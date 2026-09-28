@@ -1,5 +1,5 @@
 plugins {
-    id 'com.android.library' version '8.2.2'
+    id 'com.android.library' version '9.2.1'
     id 'maven-publish'
 }
 
@@ -38,6 +38,7 @@ dependencies {
     api 'org.nanohttpd:nanohttpd:2.3.1'
     api 'org.nanohttpd:nanohttpd-nanolets:2.3.1'
     api 'com.google.code.gson:gson:2.8.9'
+    testImplementation 'junit:junit:4.13.2'
 }
 
 afterEvaluate {
@@ -47,7 +48,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.matheuscruzsouza'
                 artifactId = 'nano-spring'
-                version = '1.1.0'
+                version = '1.2.0'
             }
         }
         repositories {

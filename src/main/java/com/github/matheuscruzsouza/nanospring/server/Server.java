@@ -34,12 +34,24 @@ public class Server extends RouterNanoHTTPD {
 
     public static Context getContext() { return staticContext; }
 
+    public <T> void registerSingleton(Class<T> type, T instance) {
+        this.services.put(type, instance);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getBean(Class<T> type) {
+        return (T) this.services.get(type);
+    }
+
     public Server(Context context, int port, String basePackage) {
         super(Integer.parseInt(Environment.getProperty("server.port", String.valueOf(port))));
         Environment.init(context);
         setNotFoundHandler(fi.iki.elonen.router.RouterNanoHTTPD.Error404UriHandler.class);
         this.context = context;
         staticContext = context;
+        if (context != null) {
+            this.services.put(Context.class, context);
+        }
         
         initializeServices(basePackage);
         processInterceptors(basePackage);

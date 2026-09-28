@@ -185,53 +185,82 @@ public class ServerIndexHandler {
                         e.printStackTrace();
                         return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Erro no ExceptionHandler: " + e.getMessage());
                     }
+                } else if (cause.getClass().isAnnotationPresent(com.github.matheuscruzsouza.nanospring.annotation.ResponseStatus.class)) {
+                    com.github.matheuscruzsouza.nanospring.annotation.ResponseStatus rs = cause.getClass().getAnnotation(com.github.matheuscruzsouza.nanospring.annotation.ResponseStatus.class);
+                    NanoHTTPD.Response.IStatus status = (rs.code() != 0)
+                            ? (com.github.matheuscruzsouza.nanospring.http.HttpStatus.valueOf(rs.code()) != null ? com.github.matheuscruzsouza.nanospring.http.HttpStatus.valueOf(rs.code()) : com.github.matheuscruzsouza.nanospring.http.HttpStatus.custom(rs.code(), rs.reason()))
+                            : rs.value();
+                    String reason = rs.reason().isEmpty() ? cause.getMessage() : rs.reason();
+                    Map<String, Object> errBody = new HashMap<>();
+                    errBody.put("status", status.getRequestStatus());
+                    errBody.put("error", status.getDescription());
+                    errBody.put("message", reason != null ? reason : "");
+                    return newFixedLengthResponse(status, "application/json", gson.toJson(errBody));
                 } else {
                     throw ite;
                 }
             }
-            
+
+            NanoHTTPD.Response.IStatus responseStatus = Status.OK;
+            Map<String, String> customHeaders = null;
+
+            if (result instanceof com.github.matheuscruzsouza.nanospring.http.ResponseEntity) {
+                com.github.matheuscruzsouza.nanospring.http.ResponseEntity<?> entity = (com.github.matheuscruzsouza.nanospring.http.ResponseEntity<?>) result;
+                responseStatus = entity.getStatus();
+                customHeaders = entity.getHeaders();
+                result = entity.getBody();
+            } else if (method.isAnnotationPresent(com.github.matheuscruzsouza.nanospring.annotation.ResponseStatus.class)) {
+                com.github.matheuscruzsouza.nanospring.annotation.ResponseStatus rs = method.getAnnotation(com.github.matheuscruzsouza.nanospring.annotation.ResponseStatus.class);
+                responseStatus = (rs.code() != 0)
+                        ? (com.github.matheuscruzsouza.nanospring.http.HttpStatus.valueOf(rs.code()) != null ? com.github.matheuscruzsouza.nanospring.http.HttpStatus.valueOf(rs.code()) : com.github.matheuscruzsouza.nanospring.http.HttpStatus.custom(rs.code(), rs.reason()))
+                        : rs.value();
+            }
+
+            NanoHTTPD.Response finalResponse;
+
             if (result instanceof java.io.File) {
                 java.io.File f = (java.io.File) result;
                 try {
-                    NanoHTTPD.Response r = NanoHTTPD.newChunkedResponse(Status.OK, mimeType, new java.io.FileInputStream(f));
-                    r.addHeader("Content-Disposition", "attachment; filename=\"" + f.getName() + "\"");
-                    return r;
+                    finalResponse = NanoHTTPD.newChunkedResponse(responseStatus, mimeType, new java.io.FileInputStream(f));
+                    finalResponse.addHeader("Content-Disposition", "attachment; filename=\"" + f.getName() + "\"");
                 } catch (Exception e) {
                     return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Erro lendo arquivo: " + e.getMessage());
                 }
-            }
-
-            if (result instanceof com.github.matheuscruzsouza.nanospring.sse.SseEmitter) {
+            } else if (result instanceof com.github.matheuscruzsouza.nanospring.sse.SseEmitter) {
                 com.github.matheuscruzsouza.nanospring.sse.SseEmitter emitter = (com.github.matheuscruzsouza.nanospring.sse.SseEmitter) result;
-                NanoHTTPD.Response response = NanoHTTPD.newChunkedResponse(Status.OK, "text/event-stream", emitter.getInputStream());
-                response.addHeader("Cache-Control", "no-cache");
-                response.addHeader("Connection", "keep-alive");
-                response.addHeader("Access-Control-Allow-Origin", "*");
-                return response;
-            }
-
-            if (result instanceof ModelAndView) {
+                finalResponse = NanoHTTPD.newChunkedResponse(responseStatus, "text/event-stream", emitter.getInputStream());
+                finalResponse.addHeader("Cache-Control", "no-cache");
+                finalResponse.addHeader("Connection", "keep-alive");
+                finalResponse.addHeader("Access-Control-Allow-Origin", "*");
+            } else if (result instanceof ModelAndView) {
                 ModelAndView mav = (ModelAndView) result;
                 String templatePath = "templates/" + mav.getViewName() + ".html";
                 try (Reader reader = new InputStreamReader(Server.getContext().getAssets().open(templatePath), "UTF-8")) {
                     String html = Mustache.compiler().compile(reader).execute(mav.getModel());
-                    return newFixedLengthResponse(Status.OK, "text/html", html);
+                    finalResponse = newFixedLengthResponse(responseStatus, "text/html", html);
                 } catch (Exception e) {
                     e.printStackTrace();
                     return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Template não encontrado: " + templatePath);
                 }
+            } else {
+                String response = "";
+                if (result != null) {
+                    if (result instanceof String && !mimeType.equals("application/json")) {
+                        response = (String) result;
+                    } else {
+                        response = gson.toJson(result);
+                    }
+                }
+                finalResponse = newFixedLengthResponse(responseStatus, mimeType, response);
             }
 
-            String response = "";
-            if (result != null) {
-                if (result instanceof String && !mimeType.equals("application/json")) {
-                    response = (String) result;
-                } else {
-                    response = gson.toJson(result);
+            if (customHeaders != null) {
+                for (Map.Entry<String, String> header : customHeaders.entrySet()) {
+                    finalResponse.addHeader(header.getKey(), header.getValue());
                 }
             }
 
-            return newFixedLengthResponse(Status.OK, mimeType, response);
+            return finalResponse;
         } catch (Exception e) {
             e.printStackTrace();
             return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Erro interno: " + e.getMessage());
