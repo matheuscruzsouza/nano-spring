@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    id 'maven-publish'
 }
 
 android {
@@ -24,6 +25,12 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
 }
 
 dependencies {
@@ -31,4 +38,27 @@ dependencies {
     api 'org.nanohttpd:nanohttpd:2.3.1'
     api 'org.nanohttpd:nanohttpd-nanolets:2.3.1'
     api 'com.google.code.gson:gson:2.8.9'
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.matheuscruzsouza'
+                artifactId = 'nano-spring'
+                version = '1.0.0'
+            }
+        }
+        repositories {
+            maven {
+                name = 'GitHubPackages'
+                url = uri("https://maven.pkg.github.com/${System.getenv('GITHUB_REPOSITORY') ?: 'matheuscruzsouza/AndroidServer'}")
+                credentials {
+                    username = System.getenv('GITHUB_ACTOR') ?: System.getenv('USERNAME')
+                    password = System.getenv('GITHUB_TOKEN') ?: System.getenv('TOKEN')
+                }
+            }
+        }
+    }
 }

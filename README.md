@@ -44,10 +44,36 @@ O **Nano-Spring** foi projetado para ser ultra-leve e rodar perfeitamente até m
 
 ## 📦 Como Instalar
 
-No arquivo `build.gradle` do seu aplicativo principal (`app`), importe o módulo do Nano-Spring:
+### Opção 1: Como Módulo Local (Dentro do mesmo projeto)
+No arquivo `build.gradle` do seu aplicativo principal (`app`):
 ```gradle
 dependencies {
     implementation project(':nano-spring')
+}
+```
+
+### Opção 2: Via GitHub Packages (Como dependência remota)
+No seu `settings.gradle` (ou `build.gradle` raiz):
+```gradle
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url = uri("https://maven.pkg.github.com/matheuscruzsouza/AndroidServer")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+```
+
+E no `build.gradle` do seu app:
+```gradle
+dependencies {
+    implementation 'com.github.matheuscruzsouza:nano-spring:1.0.0'
 }
 ```
 
