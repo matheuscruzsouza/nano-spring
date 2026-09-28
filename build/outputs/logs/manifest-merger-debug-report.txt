@@ -1,0 +1,16 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/src/main/AndroidManifest.xml:2:1-3:12
+INJECTED from /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/src/main/AndroidManifest.xml:2:1-3:12
+	package
+		INJECTED from /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/src/main/AndroidManifest.xml:2:11-69
+uses-sdk
+INJECTED from /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/src/main/AndroidManifest.xml
+INJECTED from /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/src/main/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/src/main/AndroidManifest.xml

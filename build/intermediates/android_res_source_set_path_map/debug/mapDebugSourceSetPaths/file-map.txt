@@ -1,0 +1,9 @@
+com.github.matheuscruzsouza.nanospring.nano-spring-pngs-0 /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/build/generated/res/pngs/debug
+com.github.matheuscruzsouza.nanospring.nano-spring-updated_navigation_xml-1 /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/build/generated/updated_navigation_xml/debug
+com.github.matheuscruzsouza.nanospring.nano-spring-mergeDebugResources-2 /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/build/intermediates/incremental/debug/mergeDebugResources/merged.dir
+com.github.matheuscruzsouza.nanospring.nano-spring-mergeDebugResources-3 /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/build/intermediates/incremental/debug/mergeDebugResources/stripped.dir
+com.github.matheuscruzsouza.nanospring.nano-spring-debug-4 /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/build/intermediates/merged_res/debug/mergeDebugResources
+com.github.matheuscruzsouza.nanospring.nano-spring-debug-5 /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/build/intermediates/packaged_res/debug/packageDebugResources
+com.github.matheuscruzsouza.nanospring.nano-spring-debug-6 /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/src/debug/res
+com.github.matheuscruzsouza.nanospring.nano-spring-main-7 /media/Matheus/11298c83-5c18-4a88-9d5b-00c393b4ba94/home/matheus/AndroidStudioProjects/AndroidServer/nano-spring/src/main/res
+gradleHome-0 /home/Matheus/.gradle
