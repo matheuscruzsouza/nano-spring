@@ -11,6 +11,7 @@ Com o Nano-Spring, você transforma qualquer celular ou tablet Android em um pod
 - 🚀 **Roteamento RESTful:** `@RestController`, `@GetMethod`, `@PostMethod`, `@PutMethod`, `@DeleteMethod`.
 - 💉 **Injeção de Dependências (DI):** Gerenciamento automático de ciclo de vida com `@Service` e `@Autowired`.
 - ⚙️ **Configurações Externalizadas:** Suporte nativo a `application.properties` e injeção via `@Value`.
+- 📡 **Server-Sent Events (SSE):** Streaming de eventos unidirecionais em tempo real para navegadores com `SseEmitter`.
 - 📁 **Upload de Arquivos Nativo:** Receba imagens e documentos facilmente via *multipart/form-data* usando `@UploadedFile`.
 - 🛡️ **Middlewares (Interceptadores):** Intercepte requisições nativamente para validação de JWTs, logs e segurança.
 - 🚨 **Tratamento Global de Exceções:** Evite crashes de rotas usando `@ControllerAdvice` e `@ExceptionHandler`.
@@ -199,7 +200,50 @@ public class DownloadController {
 }
 ```
 
-### 6. Interceptadores (Segurança e Logs)
+### 6. Server-Sent Events (SSE) com `SseEmitter`
+Transmita notificações, métricas ou atualizações em tempo real diretamente para o navegador (compatível nativamente com o padrão JavaScript `EventSource` e extensões do HTMX):
+
+```java
+import com.github.matheuscruzsouza.nanospring.sse.SseEmitter;
+
+@RestController("/api/stream")
+public class NotificationController {
+
+    @GetMethod(value = "/alerts", mimeType = "text/event-stream")
+    public SseEmitter streamAlerts() {
+        SseEmitter emitter = new SseEmitter();
+
+        new Thread(() -> {
+            try {
+                emitter.send("Conexão estabelecida com sucesso!");
+                
+                for (int i = 1; i <= 5; i++) {
+                    Thread.sleep(1000);
+                    // Pode enviar objetos (convertidos para JSON) ou eventos nomeados:
+                    emitter.send("alerta", Map.of("step", i, "status", "Processando"));
+                }
+
+                emitter.complete(); // Encerra o fluxo
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
+        }).start();
+
+        return emitter;
+    }
+}
+```
+
+No frontend (JavaScript):
+```javascript
+const eventSource = new EventSource('/api/stream/alerts');
+eventSource.addEventListener('alerta', (event) => {
+    const data = JSON.parse(event.data);
+    console.log("Recebido:", data);
+});
+```
+
+### 7. Interceptadores (Segurança e Logs)
 Crie classes que implementam `HandlerInterceptor` para barrar ou auditar rotas antes que elas cheguem no Controller.
 
 ```java
@@ -221,7 +265,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
 }
 ```
 
-### 7. Tratamento de Exceções Globais
+### 8. Tratamento de Exceções Globais
 Cansado de blocos Try-Catch espalhados? Crie um Advice para responder adequadamente caso seu código dispare exceções (ex: formato de ID errado ou registro não encontrado).
 
 ```java
@@ -240,7 +284,7 @@ public class GlobalExceptionHandler {
 }
 ```
 
-### 8. Retornando Páginas HTML e HTMX
+### 9. Retornando Páginas HTML e HTMX
 Para renderizar templates HTML (que devem ser colocados em `assets/templates/`), retorne um `ModelAndView`.
 
 ```java
@@ -258,7 +302,7 @@ public class WebController {
 ```
 **Para HTMX:** Você também pode retornar um `String` simples definindo o `mimeType = "text/html"`, ideal para devolver pedaços/fragmentos de tela sem recarregar a página.
 
-### 9. Arquivos Estáticos (CSS, JS, Imagens)
+### 10. Arquivos Estáticos (CSS, JS, Imagens)
 Coloque qualquer arquivo estático dentro de `app/src/main/assets/static/`.
 O Nano-Spring hospeda essa pasta automaticamente! No seu HTML, basta linkar:
 ```html

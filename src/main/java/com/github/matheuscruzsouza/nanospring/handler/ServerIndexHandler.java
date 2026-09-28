@@ -201,6 +201,15 @@ public class ServerIndexHandler {
                 }
             }
 
+            if (result instanceof com.github.matheuscruzsouza.nanospring.sse.SseEmitter) {
+                com.github.matheuscruzsouza.nanospring.sse.SseEmitter emitter = (com.github.matheuscruzsouza.nanospring.sse.SseEmitter) result;
+                NanoHTTPD.Response response = NanoHTTPD.newChunkedResponse(Status.OK, "text/event-stream", emitter.getInputStream());
+                response.addHeader("Cache-Control", "no-cache");
+                response.addHeader("Connection", "keep-alive");
+                response.addHeader("Access-Control-Allow-Origin", "*");
+                return response;
+            }
+
             if (result instanceof ModelAndView) {
                 ModelAndView mav = (ModelAndView) result;
                 String templatePath = "templates/" + mav.getViewName() + ".html";
