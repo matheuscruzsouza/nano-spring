@@ -53,24 +53,35 @@ dependencies {
 ```
 
 ### Opção 2: Via GitHub Packages (Como dependência remota)
-No seu `settings.gradle` (ou `build.gradle` raiz):
+
+> ⚠️ **Importante sobre o GitHub Packages:** O GitHub exige autenticação com token (Personal Access Token) para baixar pacotes, mesmo que o repositório seja público.
+
+#### 1. Configurar suas credenciais do GitHub
+No arquivo global `~/.gradle/gradle.properties` (ou no `gradle.properties` do seu projeto):
+```properties
+gpr.user=SEU_USUARIO_GITHUB
+gpr.key=SEU_GITHUB_PERSONAL_ACCESS_TOKEN
+```
+*(O token precisa apenas do escopo `read:packages`).*
+
+#### 2. Declarar o repositório no `settings.gradle`:
 ```gradle
 dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
         maven {
-            url = uri("https://maven.pkg.github.com/matheuscruzsouza/AndroidServer")
+            url = uri("https://maven.pkg.github.com/matheuscruzsouza/nano-spring")
             credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
-                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR") ?: ""
+                password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN") ?: ""
             }
         }
     }
 }
 ```
 
-E no `build.gradle` do seu app:
+#### 3. Adicionar a dependência no `build.gradle` do seu app:
 ```gradle
 dependencies {
     implementation 'com.github.matheuscruzsouza:nano-spring:1.0.0'
