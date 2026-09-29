@@ -1,6 +1,7 @@
 package com.github.matheuscruzsouza.nanospring.server;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
@@ -8,9 +9,11 @@ import com.github.matheuscruzsouza.nanospring.annotation.DeleteMethod;
 import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
 import com.github.matheuscruzsouza.nanospring.annotation.PostMethod;
 import com.github.matheuscruzsouza.nanospring.annotation.PutMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.Repository;
 import com.github.matheuscruzsouza.nanospring.annotation.RestController;
 import com.github.matheuscruzsouza.nanospring.annotation.Service;
 import com.github.matheuscruzsouza.nanospring.annotation.Interceptor;
+import com.github.matheuscruzsouza.nanospring.database.SqliteMigrator;
 import com.github.matheuscruzsouza.nanospring.handler.ServerIndexHandler;
 
 import java.io.IOException;
@@ -43,6 +46,10 @@ public class Server extends RouterNanoHTTPD {
         return (T) this.services.get(type);
     }
 
+    public SQLiteDatabase getDatabase() {
+        return getBean(SQLiteDatabase.class);
+    }
+
     public Server(Context context, int port, String basePackage) {
         super(Integer.parseInt(Environment.getProperty("server.port", String.valueOf(port))));
         Environment.init(context);
@@ -51,6 +58,7 @@ public class Server extends RouterNanoHTTPD {
         staticContext = context;
         if (context != null) {
             this.services.put(Context.class, context);
+            initializeDatabase(context);
         }
         
         initializeServices(basePackage);
@@ -128,9 +136,33 @@ public class Server extends RouterNanoHTTPD {
         return annotatedClasses;
     }
 
+    private void initializeDatabase(Context context) {
+        boolean migrationEnabled = Boolean.parseBoolean(Environment.getProperty("nano.datasource.migration.enabled", "true"));
+        if (!migrationEnabled) return;
+
+        String dbName = Environment.getProperty("nano.datasource.name", "nanospring.db");
+        try {
+            SQLiteDatabase db = context.openOrCreateDatabase(dbName, Context.MODE_PRIVATE, null);
+            SqliteMigrator.migrate(context, db);
+            this.services.put(SQLiteDatabase.class, db);
+            Log.d("DATABASE_OK", "Banco de dados SQLite inicializado com sucesso: " + dbName);
+        } catch (Exception e) {
+            Log.e("DATABASE_FAIL", "Erro ao inicializar banco de dados SQLite ou executar migrações", e);
+            e.printStackTrace();
+        }
+    }
+
     private void initializeServices(String packageName) {
         List<Class<?>> serviceClasses = getAnnotatedClasses(this.context, packageName, Service.class);
-        for (Class<?> klass : serviceClasses) {
+        List<Class<?>> repoClasses = getAnnotatedClasses(this.context, packageName, Repository.class);
+        List<Class<?>> allComponents = new ArrayList<>(serviceClasses);
+        for (Class<?> klass : repoClasses) {
+            if (!allComponents.contains(klass)) {
+                allComponents.add(klass);
+            }
+        }
+
+        for (Class<?> klass : allComponents) {
             try {
                 Constructor<?> ctor = klass.getConstructor();
                 Object instance = ctor.newInstance();

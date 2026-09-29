@@ -9,7 +9,8 @@ Com o Nano-Spring, você transforma qualquer celular ou tablet Android em um pod
 ## 🌟 Principais Funcionalidades
 
 - 🚀 **Roteamento RESTful:** `@RestController`, `@GetMethod`, `@PostMethod`, `@PutMethod`, `@DeleteMethod`.
-- 💉 **Injeção de Dependências (DI):** Gerenciamento automático de ciclo de vida com `@Service` e `@Autowired`.
+- 💉 **Injeção de Dependências (DI):** Gerenciamento automático de ciclo de vida com `@Service`, `@Repository` e `@Autowired`.
+- 🗄️ **Banco de Dados SQLite & Migrações:** Suporte nativo ao SQLite com versionamento de esquemas por arquivos SQL (estilo Flyway).
 - ⚙️ **Configurações Externalizadas:** Suporte nativo a `application.properties` e injeção via `@Value`.
 - 📡 **Server-Sent Events (SSE):** Streaming de eventos unidirecionais em tempo real para navegadores com `SseEmitter`.
 - 📁 **Upload de Arquivos Nativo:** Receba imagens e documentos facilmente via *multipart/form-data* usando `@UploadedFile`.
@@ -308,6 +309,61 @@ O Nano-Spring hospeda essa pasta automaticamente! No seu HTML, basta linkar:
 ```html
 <link rel="stylesheet" href="/static/css/style.css">
 <script src="/static/js/main.js"></script>
+```
+
+### 11. Banco de Dados SQLite & Migrações (Estilo Flyway)
+O Nano-Spring possui suporte nativo ao **SQLite do Android** com controle de evolução de esquemas por meio de arquivos `.sql` versionados.
+
+#### 1. Criando as migrações
+Coloque seus scripts SQL na pasta `assets/db/migration/`:
+- `assets/db/migration/V1__create_users_table.sql`
+- `assets/db/migration/V2__add_status_column.sql`
+
+Exemplo (`V1__create_users_table.sql`):
+```sql
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE
+);
+
+INSERT INTO users (nome, email) VALUES ('Administrador', 'admin@local.com');
+```
+
+O Nano-Spring cria automaticamente a tabela de controle `nano_schema_history` no SQLite, rastreia as versões aplicadas e executa cada script pendente dentro de uma transação.
+
+#### 2. Configurações opcionais (`application.properties`):
+```properties
+nano.datasource.name=meu_banco.db
+nano.datasource.migration.location=db/migration
+nano.datasource.migration.enabled=true
+```
+
+#### 3. Usando com `@Repository` e `@Autowired`:
+O `SQLiteDatabase` é automaticamente registrado como singleton no container de injeção:
+
+```java
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.Repository;
+
+@Repository
+public class UserRepository {
+
+    @Autowired
+    private SQLiteDatabase db;
+
+    public List<String> listUsers() {
+        List<String> list = new ArrayList<>();
+        try (Cursor cursor = db.rawQuery("SELECT nome FROM users", null)) {
+            while (cursor.moveToNext()) {
+                list.add(cursor.getString(0));
+            }
+        }
+        return list;
+    }
+}
 ```
 
 ---
