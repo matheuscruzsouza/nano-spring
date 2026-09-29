@@ -14,8 +14,13 @@ public class NsdServiceManager {
     private NsdManager.RegistrationListener registrationListener;
     private boolean registered = false;
     private String registeredServiceName;
+    private MdnsHostResponder hostResponder;
 
     public synchronized void register(Context context, String serviceName, String serviceType, int port) {
+        register(context, serviceName, serviceType, port, true);
+    }
+
+    public synchronized void register(Context context, String serviceName, String serviceType, int port, boolean enableHostResolution) {
         if (context == null) {
             Log.w(TAG, "Context is null, cannot register NSD service.");
             return;
@@ -71,12 +76,31 @@ public class NsdServiceManager {
             };
 
             nsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, this.registrationListener);
+
+            if (enableHostResolution) {
+                try {
+                    hostResponder = new MdnsHostResponder(context, finalServiceName);
+                    hostResponder.start();
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed to start mDNS host responder: " + e.getMessage());
+                }
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error registering NSD service", e);
         }
     }
 
     public synchronized void unregister() {
+        if (hostResponder != null) {
+            try {
+                hostResponder.stop();
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to stop host responder: " + e.getMessage());
+            } finally {
+                hostResponder = null;
+            }
+        }
+
         if (nsdManager != null && registrationListener != null) {
             try {
                 nsdManager.unregisterService(registrationListener);
@@ -96,5 +120,9 @@ public class NsdServiceManager {
 
     public synchronized String getRegisteredServiceName() {
         return registeredServiceName;
+    }
+
+    public synchronized MdnsHostResponder getHostResponder() {
+        return hostResponder;
     }
 }

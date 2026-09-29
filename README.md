@@ -87,7 +87,7 @@ dependencyResolutionManagement {
 #### 3. Adicionar a dependência no `build.gradle` do seu app:
 ```gradle
 dependencies {
-    implementation 'com.github.matheuscruzsouza:nano-spring:1.4.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring:1.5.0'
 }
 ```
 
@@ -367,33 +367,40 @@ public class UserRepository {
 }
 ```
 
-### 12. Descoberta de Serviço na Rede Local (mDNS / DNS-SD)
-O Nano-Spring possui suporte integrado ao **`NsdManager`** nativo do Android, anunciando a presença do servidor na rede local via Multicast DNS e DNS-SD (Zeroconf / Bonjour).
+### 12. Descoberta de Serviço e Acesso Direto via Navegador (`.local`)
+O Nano-Spring possui suporte integrado ao anúncio de rede mDNS / DNS-SD (Zeroconf / Bonjour) e **resolução direta de Host (registros A)**.
 
-Isso permite que outros aparelhos, computadores e aplicações na mesma rede Wi-Fi encontrem automaticamente seu servidor e porta sem precisar saber o IP dinâmico (`192.168.X.X`).
+Isso significa que você pode acessar seu servidor digitando diretamente no navegador (Chrome, Firefox, Safari, Edge):
+```text
+http://meu-servidor-android.local:8080/
+```
+Sem precisar saber o IP do celular, sem configurar roteador e sem instalar nada!
 
 #### 1. Configuração (`application.properties`):
 ```properties
-# Habilita o anúncio de serviço na rede local
+# Habilita o anúncio e descoberta mDNS
 nano.nsd.enabled=true
 
-# Nome do serviço anunciado (padrão: nano-spring)
+# Nome do host e serviço (acessível como http://meu-servidor-android.local:porta)
 nano.nsd.name=meu-servidor-android
 
-# Tipo do serviço (padrão: _http._tcp.)
+# Tipo do serviço DNS-SD (padrão: _http._tcp.)
 nano.nsd.type=_http._tcp.
+
+# Habilita o responder mDNS para resolução de Host A/AAAA no navegador (padrão: true)
+nano.nsd.host-resolution=true
 ```
 
 #### 2. Ativação programática ou injeção:
-Você também pode ativar, desativar ou injetar o gerenciador:
+Você também pode ativar, desativar ou injetar o gerenciador em tempo de execução:
 ```java
-// Ativar programaticamente no Server:
-server.enableNsd("meu-servidor");
+// Ativar programaticamente no Server com resolução de host:
+server.enableNsd("meu-servidor", true);
 
 // Ou desativar:
 server.disableNsd();
 ```
-Quando o servidor é parado com `server.stop()`, o serviço é automaticamente desregistrado da rede.
+Quando o servidor é parado com `server.stop()`, o serviço e a resolução mDNS são automaticamente desregistrados da rede.
 
 ---
 

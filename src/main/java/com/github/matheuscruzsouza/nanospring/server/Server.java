@@ -57,13 +57,17 @@ public class Server extends RouterNanoHTTPD {
     }
 
     public void enableNsd(String serviceName) {
+        enableNsd(serviceName, true);
+    }
+
+    public void enableNsd(String serviceName, boolean enableHostResolution) {
         if (this.context == null) return;
         int activePort = getListeningPort();
         if (activePort <= 0) {
             activePort = Integer.parseInt(Environment.getProperty("server.port", "8080"));
         }
         String nsdType = Environment.getProperty("nano.nsd.type", NsdServiceManager.DEFAULT_SERVICE_TYPE);
-        nsdServiceManager.register(this.context, serviceName, nsdType, activePort);
+        nsdServiceManager.register(this.context, serviceName, nsdType, activePort, enableHostResolution);
     }
 
     public void disableNsd() {
@@ -98,7 +102,8 @@ public class Server extends RouterNanoHTTPD {
             if (nsdEnabled && context != null) {
                 String nsdName = Environment.getProperty("nano.nsd.name", NsdServiceManager.DEFAULT_SERVICE_NAME);
                 String nsdType = Environment.getProperty("nano.nsd.type", NsdServiceManager.DEFAULT_SERVICE_TYPE);
-                nsdServiceManager.register(context, nsdName, nsdType, serverPort);
+                boolean hostResolution = Boolean.parseBoolean(Environment.getProperty("nano.nsd.host-resolution", "true"));
+                nsdServiceManager.register(context, nsdName, nsdType, serverPort, hostResolution);
             }
         } catch (IOException e) {
             Log.e("SERVER_FAIL", "ERRO AO INICIAR O SOCKET DO SERVIDOR", e);
