@@ -11,6 +11,7 @@ Com o Nano-Spring, você transforma qualquer celular ou tablet Android em um pod
 - 🚀 **Roteamento RESTful:** `@RestController`, `@GetMethod`, `@PostMethod`, `@PutMethod`, `@DeleteMethod`.
 - 💉 **Injeção de Dependências (DI):** Gerenciamento automático de ciclo de vida com `@Service`, `@Repository` e `@Autowired`.
 - 🗄️ **Banco de Dados SQLite & Migrações:** Suporte nativo ao SQLite com versionamento de esquemas por arquivos SQL (estilo Flyway).
+- 🔍 **Descoberta de Serviço (mDNS / DNS-SD):** Anúncio automático do servidor na rede local via Zeroconf / Bonjour com NsdManager nativo.
 - ⚙️ **Configurações Externalizadas:** Suporte nativo a `application.properties` e injeção via `@Value`.
 - 📡 **Server-Sent Events (SSE):** Streaming de eventos unidirecionais em tempo real para navegadores com `SseEmitter`.
 - 📁 **Upload de Arquivos Nativo:** Receba imagens e documentos facilmente via *multipart/form-data* usando `@UploadedFile`.
@@ -365,6 +366,34 @@ public class UserRepository {
     }
 }
 ```
+
+### 12. Descoberta de Serviço na Rede Local (mDNS / DNS-SD)
+O Nano-Spring possui suporte integrado ao **`NsdManager`** nativo do Android, anunciando a presença do servidor na rede local via Multicast DNS e DNS-SD (Zeroconf / Bonjour).
+
+Isso permite que outros aparelhos, computadores e aplicações na mesma rede Wi-Fi encontrem automaticamente seu servidor e porta sem precisar saber o IP dinâmico (`192.168.X.X`).
+
+#### 1. Configuração (`application.properties`):
+```properties
+# Habilita o anúncio de serviço na rede local
+nano.nsd.enabled=true
+
+# Nome do serviço anunciado (padrão: nano-spring)
+nano.nsd.name=meu-servidor-android
+
+# Tipo do serviço (padrão: _http._tcp.)
+nano.nsd.type=_http._tcp.
+```
+
+#### 2. Ativação programática ou injeção:
+Você também pode ativar, desativar ou injetar o gerenciador:
+```java
+// Ativar programaticamente no Server:
+server.enableNsd("meu-servidor");
+
+// Ou desativar:
+server.disableNsd();
+```
+Quando o servidor é parado com `server.stop()`, o serviço é automaticamente desregistrado da rede.
 
 ---
 

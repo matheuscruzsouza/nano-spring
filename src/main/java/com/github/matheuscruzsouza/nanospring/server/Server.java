@@ -14,6 +14,7 @@ import com.github.matheuscruzsouza.nanospring.annotation.RestController;
 import com.github.matheuscruzsouza.nanospring.annotation.Service;
 import com.github.matheuscruzsouza.nanospring.annotation.Interceptor;
 import com.github.matheuscruzsouza.nanospring.database.SqliteMigrator;
+import com.github.matheuscruzsouza.nanospring.discovery.NsdServiceManager;
 import com.github.matheuscruzsouza.nanospring.handler.ServerIndexHandler;
 
 import java.io.IOException;
@@ -34,6 +35,7 @@ public class Server extends RouterNanoHTTPD {
     private Context context;
     private static Context staticContext;
     private Map<Class<?>, Object> services = new HashMap<>();
+    private NsdServiceManager nsdServiceManager = new NsdServiceManager();
 
     public static Context getContext() { return staticContext; }
 
@@ -50,6 +52,26 @@ public class Server extends RouterNanoHTTPD {
         return getBean(SQLiteDatabase.class);
     }
 
+    public NsdServiceManager getNsdServiceManager() {
+        return nsdServiceManager;
+    }
+
+    public void enableNsd(String serviceName) {
+        if (this.context == null) return;
+        int activePort = getListeningPort();
+        if (activePort <= 0) {
+            activePort = Integer.parseInt(Environment.getProperty("server.port", "8080"));
+        }
+        String nsdType = Environment.getProperty("nano.nsd.type", NsdServiceManager.DEFAULT_SERVICE_TYPE);
+        nsdServiceManager.register(this.context, serviceName, nsdType, activePort);
+    }
+
+    public void disableNsd() {
+        if (nsdServiceManager != null) {
+            nsdServiceManager.unregister();
+        }
+    }
+
     public Server(Context context, int port, String basePackage) {
         super(Integer.parseInt(Environment.getProperty("server.port", String.valueOf(port))));
         Environment.init(context);
@@ -58,6 +80,7 @@ public class Server extends RouterNanoHTTPD {
         staticContext = context;
         if (context != null) {
             this.services.put(Context.class, context);
+            this.services.put(NsdServiceManager.class, nsdServiceManager);
             initializeDatabase(context);
         }
         
@@ -68,11 +91,27 @@ public class Server extends RouterNanoHTTPD {
 
         try {
             start();
-            Log.d("SERVER_OK", "SERVIDOR RODANDO ONLINE NA PORTA " + Environment.getProperty("server.port", String.valueOf(port)) + "!");
+            int serverPort = Integer.parseInt(Environment.getProperty("server.port", String.valueOf(port)));
+            Log.d("SERVER_OK", "SERVIDOR RODANDO ONLINE NA PORTA " + serverPort + "!");
+
+            boolean nsdEnabled = Boolean.parseBoolean(Environment.getProperty("nano.nsd.enabled", "false"));
+            if (nsdEnabled && context != null) {
+                String nsdName = Environment.getProperty("nano.nsd.name", NsdServiceManager.DEFAULT_SERVICE_NAME);
+                String nsdType = Environment.getProperty("nano.nsd.type", NsdServiceManager.DEFAULT_SERVICE_TYPE);
+                nsdServiceManager.register(context, nsdName, nsdType, serverPort);
+            }
         } catch (IOException e) {
             Log.e("SERVER_FAIL", "ERRO AO INICIAR O SOCKET DO SERVIDOR", e);
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void stop() {
+        if (nsdServiceManager != null) {
+            nsdServiceManager.unregister();
+        }
+        super.stop();
     }
 
     @Override
