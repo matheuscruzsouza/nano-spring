@@ -87,7 +87,7 @@ dependencyResolutionManagement {
 #### 3. Adicionar a dependência no `build.gradle` do seu app:
 ```gradle
 dependencies {
-    implementation 'com.github.matheuscruzsouza:nano-spring:1.3.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring:1.4.0'
 }
 ```
 
