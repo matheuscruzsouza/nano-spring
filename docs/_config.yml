@@ -1,0 +1,10 @@
+title: Nano-Spring 🌱
+description: Micro-framework web ultra-leve para Android com a simplicidade e arquitetura do Spring Boot.
+theme: jekyll-theme-primer
+markdown: kramdown
+permalink: /:path/
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
