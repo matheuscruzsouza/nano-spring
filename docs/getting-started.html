@@ -9,19 +9,35 @@
 </head>
 <body>
 
+  <!-- Topbar -->
   <header class="topbar">
     <div class="brand">
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
-      <span>🌱 Nano-Spring</span>
+      <span class="logo-icon">🌱</span>
+      <span>Nano-Spring</span>
       <span class="badge">v1.9.0</span>
     </div>
+
+    <div class="topbar-center">
+      <button class="search-btn" aria-label="Buscar na documentação">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <span>Buscar na documentação...</span>
+        <kbd>⌘K</kbd>
+      </button>
+    </div>
+
     <nav class="nav-links">
       <a href="index.html">Início</a>
-      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+      <a href="spring-boot-vs-nano-spring.html">Comparativo ⚖️</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener" class="github-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span>GitHub</span>
+      </a>
     </nav>
   </header>
 
   <div class="docs-layout">
+    <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-section">
         <div class="sidebar-title">Começando</div>
@@ -33,86 +49,150 @@
       </div>
 
       <div class="sidebar-section">
-        <div class="sidebar-title">Funcionalidades</div>
+        <div class="sidebar-title">Enterprise & Hardening</div>
         <ul class="sidebar-menu">
           <li><a href="features/logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
           <li><a href="features/security-validation.html">🔒 Segurança & Validação</a></li>
           <li><a href="features/enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Core Web</div>
+        <ul class="sidebar-menu">
           <li><a href="features/rest-api.html">APIs RESTful</a></li>
           <li><a href="features/dependency-injection.html">Injeção de Dependências</a></li>
-          <li><a href="features/sqlite-migrations.html">SQLite & Migrações</a></li>
-          <li><a href="features/mdns-discovery.html">Descoberta mDNS (.local)</a></li>
-          <li><a href="features/cors.html">CORS Nativo</a></li>
           <li><a href="features/sse.html">Server-Sent Events (SSE)</a></li>
           <li><a href="features/files.html">Upload & Download</a></li>
           <li><a href="features/interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Infraestrutura Local</div>
+        <ul class="sidebar-menu">
+          <li><a href="features/sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="features/mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="features/cors.html">CORS Nativo</a></li>
           <li><a href="features/templates-static.html">Templates & Estáticos</a></li>
         </ul>
       </div>
     </aside>
 
+    <!-- Main Content -->
     <main class="main-content">
       <div class="content">
-        <h1>🚀 Instalação & Configuração</h1>
-        <p>Aprenda a integrar o <strong>Nano-Spring</strong> ao seu aplicativo Android, configurar permissões essenciais e manter o servidor rodando em segundo plano.</p>
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+          <a href="index.html">Documentação</a>
+          <span class="breadcrumb-separator">/</span>
+          <span>Começando</span>
+          <span class="breadcrumb-separator">/</span>
+          <span style="color: #fff;">Instalação</span>
+        </div>
 
-        <h2>📱 Requisitos do Sistema</h2>
+        <h1>🚀 Instalação & Configuração</h1>
+        <p class="lead-text">Guia passo a passo para integrar o Nano-Spring ao seu projeto Android, expor serviços REST locais e manter o servidor rodando em segundo plano de forma confiável.</p>
+
+        <!-- Requisitos -->
+        <h2 id="requisitos">📱 Requisitos de Hardware & Sistema</h2>
+        <p>O Nano-Spring é ultra-leve e consome entre <strong>15 MB e 40 MB de memória RAM</strong>, operando com total fluidez mesmo em smartphones de entrada e terminais POS com 1 GB de RAM:</p>
+
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>Requisito</th>
-                <th>Mínimo</th>
+                <th>Componente</th>
+                <th>Mínimo Suportado</th>
                 <th>Recomendado</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><strong>Versão Android</strong></td>
+                <td><strong>Versão do Android</strong></td>
                 <td>Android 7.1.1 (API 25 - Nougat)</td>
                 <td>Android 10+ (API 29+)</td>
               </tr>
               <tr>
-                <td><strong>Java Compatibility</strong></td>
+                <td><strong>Compatibilidade Java</strong></td>
                 <td>Java 11</td>
                 <td>Java 17</td>
               </tr>
               <tr>
-                <td><strong>Memória RAM</strong></td>
-                <td>15 MB a 40 MB consumidos</td>
-                <td>Aparelhos com 2 GB de RAM total</td>
+                <td><strong>Memória RAM Consumida</strong></td>
+                <td>~15 MB a 40 MB</td>
+                <td>Qualquer aparelho com 1GB+ total</td>
               </tr>
               <tr>
-                <td><strong>Processador</strong></td>
-                <td>Quad-Core 1.3 GHz</td>
-                <td>Octa-Core 2.0 GHz</td>
+                <td><strong>Arquitetura da CPU</strong></td>
+                <td>ARMv7 (32-bit), ARM64 ou x86_64</td>
+                <td>Qualquer processador Quad-core 1.3GHz+</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <h2>📦 Opção 1: Via GitHub Packages</h2>
-        <p>O GitHub Packages requer autenticação via token pessoal para baixar dependências:</p>
+        <!-- Modo de Instalação (Tabs) -->
+        <h2 id="instalacao">📦 Instalação Passo a Passo</h2>
+        <p>Escolha a forma de distribuição ideal para o seu ambiente de desenvolvimento:</p>
 
-        <h3>1. Configure suas credenciais</h3>
-        <p>Adicione no arquivo <code>~/.gradle/gradle.properties</code> do seu computador:</p>
-        <div class="code-wrapper">
-          <div class="code-header">
-            <span>~/.gradle/gradle.properties</span>
-            <button class="copy-btn">Copiar</button>
+        <div class="tabs-group">
+          <div class="tabs-nav">
+            <button class="tab-btn active" type="button">Opção 1: GitHub Packages (Recomendado)</button>
+            <button class="tab-btn" type="button">Opção 2: Módulo Local no Projeto</button>
           </div>
-          <pre><code class="language-properties">gpr.user=SEU_USUARIO_GITHUB
-gpr.key=SEU_GITHUB_PERSONAL_ACCESS_TOKEN</code></pre>
-        </div>
 
-        <h3>2. Declare o repositório Maven</h3>
-        <p>No arquivo <code>settings.gradle</code> do projeto:</p>
-        <div class="code-wrapper">
-          <div class="code-header">
-            <span>settings.gradle</span>
-            <button class="copy-btn">Copiar</button>
-          </div>
-          <pre><code class="language-groovy">dependencyResolutionManagement {
+          <!-- Tab Pane 1: GitHub Packages -->
+          <div class="tab-pane active">
+            <div class="stepper">
+
+              <!-- Step 1 -->
+              <div class="step-item">
+                <div class="step-marker">1</div>
+                <div class="step-content">
+                  <div class="step-header">
+                    <h3 id="passo-1">Configure suas credenciais do GitHub</h3>
+                    <p>O GitHub Packages requer autenticação via token pessoal (PAT) com escopo <code>read:packages</code> para baixar bibliotecas.</p>
+                  </div>
+
+                  <p>Adicione no arquivo <code>~/.gradle/gradle.properties</code> do seu computador (ou na raiz do projeto):</p>
+                  <div class="code-wrapper">
+                    <div class="code-header">
+                      <div class="window-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                      </div>
+                      <span class="code-title">~/.gradle/gradle.properties</span>
+                      <button class="copy-btn">Copiar</button>
+                    </div>
+                    <pre><code class="language-properties">gpr.user=SEU_USUARIO_GITHUB
+gpr.key=SEU_PERSONAL_ACCESS_TOKEN</code></pre>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 2 -->
+              <div class="step-item">
+                <div class="step-marker">2</div>
+                <div class="step-content">
+                  <div class="step-header">
+                    <h3 id="passo-2">Declare o repositório Maven</h3>
+                    <p>Configure a resolução de dependências no <code>settings.gradle</code> da raiz do seu projeto Android.</p>
+                  </div>
+
+                  <div class="code-wrapper">
+                    <div class="code-header">
+                      <div class="window-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                      </div>
+                      <span class="code-title">settings.gradle</span>
+                      <button class="copy-btn">Copiar</button>
+                    </div>
+                    <pre><code class="language-groovy">dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
@@ -125,121 +205,244 @@ gpr.key=SEU_GITHUB_PERSONAL_ACCESS_TOKEN</code></pre>
         }
     }
 }</code></pre>
-        </div>
+                  </div>
+                </div>
+              </div>
 
-        <h3>3. Adicione a dependência</h3>
-        <p>No <code>build.gradle</code> do seu módulo <code>app</code>:</p>
-        <div class="code-wrapper">
-          <div class="code-header">
-            <span>app/build.gradle</span>
-            <button class="copy-btn">Copiar</button>
-          </div>
-          <pre><code class="language-groovy">dependencies {
+              <!-- Step 3 -->
+              <div class="step-item">
+                <div class="step-marker">3</div>
+                <div class="step-content">
+                  <div class="step-header">
+                    <h3 id="passo-3">Adicione a dependência da biblioteca</h3>
+                    <p>No <code>build.gradle</code> do seu módulo da aplicação (geralmente <code>app/build.gradle</code>):</p>
+                  </div>
+
+                  <div class="code-wrapper">
+                    <div class="code-header">
+                      <div class="window-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                      </div>
+                      <span class="code-title">app/build.gradle</span>
+                      <button class="copy-btn">Copiar</button>
+                    </div>
+                    <pre><code class="language-groovy">dependencies {
     implementation 'com.github.matheuscruzsouza:nano-spring:1.9.0'
 }</code></pre>
-        </div>
+                  </div>
+                </div>
+              </div>
 
-        <h2>🛡️ Permissões no AndroidManifest.xml</h2>
-        <p>Declare as permissões de rede no seu <code>app/src/main/AndroidManifest.xml</code>:</p>
+              <!-- Step 4 -->
+              <div class="step-item">
+                <div class="step-marker">4</div>
+                <div class="step-content">
+                  <div class="step-header">
+                    <h3 id="passo-4">Declare as permissões no AndroidManifest.xml</h3>
+                    <p>Para abrir portas de socket HTTP, monitorar rede e anunciar via mDNS Zeroconf:</p>
+                  </div>
 
-        <div class="code-wrapper">
-          <div class="code-header">
-            <span>AndroidManifest.xml</span>
-            <button class="copy-btn">Copiar</button>
-          </div>
-          <pre><code class="language-markup">&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+                  <div class="code-wrapper">
+                    <div class="code-header">
+                      <div class="window-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                      </div>
+                      <span class="code-title">app/src/main/AndroidManifest.xml</span>
+                      <button class="copy-btn">Copiar</button>
+                    </div>
+                    <pre><code class="language-markup">&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"&gt;
 
-    &lt;!-- Permissões de rede obrigatórias --&gt;
+    &lt;!-- Permissões de rede essenciais --&gt;
     &lt;uses-permission android:name="android.permission.INTERNET" /&gt;
     &lt;uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /&gt;
     &lt;uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /&gt;
 
-    &lt;!-- Necessário para descoberta Zeroconf / mDNS --&gt;
+    &lt;!-- Obrigatório para descoberta Zeroconf / mDNS (.local) --&gt;
     &lt;uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" /&gt;
+
+    &lt;!-- Recomendado para operação contínua 24/7 sem suspensão --&gt;
+    &lt;uses-permission android:name="android.permission.WAKE_LOCK" /&gt;
+    &lt;uses-permission android:name="android.permission.FOREGROUND_SERVICE" /&gt;
 
     &lt;application
         android:usesCleartextTraffic="true"
-        ...&gt;
+        ... &gt;
     &lt;/application&gt;
 &lt;/manifest&gt;</code></pre>
-        </div>
+                  </div>
+                </div>
+              </div>
 
-        <div class="callout callout-warning">
-          <span>⚠️</span>
-          <div><strong>Atenção:</strong> A diretiva <code>android:usesCleartextTraffic="true"</code> é necessária a partir do Android 9 para permitir tráfego HTTP sem TLS em redes locais.</div>
-        </div>
+              <!-- Step 5 -->
+              <div class="step-item">
+                <div class="step-marker">5</div>
+                <div class="step-content">
+                  <div class="step-header">
+                    <h3 id="passo-5">Crie seu primeiro Controller REST</h3>
+                    <p>Exatamente como no Spring Boot, use anotações limpas para expor rotas HTTP:</p>
+                  </div>
 
-        <h2>🔋 Executando como Foreground Service</h2>
-        <p>Para evitar que o Android mate o processo do servidor quando o aparelho entrar em suspensão ou o usuário alternar de aplicativo, execute-o através de um Foreground Service:</p>
+                  <div class="code-wrapper">
+                    <div class="code-header">
+                      <div class="window-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                      </div>
+                      <span class="code-title">OlaController.java</span>
+                      <button class="copy-btn">Copiar</button>
+                    </div>
+                    <pre><code class="language-java">package com.seupacote.controllers;
 
-        <div class="code-wrapper">
-          <div class="code-header">
-            <span>AppServerService.java</span>
-            <button class="copy-btn">Copiar</button>
-          </div>
-          <pre><code class="language-java">public class AppServerService extends android.app.Service {
-    private static final String CHANNEL_ID = "NanoSpringServiceChannel";
-    private Server server;
+import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.RestController;
+import com.github.matheuscruzsouza.nanospring.http.ResponseEntity;
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        createNotificationChannel();
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Nano-Spring Server")
-                .setContentText("Servidor HTTP ativo e escutando conexões")
-                .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .build();
-        startForeground(1, notification);
-    }
+import java.util.Map;
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (server == null) {
-            server = new Server(this, 8080, "com.exemplo.meuapp");
-        }
-        return START_STICKY;
-    }
+@RestController("/api")
+public class OlaController {
 
-    @Override
-    public void onDestroy() {
-        if (server != null) server.stop();
-        super.onDestroy();
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) { return null; }
-
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "Nano-Spring Server Channel",
-                    NotificationManager.IMPORTANCE_LOW
-            );
-            getSystemService(NotificationManager.class).createNotificationChannel(channel);
-        }
+    @GetMethod("/ola")
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; dizerOla() {
+        return ResponseEntity.ok(Map.of(
+            "status", "online",
+            "mensagem", "Servidor Nano-Spring rodando nativamente no Android!"
+        ));
     }
 }</code></pre>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 6 -->
+              <div class="step-item">
+                <div class="step-marker">6</div>
+                <div class="step-content">
+                  <div class="step-header">
+                    <h3 id="passo-6">Inicialize o Servidor em Segundo Plano</h3>
+                    <p>Utilize a classe base <code>NanoSpringService</code> para garantir que o Android mantenha o servidor ativo com notificação persistente e travas de Wi-Fi:</p>
+                  </div>
+
+                  <div class="code-wrapper">
+                    <div class="code-header">
+                      <div class="window-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                      </div>
+                      <span class="code-title">ServidorService.java</span>
+                      <button class="copy-btn">Copiar</button>
+                    </div>
+                    <pre><code class="language-java">package com.seupacote.services;
+
+import com.github.matheuscruzsouza.nanospring.service.NanoSpringService;
+
+public class ServidorService extends NanoSpringService {
+
+    @Override
+    public int getServerPort() {
+        return 8080; // Ou porta definida no application.properties
+    }
+
+    @Override
+    public String getBasePackage() {
+        return "com.seupacote"; // Pacote raiz que será escaneado
+    }
+}</code></pre>
+                  </div>
+
+                  <div class="callout callout-tip">
+                    <span>💡</span>
+                    <div>
+                      <strong>Pronto!</strong> Ao iniciar o serviço, sua API estará disponível localmente em <code>http://&lt;ip-do-dispositivo&gt;:8080/api/ola</code> ou pelo hostname Zeroconf <code>http://servidor.local:8080/api/ola</code>.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Tab Pane 2: Módulo Local -->
+          <div class="tab-pane">
+            <p>Se você clonou o repositório do <strong>nano-spring</strong> e incluiu o projeto como módulo local no <code>settings.gradle</code>:</p>
+            <div class="code-wrapper">
+              <div class="code-header">
+                <div class="window-dots">
+                  <span class="dot dot-red"></span>
+                  <span class="dot dot-yellow"></span>
+                  <span class="dot dot-green"></span>
+                </div>
+                <span class="code-title">settings.gradle</span>
+                <button class="copy-btn">Copiar</button>
+              </div>
+              <pre><code class="language-groovy">include ':app'
+include ':nano-spring'
+project(':nano-spring').projectDir = new File(rootDir, '../nano-spring')</code></pre>
+            </div>
+
+            <p>Em seguida, declare no <code>app/build.gradle</code>:</p>
+            <div class="code-wrapper">
+              <div class="code-header">
+                <div class="window-dots">
+                  <span class="dot dot-red"></span>
+                  <span class="dot dot-yellow"></span>
+                  <span class="dot dot-green"></span>
+                </div>
+                <span class="code-title">app/build.gradle</span>
+                <button class="copy-btn">Copiar</button>
+              </div>
+              <pre><code class="language-groovy">dependencies {
+    implementation project(':nano-spring')
+}</code></pre>
+            </div>
+          </div>
         </div>
 
         <div class="page-nav">
           <a href="index.html" class="page-nav-link prev">
-            <span class="hint">Anterior</span>
-            <span class="title">← Visão Geral</span>
+            <span class="hint">← Anterior</span>
+            <span class="title">Visão Geral</span>
           </a>
-          <a href="features/rest-api.html" class="page-nav-link next">
-            <span class="hint">Próximo</span>
-            <span class="title">APIs RESTful →</span>
+          <a href="spring-boot-vs-nano-spring.html" class="page-nav-link next">
+            <span class="hint">Próximo →</span>
+            <span class="title">Spring Boot vs Nano-Spring</span>
           </a>
         </div>
       </div>
     </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta página</div>
+      <ul class="toc-list">
+        <li><a href="#requisitos">Requisitos de Hardware</a></li>
+        <li><a href="#instalacao">Instalação Passo a Passo</a></li>
+        <li><a href="#passo-1">1. Credenciais GitHub</a></li>
+        <li><a href="#passo-2">2. Repositório Maven</a></li>
+        <li><a href="#passo-3">3. Dependência Gradle</a></li>
+        <li><a href="#passo-4">4. Permissões Android</a></li>
+        <li><a href="#passo-5">5. Primeiro Controller</a></li>
+        <li><a href="#passo-6">6. Iniciar Servidor</a></li>
+      </ul>
+    </aside>
   </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>© 2026 Nano-Spring Framework. Distribuído sob licença MIT. Feito para alta performance no Android.</p>
+    </div>
+  </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-groovy.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-properties.min.js"></script>
   <script src="assets/js/app.js"></script>
 </body>

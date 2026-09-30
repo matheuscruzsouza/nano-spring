@@ -13,12 +13,26 @@
   <header class="topbar">
     <div class="brand">
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
-      <span>🌱 Nano-Spring</span>
+      <span class="logo-icon">🌱</span>
+      <span>Nano-Spring</span>
       <span class="badge">v1.9.0</span>
     </div>
+
+    <div class="topbar-center">
+      <button class="search-btn" aria-label="Buscar na documentação">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <span>Buscar na documentação...</span>
+        <kbd>⌘K</kbd>
+      </button>
+    </div>
+
     <nav class="nav-links">
       <a href="getting-started.html">Documentação</a>
-      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+      <a href="spring-boot-vs-nano-spring.html">Comparativo ⚖️</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener" class="github-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span>GitHub</span>
+      </a>
     </nav>
   </header>
 
@@ -35,19 +49,31 @@
       </div>
 
       <div class="sidebar-section">
-        <div class="sidebar-title">Funcionalidades</div>
+        <div class="sidebar-title">Enterprise & Hardening</div>
         <ul class="sidebar-menu">
           <li><a href="features/logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
           <li><a href="features/security-validation.html">🔒 Segurança & Validação</a></li>
           <li><a href="features/enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Core Web</div>
+        <ul class="sidebar-menu">
           <li><a href="features/rest-api.html">APIs RESTful</a></li>
           <li><a href="features/dependency-injection.html">Injeção de Dependências</a></li>
-          <li><a href="features/sqlite-migrations.html">SQLite & Migrações</a></li>
-          <li><a href="features/mdns-discovery.html">Descoberta mDNS (.local)</a></li>
-          <li><a href="features/cors.html">CORS Nativo</a></li>
           <li><a href="features/sse.html">Server-Sent Events (SSE)</a></li>
           <li><a href="features/files.html">Upload & Download</a></li>
           <li><a href="features/interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Infraestrutura Local</div>
+        <ul class="sidebar-menu">
+          <li><a href="features/sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="features/mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="features/cors.html">CORS Nativo</a></li>
           <li><a href="features/templates-static.html">Templates & Estáticos</a></li>
         </ul>
       </div>
@@ -59,12 +85,12 @@
       <section class="hero">
         <div class="hero-pill">✨ Versão 1.9.0 com Diagnósticos em Campo, Perfis & Async Controllers</div>
         <h1>O poder do Spring Boot dentro do seu Android</h1>
-        <p>Transforme qualquer celular, tablet ou POS Android em um servidor web de alta performance. APIs REST, injeção de dependências, banco SQLite versionado e mDNS consumindo entre 15 e 40 MB de RAM.</p>
+        <p>Transforme qualquer celular, tablet, TV-Box ou POS Android em um servidor web de alta performance. APIs REST, injeção de dependências, banco SQLite versionado e mDNS consumindo entre 15 e 40 MB de RAM.</p>
         
         <div class="hero-actions">
           <a href="getting-started.html" class="btn btn-primary">Começar Agora 🚀</a>
           <a href="spring-boot-vs-nano-spring.html" class="btn btn-secondary">Comparar com Spring Boot ⚖️</a>
-          <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener" class="btn btn-secondary">GitHub ↗</a>
+          <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener" class="btn btn-secondary">Repositório no GitHub ↗</a>
         </div>
       </section>
 
@@ -76,34 +102,39 @@
         <h3>1. Adicione a dependência no Gradle</h3>
         <div class="code-wrapper">
           <div class="code-header">
-            <span>build.gradle (app)</span>
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">app/build.gradle</span>
             <button class="copy-btn">Copiar</button>
           </div>
           <pre><code class="language-groovy">dependencies {
-    implementation 'com.github.matheuscruzsouza:nano-spring:1.6.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring:1.9.0'
 }</code></pre>
         </div>
 
         <h3>2. Inicie o servidor em um Service Android</h3>
         <div class="code-wrapper">
           <div class="code-header">
-            <span>AppServerService.java</span>
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">AppServerService.java</span>
             <button class="copy-btn">Copiar</button>
           </div>
-          <pre><code class="language-java">public class AppServerService extends android.app.Service {
-    private Server server;
-
+          <pre><code class="language-java">public class AppServerService extends com.github.matheuscruzsouza.nanospring.service.NanoSpringService {
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        // Inicializa o servidor na porta 8080 varrendo as anotações do seu pacote
-        server = new Server(this, 8080, "com.exemplo.meuapp");
-        return START_STICKY;
+    public int getServerPort() {
+        return 8080;
     }
 
     @Override
-    public void onDestroy() {
-        if (server != null) server.stop();
-        super.onDestroy();
+    public String getBasePackage() {
+        return "com.exemplo.meuapp";
     }
 }</code></pre>
         </div>
@@ -111,7 +142,12 @@
         <h3>3. Crie seu primeiro Controller REST</h3>
         <div class="code-wrapper">
           <div class="code-header">
-            <span>HelloController.java</span>
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">HelloController.java</span>
             <button class="copy-btn">Copiar</button>
           </div>
           <pre><code class="language-java">@RestController("/api")
@@ -144,9 +180,23 @@ public class HelloController {
           </div>
 
           <div class="card">
+            <div class="card-icon">🔒</div>
+            <h3>Segurança & Validação</h3>
+            <p>HTTPS com Keystore .p12 nativo, rate limiting anti-DoS por IP e validação declarativa com @Valid.</p>
+            <a href="features/security-validation.html" class="card-link">Explorar Segurança →</a>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🛡️</div>
+            <h3>Enterprise & Resiliência</h3>
+            <p>Pool anti-OOM, SQLite WAL mode concorrente, monitoramento de IP e NanoSpringService para background 24/7.</p>
+            <a href="features/enterprise-hardening.html" class="card-link">Explorar Resiliência →</a>
+          </div>
+
+          <div class="card">
             <div class="card-icon">🌐</div>
             <h3>APIs RESTful</h3>
-            <p>Rotas intuitivas com @RestController, @GetMethod, @PathVariable e serialização automática JSON.</p>
+            <p>Rotas intuitivas com @RestController, @GetMethod, @PathVariable, @RequestHeader e ResponseEntity.</p>
             <a href="features/rest-api.html" class="card-link">Explorar REST APIs →</a>
           </div>
 
@@ -217,6 +267,12 @@ public class HelloController {
       </section>
     </main>
   </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>© 2026 Nano-Spring Framework. Distribuído sob licença MIT. Feito para alta performance no Android.</p>
+    </div>
+  </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
