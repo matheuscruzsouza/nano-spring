@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Injeção de Dependências | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.6.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="dependency-injection.html" class="active">Injeção de Dependências</a></li>
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
+          <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>💉 Injeção de Dependências & Configurações</h1>
+        <p>O <strong>Nano-Spring</strong> implementa um container IoC (Inversion of Control) leve e eficiente que gerencia componentes no padrão <strong>Singleton</strong>, eliminando o acoplamento manual entre classes.</p>
+
+        <h2>📌 Componentes Principais</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Anotação</th>
+                <th>Alvo</th>
+                <th>Finalidade</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>@Service</code></td>
+                <td>Classe</td>
+                <td>Registra a classe como camada de serviço / regra de negócio singleton</td>
+              </tr>
+              <tr>
+                <td><code>@Repository</code></td>
+                <td>Classe</td>
+                <td>Registra a classe como camada de acesso a dados (DAO / SQLite)</td>
+              </tr>
+              <tr>
+                <td><code>@Autowired</code></td>
+                <td>Campo</td>
+                <td>Injeta uma dependência singleton registrada no container</td>
+              </tr>
+              <tr>
+                <td><code>@Value</code></td>
+                <td>Campo</td>
+                <td>Injeta propriedades lidas do <code>application.properties</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>💡 Arquitetura em Camadas</h2>
+        <p>Veja como estruturar Repositório, Serviço e Controlador com injeção automática:</p>
+
+        <h3>1. Repositório (`@Repository`)</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>ClienteRepository.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.exemplo.meuapp.repository;
+
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.Repository;
+import java.util.ArrayList;
+import java.util.List;
+
+@Repository
+public class ClienteRepository {
+
+    // O SQLiteDatabase é injetado automaticamente pelo framework!
+    @Autowired
+    private SQLiteDatabase db;
+
+    public List&lt;String&gt; buscarNomes() {
+        List&lt;String&gt; nomes = new ArrayList&lt;&gt;();
+        try (Cursor c = db.rawQuery("SELECT nome FROM clientes", null)) {
+            while (c.moveToNext()) {
+                nomes.add(c.getString(0));
+            }
+        }
+        return nomes;
+    }
+}</code></pre>
+        </div>
+
+        <h3>2. Serviço (`@Service`)</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>ClienteService.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.exemplo.meuapp.service;
+
+import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.Service;
+import com.exemplo.meuapp.repository.ClienteRepository;
+import java.util.List;
+
+@Service
+public class ClienteService {
+
+    @Autowired
+    private ClienteRepository clienteRepository;
+
+    public List&lt;String&gt; listarClientesFormatados() {
+        return clienteRepository.buscarNomes();
+    }
+}</code></pre>
+        </div>
+
+        <h3>3. Controlador (`@RestController`)</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>ClienteController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.exemplo.meuapp.controller;
+
+import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.RestController;
+import com.exemplo.meuapp.service.ClienteService;
+import java.util.List;
+
+@RestController("/api/clientes")
+public class ClienteController {
+
+    @Autowired
+    private ClienteService clienteService;
+
+    @GetMethod("")
+    public List&lt;String&gt; getClientes() {
+        return clienteService.listarClientesFormatados();
+    }
+}</code></pre>
+        </div>
+
+        <h2>⚙️ Configurações com application.properties</h2>
+        <p>Crie o arquivo <code>assets/application.properties</code>:</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>assets/application.properties</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-properties">server.port=9090
+app.loja.nome=Android Server Store
+app.desconto.maximo=25</code></pre>
+        </div>
+
+        <p>Injete propriedades usando a anotação <code>@Value</code> com suporte a fallback padrão:</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>ConfigController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">@RestController("/api/config")
+public class ConfigController {
+
+    @Value("${app.loja.nome:Loja Padrão}")
+    private String nomeLoja;
+
+    @Value("${app.desconto.maximo:10}")
+    private int descontoMaximo;
+
+    @GetMethod("")
+    public String getInfo() {
+        return "Loja: " + nomeLoja + " | Desconto Máx: " + descontoMaximo + "%";
+    }
+}</code></pre>
+        </div>
+
+        <div class="page-nav">
+          <a href="rest-api.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← APIs RESTful</span>
+          </a>
+          <a href="sqlite-migrations.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">SQLite & Migrações →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-properties.min.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

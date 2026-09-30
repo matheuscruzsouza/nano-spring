@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload & Download de Arquivos | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.6.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
+          <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html" class="active">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>📁 Upload & Streaming de Arquivos</h1>
+        <p>O <strong>Nano-Spring</strong> oferece suporte nativo a <em>multipart/form-data</em> para uploads e transmissão em blocos (<em>Chunked Transfer Encoding</em>) para download de arquivos pesados sem sobrecarregar a memória do Android.</p>
+
+        <h2>📤 Upload de Arquivos (@UploadedFile)</h2>
+        <p>Use a anotação <code>@UploadedFile("campo")</code> recebendo um parâmetro do tipo <code>java.io.File</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>UploadController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.exemplo.meuapp.controller;
+
+import com.github.matheuscruzsouza.nanospring.annotation.PostMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.RestController;
+import com.github.matheuscruzsouza.nanospring.annotation.UploadedFile;
+import java.io.File;
+
+@RestController("/api/arquivos")
+public class UploadController {
+
+    @PostMethod("/upload")
+    public String receberArquivo(@UploadedFile("documento") File arquivoTemp) {
+        if (arquivoTemp == null || !arquivoTemp.exists()) {
+            return "Nenhum arquivo enviado.";
+        }
+
+        long tamanho = arquivoTemp.length();
+        // Mova o arquivo da pasta temporária para o armazenamento permanente se necessário:
+        File destino = new File(arquivoTemp.getParentFile(), "salvo_" + arquivoTemp.getName());
+        arquivoTemp.renameTo(destino);
+
+        return "Arquivo recebido com sucesso (" + tamanho + " bytes)!";
+    }
+}</code></pre>
+        </div>
+
+        <h2>📥 Download e Streaming em Chunks</h2>
+        <p>Ao retornar diretamente uma instância de <code>java.io.File</code>, o Nano-Spring ativa transmissão em fluxo (streaming chunked):</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>DownloadController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.exemplo.meuapp.controller;
+
+import android.content.Context;
+import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.PathVariable;
+import com.github.matheuscruzsouza.nanospring.annotation.RestController;
+import com.github.matheuscruzsouza.nanospring.http.HttpStatus;
+import com.github.matheuscruzsouza.nanospring.http.ResponseEntity;
+import java.io.File;
+
+@RestController("/api/arquivos")
+public class DownloadController {
+
+    @Autowired
+    private Context context;
+
+    @GetMethod(value = "/download/:nome", mimeType = "application/octet-stream")
+    public Object baixar(@PathVariable("nome") String nome) {
+        File file = new File(context.getFilesDir(), nome);
+        if (!file.exists()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Arquivo inexistente");
+        }
+
+        // O Nano-Spring injeta Content-Disposition e faz streaming em blocos!
+        return file;
+    }
+}</code></pre>
+        </div>
+
+        <div class="callout callout-tip">
+          <span>⚡</span>
+          <div>Arquivos de centenas de megabytes são transmitidos direto do disco para o socket TCP em pequenas parcelas, sem risco de <code>OutOfMemoryError</code>.</div>
+        </div>
+
+        <div class="page-nav">
+          <a href="sse.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← Server-Sent Events (SSE)</span>
+          </a>
+          <a href="interceptors-errors.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">Interceptadores & Erros →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

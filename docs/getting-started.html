@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instalação & Setup | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.6.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="index.html">Visão Geral</a></li>
+          <li><a href="getting-started.html" class="active">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="features/rest-api.html">APIs RESTful</a></li>
+          <li><a href="features/dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="features/sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="features/mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="features/cors.html">CORS Nativo</a></li>
+          <li><a href="features/sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="features/files.html">Upload & Download</a></li>
+          <li><a href="features/interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="features/templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>🚀 Instalação & Configuração</h1>
+        <p>Aprenda a integrar o <strong>Nano-Spring</strong> ao seu aplicativo Android, configurar permissões essenciais e manter o servidor rodando em segundo plano.</p>
+
+        <h2>📱 Requisitos do Sistema</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Requisito</th>
+                <th>Mínimo</th>
+                <th>Recomendado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Versão Android</strong></td>
+                <td>Android 7.1.1 (API 25 - Nougat)</td>
+                <td>Android 10+ (API 29+)</td>
+              </tr>
+              <tr>
+                <td><strong>Java Compatibility</strong></td>
+                <td>Java 11</td>
+                <td>Java 17</td>
+              </tr>
+              <tr>
+                <td><strong>Memória RAM</strong></td>
+                <td>15 MB a 40 MB consumidos</td>
+                <td>Aparelhos com 2 GB de RAM total</td>
+              </tr>
+              <tr>
+                <td><strong>Processador</strong></td>
+                <td>Quad-Core 1.3 GHz</td>
+                <td>Octa-Core 2.0 GHz</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>📦 Opção 1: Via GitHub Packages</h2>
+        <p>O GitHub Packages requer autenticação via token pessoal para baixar dependências:</p>
+
+        <h3>1. Configure suas credenciais</h3>
+        <p>Adicione no arquivo <code>~/.gradle/gradle.properties</code> do seu computador:</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>~/.gradle/gradle.properties</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-properties">gpr.user=SEU_USUARIO_GITHUB
+gpr.key=SEU_GITHUB_PERSONAL_ACCESS_TOKEN</code></pre>
+        </div>
+
+        <h3>2. Declare o repositório Maven</h3>
+        <p>No arquivo <code>settings.gradle</code> do projeto:</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>settings.gradle</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-groovy">dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url = uri("https://maven.pkg.github.com/matheuscruzsouza/nano-spring")
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR") ?: ""
+                password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN") ?: ""
+            }
+        }
+    }
+}</code></pre>
+        </div>
+
+        <h3>3. Adicione a dependência</h3>
+        <p>No <code>build.gradle</code> do seu módulo <code>app</code>:</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>app/build.gradle</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-groovy">dependencies {
+    implementation 'com.github.matheuscruzsouza:nano-spring:1.6.0'
+}</code></pre>
+        </div>
+
+        <h2>🛡️ Permissões no AndroidManifest.xml</h2>
+        <p>Declare as permissões de rede no seu <code>app/src/main/AndroidManifest.xml</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>AndroidManifest.xml</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-markup">&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+
+    &lt;!-- Permissões de rede obrigatórias --&gt;
+    &lt;uses-permission android:name="android.permission.INTERNET" /&gt;
+    &lt;uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /&gt;
+    &lt;uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /&gt;
+
+    &lt;!-- Necessário para descoberta Zeroconf / mDNS --&gt;
+    &lt;uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" /&gt;
+
+    &lt;application
+        android:usesCleartextTraffic="true"
+        ...&gt;
+    &lt;/application&gt;
+&lt;/manifest&gt;</code></pre>
+        </div>
+
+        <div class="callout callout-warning">
+          <span>⚠️</span>
+          <div><strong>Atenção:</strong> A diretiva <code>android:usesCleartextTraffic="true"</code> é necessária a partir do Android 9 para permitir tráfego HTTP sem TLS em redes locais.</div>
+        </div>
+
+        <h2>🔋 Executando como Foreground Service</h2>
+        <p>Para evitar que o Android mate o processo do servidor quando o aparelho entrar em suspensão ou o usuário alternar de aplicativo, execute-o através de um Foreground Service:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>AppServerService.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">public class AppServerService extends android.app.Service {
+    private static final String CHANNEL_ID = "NanoSpringServiceChannel";
+    private Server server;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        createNotificationChannel();
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Nano-Spring Server")
+                .setContentText("Servidor HTTP ativo e escutando conexões")
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .build();
+        startForeground(1, notification);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (server == null) {
+            server = new Server(this, 8080, "com.exemplo.meuapp");
+        }
+        return START_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        if (server != null) server.stop();
+        super.onDestroy();
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) { return null; }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Nano-Spring Server Channel",
+                    NotificationManager.IMPORTANCE_LOW
+            );
+            getSystemService(NotificationManager.class).createNotificationChannel(channel);
+        }
+    }
+}</code></pre>
+        </div>
+
+        <div class="page-nav">
+          <a href="index.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← Visão Geral</span>
+          </a>
+          <a href="features/rest-api.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">APIs RESTful →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-groovy.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-properties.min.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

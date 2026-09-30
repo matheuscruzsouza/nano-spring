@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server-Sent Events (SSE) | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.6.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
+          <li><a href="sse.html" class="active">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>📡 Server-Sent Events (SSE) em Tempo Real</h1>
+        <p>Com a classe <code>SseEmitter</code>, o <strong>Nano-Spring</strong> viabiliza o envio contínuo de eventos do servidor Android diretamente para o navegador sobre uma única conexão HTTP persistente, dispensando WebSockets complexos.</p>
+
+        <h2>💻 Implementação no Controller</h2>
+        <p>Retorne <code>SseEmitter</code> e defina <code>mimeType = "text/event-stream"</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>SensoresController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.exemplo.meuapp.controller;
+
+import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.RestController;
+import com.github.matheuscruzsouza.nanospring.sse.SseEmitter;
+import java.util.Map;
+
+@RestController("/api/stream")
+public class SensoresController {
+
+    @GetMethod(value = "/leituras", mimeType = "text/event-stream")
+    public SseEmitter streamLeituras() {
+        SseEmitter emitter = new SseEmitter();
+
+        // Inicia uma thread para alimentar os dados em tempo real
+        new Thread(() -> {
+            try {
+                emitter.send("Conexão aberta com sucesso!");
+
+                for (int i = 1; i <= 5; i++) {
+                    Thread.sleep(1000);
+
+                    // Envia eventos nomeados com JSON estruturado:
+                    emitter.send("sensor_update", Map.of(
+                            "temperatura", 24.5 + (i * 0.3),
+                            "pressao", 1013,
+                            "amostra", i
+                    ));
+                }
+
+                emitter.complete(); // Encerra o fluxo com sucesso
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
+        }).start();
+
+        return emitter;
+    }
+}</code></pre>
+        </div>
+
+        <h2>🌐 Consumindo no Frontend</h2>
+
+        <h3>1. JavaScript Puro com EventSource</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>app.js (Cliente)</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-javascript">const sse = new EventSource('/api/stream/leituras');
+
+// Escuta evento específico enviado com emitter.send("sensor_update", ...)
+sse.addEventListener('sensor_update', (event) => {
+    const dados = JSON.parse(event.data);
+    console.log("Temperatura:", dados.temperatura + "°C");
+});
+
+sse.onerror = (err) => {
+    console.log("Conexão encerrada pelo servidor.");
+    sse.close();
+};</code></pre>
+        </div>
+
+        <h3>2. Com HTMX (Extensão SSE)</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>index.html (HTMX)</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-markup">&lt;div hx-ext="sse" sse-connect="/api/stream/leituras" sse-swap="sensor_update"&gt;
+    &lt;span&gt;Aguardando dados do Android...&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+
+        <div class="page-nav">
+          <a href="cors.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← CORS Nativo</span>
+          </a>
+          <a href="files.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">Upload & Download →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

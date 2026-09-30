@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CORS Nativo | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.6.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html" class="active">CORS Nativo</a></li>
+          <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>🛡️ Módulo Nativo de CORS</h1>
+        <p>O <strong>Nano-Spring</strong> possui suporte integrado e declarativo a <strong>Cross-Origin Resource Sharing (CORS)</strong>, eliminando dores de cabeça ao consumir as rotas do celular a partir de aplicações frontend modernas (React, Vue, Angular, Svelte ou páginas web externas).</p>
+
+        <h2>⚡ Recursos Principais</h2>
+        <ul>
+          <li><strong>Ativado por padrão:</strong> Pronto para uso imediato com política permissiva (<code>nano.cors.enabled=true</code>).</li>
+          <li><strong>Pre-flight Automático:</strong> Requisições HTTP com método <code>OPTIONS</code> são interceptadas imediatamente pelo pipeline, retornando <code>200 OK</code> com corpo vazio e cabeçalhos CORS completos, sem acionar controladores ou gastar processamento.</li>
+          <li><strong>Injeção Global:</strong> Cabeçalhos são injetados em requisições bem-sucedidas, respostas de arquivos estáticos, streams SSE e respostas de erro tratadas por <code>@ControllerAdvice</code>.</li>
+          <li><strong>Zero Overhead:</strong> Caso desabilitado (<code>nano.cors.enabled=false</code>), o overhead é de apenas uma checagem booleana.</li>
+        </ul>
+
+        <h2>⚙️ Configuração via application.properties</h2>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>assets/application.properties</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-properties"># Habilita ou desabilita o filtro global (padrão: true)
+nano.cors.enabled=true
+
+# Origens permitidas separadas por vírgula (padrão: *)
+nano.cors.allowed-origins=http://localhost:3000,https://meuapp.com
+
+# Métodos HTTP aceitos (padrão: GET,POST,PUT,DELETE,OPTIONS)
+nano.cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS
+
+# Cabeçalhos permitidos (padrão: Content-Type,Authorization,X-Requested-With,Accept)
+nano.cors.allowed-headers=Content-Type,Authorization,X-Requested-With,Accept,X-Custom-Token
+
+# Cache em segundos para pre-flight (padrão: 86400 = 24 horas)
+nano.cors.max-age=86400</code></pre>
+        </div>
+
+        <h2>💻 Ajuste Programático em Tempo de Execução</h2>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>CorsSetup.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">import com.github.matheuscruzsouza.nanospring.cors.CorsConfiguration;
+
+// Acessa a configuração de CORS do servidor:
+CorsConfiguration cors = server.getCorsConfiguration();
+
+// Configura regras customizadas dinamicamente:
+cors.setAllowedOrigins("https://dashboard.meuapp.com");
+cors.setAllowedHeaders("Content-Type,Authorization,X-Tenant-ID");
+cors.setMaxAge(3600); // 1 hora de cache pre-flight</code></pre>
+        </div>
+
+        <div class="callout callout-tip">
+          <span>💡</span>
+          <div>A instância de <code>CorsConfiguration</code> também é registrada como Singleton no container de injeção e pode ser injetada via <code>@Autowired</code> em qualquer serviço.</div>
+        </div>
+
+        <div class="page-nav">
+          <a href="mdns-discovery.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← Descoberta mDNS (.local)</span>
+          </a>
+          <a href="sse.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">Server-Sent Events (SSE) →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-properties.min.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

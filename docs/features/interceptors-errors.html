@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interceptadores & Erros | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.6.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
+          <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html" class="active">Interceptadores & Erros</a></li>
+          <li><a href="templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>🔒 Interceptadores & Tratamento Global de Exceções</h1>
+        <p>O <strong>Nano-Spring</strong> fornece middlewares poderosos para validação de segurança e auditoria, além de um Advice centralizado para tratamento de erros.</p>
+
+        <h2>🛡️ Interceptadores (HandlerInterceptor)</h2>
+        <p>Para interceptar requisições antes que alcancem o controller:</p>
+        <ol>
+          <li>Implemente a interface <code>HandlerInterceptor</code>.</li>
+          <li>Anote com <code>@Interceptor</code>.</li>
+          <li>Use <code>@Order(int)</code> para definir a prioridade na fila (1 executa antes de 2).</li>
+        </ol>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>AuthInterceptor.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.exemplo.meuapp.security;
+
+import com.github.matheuscruzsouza.nanospring.annotation.Interceptor;
+import com.github.matheuscruzsouza.nanospring.annotation.Order;
+import com.github.matheuscruzsouza.nanospring.handler.HandlerInterceptor;
+import fi.iki.elonen.NanoHTTPD;
+
+@Interceptor
+@Order(1)
+public class AuthInterceptor implements HandlerInterceptor {
+
+    @Override
+    public boolean preHandle(NanoHTTPD.IHTTPSession session, String path) {
+        // Libera rotas públicas
+        if (path.startsWith("/api/public") || path.startsWith("/static")) {
+            return true;
+        }
+
+        // Exige token em rotas administrativas
+        if (path.startsWith("/api/admin")) {
+            String auth = session.getHeaders().get("authorization");
+            if (auth == null || !auth.equals("Bearer SEGREDO_123")) {
+                // Retornar false cancela a requisição e devolve 401 Unauthorized
+                return false;
+            }
+        }
+
+        return true;
+    }
+}</code></pre>
+        </div>
+
+        <h2>🚨 Tratamento Global de Exceções (@ControllerAdvice)</h2>
+        <p>Centralize o tratamento de erros sem encher seus controllers com blocos <code>try-catch</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>GlobalAdvice.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.exemplo.meuapp.exception;
+
+import com.github.matheuscruzsouza.nanospring.annotation.ControllerAdvice;
+import com.github.matheuscruzsouza.nanospring.annotation.ExceptionHandler;
+import com.github.matheuscruzsouza.nanospring.http.HttpStatus;
+import com.github.matheuscruzsouza.nanospring.http.ResponseEntity;
+import java.util.Map;
+
+@ControllerAdvice
+public class GlobalAdvice {
+
+    @ExceptionHandler(NumberFormatException.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; handleFormat(NumberFormatException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "status", 400,
+                "erro", "ID inválido: era esperado um número inteiro",
+                "mensagem", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; handleGeneric(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "status", 500,
+                "erro", "Erro interno no servidor Android",
+                "detalhes", ex.getMessage() != null ? ex.getMessage() : "Desconhecido"
+        ));
+    }
+}</code></pre>
+        </div>
+
+        <div class="page-nav">
+          <a href="files.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← Upload & Download</span>
+          </a>
+          <a href="templates-static.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">Templates & Estáticos →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

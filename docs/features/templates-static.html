@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Templates & Arquivos Estáticos | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.6.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
+          <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="templates-static.html" class="active">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>🎨 Templates HTML & Arquivos Estáticos</h1>
+        <p>O <strong>Nano-Spring</strong> integra a biblioteca <strong>JMustache</strong> para renderização Server-Side de páginas HTML no Android e disponibiliza automaticamente qualquer asset estático sob a rota <code>/static/</code>.</p>
+
+        <h2>📄 Renderização Server-Side (ModelAndView)</h2>
+
+        <h3>1. Crie o arquivo HTML de template</h3>
+        <p>Salve seus templates na pasta <code>app/src/main/assets/templates/</code>:</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>assets/templates/painel.html</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-markup">&lt;!DOCTYPE html&gt;
+&lt;html lang="pt-BR"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;{{titulo}}&lt;/title&gt;
+    &lt;link rel="stylesheet" href="/static/css/style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Bem-vindo, {{usuario}}!&lt;/h1&gt;
+    
+    &lt;h3&gt;Tarefas Pendentes:&lt;/h3&gt;
+    &lt;ul&gt;
+        {{#tarefas}}
+        &lt;li&gt;{{.}}&lt;/li&gt;
+        {{/tarefas}}
+    &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </div>
+
+        <h3>2. Retorne o ModelAndView no Controller</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>PainelController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.exemplo.meuapp.controller;
+
+import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.RestController;
+import com.github.matheuscruzsouza.nanospring.ui.ModelAndView;
+import java.util.List;
+
+@RestController("/web")
+public class PainelController {
+
+    @GetMethod("/painel")
+    public ModelAndView exibirPainel() {
+        return new ModelAndView("painel")
+                .addObject("titulo", "Painel Administrativo")
+                .addObject("usuario", "Matheus")
+                .addObject("tarefas", List.of(
+                        "Conectar impressora Bluetooth",
+                        "Sincronizar banco local",
+                        "Subir servidor na porta 8080"
+                ));
+    }
+}</code></pre>
+        </div>
+
+        <h2>⚡ Integração com HTMX</h2>
+        <p>Retorne fragmentos HTML parciais definindo <code>mimeType = "text/html"</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>FragmentoController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">@GetMethod(value = "/fragmento-status", mimeType = "text/html")
+public String fragmentoStatus() {
+    return "&lt;div class='badge'&gt;Dispositivo Online - " + System.currentTimeMillis() + "&lt;/div&gt;";
+}</code></pre>
+        </div>
+
+        <h2>📁 Hospedagem Automática de Arquivos Estáticos</h2>
+        <p>Basta colocar seus arquivos na pasta <code>app/src/main/assets/static/</code>:</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>Estrutura de pastas</span>
+          </div>
+          <pre><code class="language-bash">app/src/main/assets/
+└── static/
+    ├── css/
+    │   └── style.css
+    ├── js/
+    │   └── main.js
+    └── img/
+        └── android.png</code></pre>
+        </div>
+
+        <p>Qualquer arquivo aí dentro é servido imediatamente com o MIME-type adequado em <code>http://&lt;servidor&gt;:porta/static/...</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>Referência no HTML</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-markup">&lt;link rel="stylesheet" href="/static/css/style.css"&gt;
+&lt;script src="/static/js/main.js"&gt;&lt;/script&gt;
+&lt;img src="/static/img/android.png" alt="Android"&gt;</code></pre>
+        </div>
+
+        <div class="page-nav">
+          <a href="interceptors-errors.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← Interceptadores & Erros</span>
+          </a>
+          <a href="../index.html" class="page-nav-link next">
+            <span class="hint">Voltar</span>
+            <span class="title">Início / Visão Geral →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

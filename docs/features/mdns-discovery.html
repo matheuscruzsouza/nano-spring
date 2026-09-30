@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Descoberta mDNS (.local) | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.6.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html" class="active">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
+          <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>🔍 Descoberta mDNS & Acesso Direto (.local)</h1>
+        <p>O <strong>Nano-Spring</strong> implementa uma solução integrada de anúncio Zeroconf / Bonjour com <strong>resolução direta de Host (registro A)</strong>. Isso permite acessar seu servidor no Android através de um endereço amigável direto no navegador:</p>
+
+        <div class="callout callout-tip">
+          <span>🌐</span>
+          <div>Digite no Chrome, Safari, Edge ou Firefox de qualquer computador na mesma rede Wi-Fi:<br>
+          <strong><code>http://meu-servidor-android.local:8080/</code></strong></div>
+        </div>
+
+        <h2>🔬 Por que o NsdManager puro do Android não resolve o navegador?</h2>
+        <p>O <code>NsdManager</code> nativo do Android anuncia apenas o ponteiro de serviço DNS-SD (<code>_http._tcp.</code>). Quando um navegador web tenta resolver <code>http://servidor.local</code>, ele envia uma query DNS padrão solicitando o endereço IP (registro A) na porta UDP 5353.</p>
+        <p>O Nano-Spring inclui o <code>MdnsHostResponder</code>, um socket multicast em Java puro que escuta em <code>224.0.0.251:5353</code> e responde às consultas do navegador com o endereço IPv4 ativo do celular.</p>
+
+        <h2>⚙️ Configuração via application.properties</h2>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>assets/application.properties</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-properties"># Habilita o anúncio de rede mDNS
+nano.nsd.enabled=true
+
+# Nome do host anunciado na rede (acessível como http://meu-servidor.local:porta)
+nano.nsd.name=meu-servidor
+
+# Tipo do serviço DNS-SD (padrão: _http._tcp.)
+nano.nsd.type=_http._tcp.
+
+# Habilita o responder para navegadores (padrão: true)
+nano.nsd.host-resolution=true</code></pre>
+        </div>
+
+        <h2>💻 Ativação Programática no Código</h2>
+        <p>Você pode ligar ou desligar o mDNS em tempo de execução através da instância do <code>Server</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>ServerSetup.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">// Inicia o responder com o nome 'totem-loja' e resolução direta habilitada:
+server.enableNsd("totem-loja", true);
+
+// Desativa o responder e libera portas e multicast locks:
+server.disableNsd();</code></pre>
+        </div>
+
+        <h2>🛡️ Permissão Multicast Obrigatória</h2>
+        <p>No <code>AndroidManifest.xml</code>, além da permissão de Internet, adicione:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>AndroidManifest.xml</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-markup">&lt;uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" /&gt;
+&lt;uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /&gt;</code></pre>
+        </div>
+
+        <div class="page-nav">
+          <a href="sqlite-migrations.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← SQLite & Migrações</span>
+          </a>
+          <a href="cors.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">CORS Nativo →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-properties.min.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nano-Spring 🌱 | Micro-framework Web para Android</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.6.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="getting-started.html">Documentação</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="index.html" class="active">Visão Geral</a></li>
+          <li><a href="getting-started.html">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="features/rest-api.html">APIs RESTful</a></li>
+          <li><a href="features/dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="features/sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="features/mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="features/cors.html">CORS Nativo</a></li>
+          <li><a href="features/sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="features/files.html">Upload & Download</a></li>
+          <li><a href="features/interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="features/templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Hero -->
+      <section class="hero">
+        <div class="hero-pill">✨ Versão 1.6.0 com CORS & SQLite Flyway</div>
+        <h1>O poder do Spring Boot dentro do seu Android</h1>
+        <p>Transforme qualquer celular, tablet ou POS Android em um servidor web de alta performance. APIs REST, injeção de dependências, banco SQLite versionado e mDNS consumindo entre 15 e 40 MB de RAM.</p>
+        
+        <div class="hero-actions">
+          <a href="getting-started.html" class="btn btn-primary">Começar Agora 🚀</a>
+          <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener" class="btn btn-secondary">Repositório no GitHub ↗</a>
+        </div>
+      </section>
+
+      <!-- Quickstart -->
+      <section class="content">
+        <h2>⚡ Início Rápido em 3 Passos</h2>
+        <p>Construir um servidor web local em Java para Android nunca foi tão simples:</p>
+
+        <h3>1. Adicione a dependência no Gradle</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>build.gradle (app)</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-groovy">dependencies {
+    implementation 'com.github.matheuscruzsouza:nano-spring:1.6.0'
+}</code></pre>
+        </div>
+
+        <h3>2. Inicie o servidor em um Service Android</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>AppServerService.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">public class AppServerService extends android.app.Service {
+    private Server server;
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        // Inicializa o servidor na porta 8080 varrendo as anotações do seu pacote
+        server = new Server(this, 8080, "com.exemplo.meuapp");
+        return START_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        if (server != null) server.stop();
+        super.onDestroy();
+    }
+}</code></pre>
+        </div>
+
+        <h3>3. Crie seu primeiro Controller REST</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>HelloController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">@RestController("/api")
+public class HelloController {
+
+    @GetMethod("/ola")
+    public Map&lt;String, String&gt; dizerOla() {
+        return Map.of(
+            "status", "online",
+            "mensagem", "Servidor rodando nativamente no Android!"
+        );
+    }
+}</code></pre>
+        </div>
+
+        <div class="callout callout-tip">
+          <span>💡</span>
+          <div>Acesse direto do navegador no mesmo Wi-Fi: <code>http://&lt;ip-do-celular&gt;:8080/api/ola</code> ou via mDNS <code>http://androidserver.local:8080/api/ola</code>.</div>
+        </div>
+
+        <h2>🌟 Principais Funcionalidades</h2>
+        <p>Explore a documentação aprofundada de cada recurso do framework:</p>
+
+        <div class="cards-grid">
+          <div class="card">
+            <div class="card-icon">🌐</div>
+            <h3>APIs RESTful</h3>
+            <p>Rotas intuitivas com @RestController, @GetMethod, @PathVariable e serialização automática JSON.</p>
+            <a href="features/rest-api.html" class="card-link">Explorar REST APIs →</a>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">💉</div>
+            <h3>Injeção de Dependências</h3>
+            <p>Gerenciamento de ciclo de vida singleton com @Service, @Repository, @Autowired e @Value.</p>
+            <a href="features/dependency-injection.html" class="card-link">Explorar DI →</a>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🗄️</div>
+            <h3>SQLite & Migrações</h3>
+            <p>Evolução de esquemas SQL estilo Flyway (V1__*.sql) com histórico automático em nano_schema_history.</p>
+            <a href="features/sqlite-migrations.html" class="card-link">Explorar SQLite →</a>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🔍</div>
+            <h3>Descoberta mDNS</h3>
+            <p>Anúncio Zeroconf e resolução de Host A para acessar http://servidor.local direto do navegador.</p>
+            <a href="features/mdns-discovery.html" class="card-link">Explorar mDNS →</a>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🛡️</div>
+            <h3>CORS Nativo</h3>
+            <p>Habilitado por padrão com resolução automática de pre-flight OPTIONS para SPAs e frontends web.</p>
+            <a href="features/cors.html" class="card-link">Explorar CORS →</a>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">📡</div>
+            <h3>Server-Sent Events</h3>
+            <p>Streaming unidirecional de eventos em tempo real para navegadores com SseEmitter e HTMX.</p>
+            <a href="features/sse.html" class="card-link">Explorar SSE →</a>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">📁</div>
+            <h3>Upload & Download</h3>
+            <p>Receba arquivos com @UploadedFile e sirva arquivos pesados via streaming chunked sem estourar a RAM.</p>
+            <a href="features/files.html" class="card-link">Explorar Arquivos →</a>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🔒</div>
+            <h3>Interceptadores & Erros</h3>
+            <p>Filtros com HandlerInterceptor e captura global de exceções via @ControllerAdvice.</p>
+            <a href="features/interceptors-errors.html" class="card-link">Explorar Middlewares →</a>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🎨</div>
+            <h3>Templates & Estáticos</h3>
+            <p>Renderização de páginas com JMustache (ModelAndView) e hospedagem automática de /static/.</p>
+            <a href="features/templates-static.html" class="card-link">Explorar Templates →</a>
+          </div>
+        </div>
+
+        <div class="page-nav">
+          <div></div>
+          <a href="getting-started.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">Instalação & Setup →</span>
+          </a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-groovy.min.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

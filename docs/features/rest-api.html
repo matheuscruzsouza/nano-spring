@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APIs RESTful | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.6.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="rest-api.html" class="active">APIs RESTful</a></li>
+          <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
+          <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>🌐 Construindo APIs RESTful</h1>
+        <p>O <strong>Nano-Spring</strong> fornece anotações declarativas para construir endpoints HTTP de forma rápida e elegante, seguindo as convenções consagradas do Spring Boot.</p>
+
+        <h2>📌 Resumo das Anotações</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Anotação</th>
+                <th>Alvo</th>
+                <th>Descrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>@RestController(prefix)</code></td>
+                <td>Classe</td>
+                <td>Registra a classe como controller REST e define a rota base</td>
+              </tr>
+              <tr>
+                <td><code>@GetMethod(path)</code></td>
+                <td>Método</td>
+                <td>Mapeia requisições <code>GET</code></td>
+              </tr>
+              <tr>
+                <td><code>@PostMethod(path)</code></td>
+                <td>Método</td>
+                <td>Mapeia requisições <code>POST</code></td>
+              </tr>
+              <tr>
+                <td><code>@PutMethod(path)</code></td>
+                <td>Método</td>
+                <td>Mapeia requisições <code>PUT</code></td>
+              </tr>
+              <tr>
+                <td><code>@DeleteMethod(path)</code></td>
+                <td>Método</td>
+                <td>Mapeia requisições <code>DELETE</code></td>
+              </tr>
+              <tr>
+                <td><code>@PathVariable(name)</code></td>
+                <td>Parâmetro</td>
+                <td>Captura variáveis declaradas na rota com <code>:nome</code></td>
+              </tr>
+              <tr>
+                <td><code>@RequestParam(name)</code></td>
+                <td>Parâmetro</td>
+                <td>Extrai parâmetros de Query String (ex: <code>?pagina=1</code>)</td>
+              </tr>
+              <tr>
+                <td><code>@RequestBody</code></td>
+                <td>Parâmetro</td>
+                <td>Desserializa o corpo JSON da requisição em um POJO Java via Gson</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>💡 Exemplo Prático: CRUD REST</h2>
+        <p>Veja como criar um controller completo com listagem, busca por ID, criação, atualização e exclusão:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>UserController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.exemplo.meuapp.controllers;
+
+import com.github.matheuscruzsouza.nanospring.annotation.*;
+import com.github.matheuscruzsouza.nanospring.http.HttpStatus;
+import com.github.matheuscruzsouza.nanospring.http.ResponseEntity;
+import com.exemplo.meuapp.model.User;
+import com.exemplo.meuapp.service.UserService;
+
+import java.util.List;
+
+@RestController("/api/users")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    // GET /api/users ou /api/users?status=ativo
+    @GetMethod("")
+    public List&lt;User&gt; listUsers(@RequestParam(value = "status", required = false) String status) {
+        if (status != null) {
+            return userService.findByStatus(status);
+        }
+        return userService.findAll();
+    }
+
+    // GET /api/users/42
+    @GetMethod("/:id")
+    public ResponseEntity&lt;User&gt; getUserById(@PathVariable("id") Long id) {
+        User user = userService.findById(id);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(user);
+    }
+
+    // POST /api/users
+    @PostMethod("")
+    @ResponseStatus(HttpStatus.CREATED)
+    public User createUser(@RequestBody User newUser) {
+        return userService.save(newUser);
+    }
+
+    // PUT /api/users/42
+    @PutMethod("/:id")
+    public ResponseEntity&lt;User&gt; updateUser(@PathVariable("id") Long id, @RequestBody User user) {
+        User updated = userService.update(id, user);
+        return ResponseEntity.ok(updated);
+    }
+
+    // DELETE /api/users/42
+    @DeleteMethod("/:id")
+    public ResponseEntity&lt;Void&gt; deleteUser(@PathVariable("id") Long id) {
+        userService.delete(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+}</code></pre>
+        </div>
+
+        <h2>⚙️ Controle de Resposta com ResponseEntity</h2>
+        <p>A classe <code>ResponseEntity&lt;T&gt;</code> permite definir status HTTP customizados e cabeçalhos arbitrários:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>CustomResponseController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">@GetMethod("/status")
+public ResponseEntity&lt;String&gt; getStatus() {
+    return ResponseEntity.status(HttpStatus.ACCEPTED)
+            .header("X-App-Version", "1.6.0")
+            .header("X-Powered-By", "Nano-Spring-Android")
+            .body("Solicitação recebida com sucesso");
+}</code></pre>
+        </div>
+
+        <div class="page-nav">
+          <a href="../getting-started.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← Instalação & Setup</span>
+          </a>
+          <a href="dependency-injection.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">Injeção de Dependências →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

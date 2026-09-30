@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQLite & Migrações | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.6.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="sqlite-migrations.html" class="active">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
+          <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>🗄️ SQLite & Migrações de Esquema (Flyway-style)</h1>
+        <p>O <strong>Nano-Spring</strong> integra nativamente o <strong>SQLite do Android</strong> e oferece um migrador automático baseado em arquivos SQL versionados, garantindo que o banco de dados do aparelho evolua de forma previsível e segura.</p>
+
+        <h2>🚀 Como Funciona</h2>
+        <ol>
+          <li>Você cria arquivos SQL na pasta <code>app/src/main/assets/db/migration/</code>.</li>
+          <li>Ao inicializar o <code>Server</code>, o <code>SqliteMigrator</code> consulta a tabela interna <code>nano_schema_history</code>.</li>
+          <li>Apenas os scripts novos são executados em ordem de versão, cada um protegido por uma transação SQLite.</li>
+          <li>A instância de <code>SQLiteDatabase</code> fica pronta para injeção via <code>@Autowired</code> em qualquer <code>@Repository</code>.</li>
+        </ol>
+
+        <h2>📁 Convenção de Nomes dos Scripts</h2>
+        <div class="callout callout-warning">
+          <span>⚠️</span>
+          <div><strong>Atenção:</strong> O nome dos arquivos deve seguir rigorosamente a sintaxe <code>V&lt;versão&gt;__&lt;descrição&gt;.sql</code> com <strong>dois underscores</strong> (<code>__</code>). Exemplo: <code>V1__create_tables.sql</code>, <code>V2__add_status.sql</code>.</div>
+        </div>
+
+        <h3>Exemplo 1: `V1__init_schema.sql`</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>assets/db/migration/V1__init_schema.sql</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-sql">CREATE TABLE IF NOT EXISTS categorias (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS produtos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    categoria_id INTEGER,
+    titulo TEXT NOT NULL,
+    preco REAL NOT NULL,
+    FOREIGN KEY(categoria_id) REFERENCES categorias(id)
+);</code></pre>
+        </div>
+
+        <h3>Exemplo 2: `V2__seed_data.sql`</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>assets/db/migration/V2__seed_data.sql</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-sql">INSERT INTO categorias (nome) VALUES ('Bebidas');
+INSERT INTO categorias (nome) VALUES ('Lanches');
+
+INSERT INTO produtos (categoria_id, titulo, preco) VALUES (1, 'Café Espresso', 5.50);
+INSERT INTO produtos (categoria_id, titulo, preco) VALUES (2, 'Sanduíche Natural', 14.00);</code></pre>
+        </div>
+
+        <h2>💉 Injetando o SQLiteDatabase no @Repository</h2>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>ProdutoRepository.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.exemplo.meuapp.repository;
+
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.Repository;
+import java.util.ArrayList;
+import java.util.List;
+
+@Repository
+public class ProdutoRepository {
+
+    @Autowired
+    private SQLiteDatabase db;
+
+    public long inserir(String titulo, double preco, int categoriaId) {
+        ContentValues cv = new ContentValues();
+        cv.put("titulo", titulo);
+        cv.put("preco", preco);
+        cv.put("categoria_id", categoriaId);
+        return db.insert("produtos", null, cv);
+    }
+
+    public List&lt;String&gt; listarTitulos() {
+        List&lt;String&gt; lista = new ArrayList&lt;&gt;();
+        try (Cursor cursor = db.rawQuery("SELECT titulo FROM produtos", null)) {
+            while (cursor.moveToNext()) {
+                lista.add(cursor.getString(0));
+            }
+        }
+        return lista;
+    }
+}</code></pre>
+        </div>
+
+        <h2>⚙️ Configurações Opcionais (`application.properties`)</h2>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>assets/application.properties</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-properties"># Nome do arquivo do banco SQLite (padrão: nano_spring_app.db)
+nano.datasource.name=minha_empresa.db
+
+# Caminho da pasta de migrações nos assets (padrão: db/migration)
+nano.datasource.migration.location=db/migration
+
+# Habilita ou desativa a execução automática (padrão: true)
+nano.datasource.migration.enabled=true</code></pre>
+        </div>
+
+        <div class="page-nav">
+          <a href="dependency-injection.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← Injeção de Dependências</span>
+          </a>
+          <a href="mdns-discovery.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">Descoberta mDNS (.local) →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-properties.min.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>
