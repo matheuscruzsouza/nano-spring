@@ -9,7 +9,7 @@ Com o Nano-Spring, você transforma qualquer celular ou tablet Android em um pod
 ## 🌟 Principais Funcionalidades
 
 - 📜 **Diagnósticos & Rotação de Logs (v1.9.0):** `RotatingFileLogger` com teto de disco e endpoint remoto `/actuator/logfile`.
-- 📑 **Swagger & OpenAPI 3.0 Embutido (v1.9.0):** Interface interativa embutida (`/swagger-ui`) e OpenAPI 3.0.1 (`/v3/api-docs`) ultra-leve (~15 KB) e 100% offline.
+- 📑 **Swagger & OpenAPI 3.0 Embutido (v1.10.0):** Interface interativa embutida (`/swagger-ui`) e OpenAPI 3.0.1 (`/v3/api-docs`) ultra-leve (~15 KB) e 100% offline.
 - ⚙️ **Perfis de Ambiente Multi-Camada (v1.9.0):** Suporte a `application-{profile}.properties` com ativação dinâmica.
 - ⚡ **Controladores Assíncronos (v1.9.0):** Retornos com `CompletableFuture<T>`, timeout automático (`408`) e proteção de threads de hardware (POS/TEF).
 - ⏱️ **Timeout de Leitura Configurável (v1.9.0):** `nano.server.read-timeout` para redes instáveis ou dispositivos embarcados.
@@ -99,7 +99,7 @@ dependencyResolutionManagement {
 #### 3. Adicionar a dependência no `build.gradle` do seu app:
 ```gradle
 dependencies {
-    implementation 'com.github.matheuscruzsouza:nano-spring:1.9.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring:1.10.0'
 }
 ```
 
@@ -590,7 +590,7 @@ nano.async.timeout-seconds=30
 nano.server.read-timeout=10000
 ```
 
-### 17. Swagger & OpenAPI 3.0 Embutido (v1.9.0)
+### 17. Swagger & OpenAPI 3.0 Embutido (v1.10.0)
 
 Documente e teste suas rotas interativamente sem precisar instalar pacotes NPM ou bibliotecas pesadas de 8 MB+. O **Nano-Swagger** gera um endpoint OpenAPI 3.0.1 dinâmico e serve uma interface HTML5/CSS/JS ultra-leve (~15 KB) que funciona 100% offline em redes locais de TV-Box ou terminais POS:
 
