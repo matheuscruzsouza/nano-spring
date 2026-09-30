@@ -38,7 +38,7 @@
   </header>
 
   <div class="docs-layout">
-        <!-- Sidebar Navigation -->
+    <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-section">
         <div class="sidebar-title">Começando</div>
@@ -46,15 +46,7 @@
           <li><a href="../index.html">Visão Geral</a></li>
           <li><a href="../getting-started.html">Instalação & Setup</a></li>
           <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
-          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
-          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="v1-10-0.html">✨ Novidades da v1.10.0</a></li>
         </ul>
       </div>
 
@@ -67,6 +59,15 @@
           <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
           <li><a href="files.html">Upload & Download</a></li>
           <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
         </ul>
       </div>
 
@@ -94,7 +95,7 @@
 <h1>🌐 Construindo APIs RESTful</h1>
         <p>O <strong>Nano-Spring</strong> fornece anotações declarativas para construir endpoints HTTP de forma rápida e elegante, seguindo as convenções consagradas do Spring Boot.</p>
 
-        <h2>📌 Resumo das Anotações</h2>
+        <h2 id="anotacoes">📌 Resumo das Anotações</h2>
         <div class="table-wrapper">
           <table>
             <thead>
@@ -154,7 +155,7 @@
           </table>
         </div>
 
-        <h2>💡 Exemplo Prático: CRUD REST</h2>
+        <h2 id="exemplo-crud">💡 Exemplo Prático: CRUD REST</h2>
         <p>Veja como criar um controller completo com listagem, busca por ID, criação, atualização e exclusão:</p>
 
         <div class="code-wrapper">
@@ -225,7 +226,7 @@ public class UserController {
 }</code></pre>
         </div>
 
-        <h2>🛡️ Injetando Cabeçalhos com @RequestHeader</h2>
+        <h2 id="request-header">🛡️ Injetando Cabeçalhos com @RequestHeader</h2>
         <p>Injete valores de cabeçalhos HTTP com suporte a case-insensitivity, obrigatoriedade e valores padrão:</p>
 
         <div class="code-wrapper">
@@ -261,7 +262,7 @@ public class AuthController {
 }</code></pre>
         </div>
 
-        <h2>⚙️ Controle Total de Respostas com ResponseEntity (Spring-Like)</h2>
+        <h2 id="response-entity">⚙️ Controle Total de Respostas com ResponseEntity (Spring-Like)</h2>
         <p>A classe <code>ResponseEntity&lt;T&gt;</code> oferece total paridade com o Spring Boot para status HTTP, cabeçalhos fluentes e manipulação de respostas:</p>
 
         <div class="code-wrapper">
@@ -309,9 +310,9 @@ return ResponseEntity.of(userService.buscarOptionalPorId(id));</code></pre>
         </div>
 
         <div class="page-nav">
-          <a href="../getting-started.html" class="page-nav-link prev">
+          <a href="v1-10-0.html" class="page-nav-link prev">
             <span class="hint">Anterior</span>
-            <span class="title">← Instalação & Setup</span>
+            <span class="title">← Novidades da v1.10.0</span>
           </a>
           <a href="swagger-openapi.html" class="page-nav-link next">
             <span class="hint">Próximo</span>
@@ -320,6 +321,17 @@ return ResponseEntity.of(userService.buscarOptionalPorId(id));</code></pre>
         </div>
       </div>
     </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#anotacoes">Resumo das Anotações</a></li>
+        <li><a href="#exemplo-crud">Exemplo: CRUD REST</a></li>
+        <li><a href="#request-header">Injetando @RequestHeader</a></li>
+        <li><a href="#response-entity">Controle com ResponseEntity</a></li>
+      </ul>
+    </aside>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>

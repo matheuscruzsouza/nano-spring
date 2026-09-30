@@ -46,15 +46,7 @@
           <li><a href="../index.html">Visão Geral</a></li>
           <li><a href="../getting-started.html">Instalação & Setup</a></li>
           <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
-          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
-          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="v1-10-0.html">🚀 Novidades da v1.10.0</a></li>
         </ul>
       </div>
 
@@ -67,6 +59,15 @@
           <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
           <li><a href="files.html">Upload & Download</a></li>
           <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
         </ul>
       </div>
 
@@ -94,7 +95,7 @@
 <h1>🎨 Templates HTML & Arquivos Estáticos</h1>
         <p>O <strong>Nano-Spring</strong> integra a biblioteca <strong>JMustache</strong> para renderização Server-Side de páginas HTML no Android e disponibiliza automaticamente qualquer asset estático sob a rota <code>/static/</code>.</p>
 
-        <h2>📄 Renderização Server-Side (ModelAndView)</h2>
+        <h2 id="renderizacao-serverside">📄 Renderização Server-Side (ModelAndView)</h2>
 
         <h3>1. Crie o arquivo HTML de template</h3>
         <p>Salve seus templates na pasta <code>app/src/main/assets/templates/</code>:</p>
@@ -163,7 +164,7 @@ public class PainelController {
 }</code></pre>
         </div>
 
-        <h2>⚡ Integração com HTMX</h2>
+        <h2 id="integracao-htmx">⚡ Integração com HTMX</h2>
         <p>Retorne fragmentos HTML parciais definindo <code>mimeType = "text/html"</code>:</p>
 
         <div class="code-wrapper">
@@ -182,7 +183,7 @@ public String fragmentoStatus() {
 }</code></pre>
         </div>
 
-        <h2>📁 Hospedagem Automática de Arquivos Estáticos</h2>
+        <h2 id="arquivos-estaticos">📁 Hospedagem Automática de Arquivos Estáticos</h2>
         <p>Basta colocar seus arquivos na pasta <code>app/src/main/assets/static/</code>:</p>
         <div class="code-wrapper">
           <div class="code-header">
@@ -222,9 +223,9 @@ public String fragmentoStatus() {
         </div>
 
         <div class="page-nav">
-          <a href="interceptors-errors.html" class="page-nav-link prev">
+          <a href="cors.html" class="page-nav-link prev">
             <span class="hint">Anterior</span>
-            <span class="title">← Interceptadores & Erros</span>
+            <span class="title">← CORS Nativo</span>
           </a>
           <a href="../index.html" class="page-nav-link next">
             <span class="hint">Voltar</span>
@@ -233,6 +234,16 @@ public String fragmentoStatus() {
         </div>
       </div>
     </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#renderizacao-serverside">Renderização Server-Side</a></li>
+        <li><a href="#integracao-htmx">Integração com HTMX</a></li>
+        <li><a href="#arquivos-estaticos">Arquivos Estáticos</a></li>
+      </ul>
+    </aside>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>

@@ -46,15 +46,7 @@
           <li><a href="../index.html">Visão Geral</a></li>
           <li><a href="../getting-started.html">Instalação & Setup</a></li>
           <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
-          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
-          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="v1-10-0.html">🚀 Novidades da v1.10.0</a></li>
         </ul>
       </div>
 
@@ -67,6 +59,15 @@
           <li><a href="sse.html" class="active">Server-Sent Events (SSE)</a></li>
           <li><a href="files.html">Upload & Download</a></li>
           <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
         </ul>
       </div>
 
@@ -94,7 +95,7 @@
 <h1>📡 Server-Sent Events (SSE) em Tempo Real</h1>
         <p>Com a classe <code>SseEmitter</code>, o <strong>Nano-Spring</strong> viabiliza o envio contínuo de eventos do servidor Android diretamente para o navegador sobre uma única conexão HTTP persistente, dispensando WebSockets complexos.</p>
 
-        <h2>💻 Implementação no Controller</h2>
+        <h2 id="controller">💻 Implementação no Controller</h2>
         <p>Retorne <code>SseEmitter</code> e defina <code>mimeType = "text/event-stream"</code>:</p>
 
         <div class="code-wrapper">
@@ -148,7 +149,7 @@ public class SensoresController {
 }</code></pre>
         </div>
 
-        <h2>🌐 Consumindo no Frontend</h2>
+        <h2 id="frontend">🌐 Consumindo no Frontend</h2>
 
         <h3>1. JavaScript Puro com EventSource</h3>
         <div class="code-wrapper">
@@ -192,9 +193,9 @@ sse.onerror = (err) => {
         </div>
 
         <div class="page-nav">
-          <a href="cors.html" class="page-nav-link prev">
+          <a href="dependency-injection.html" class="page-nav-link prev">
             <span class="hint">Anterior</span>
-            <span class="title">← CORS Nativo</span>
+            <span class="title">← Injeção de Dependências</span>
           </a>
           <a href="files.html" class="page-nav-link next">
             <span class="hint">Próximo</span>
@@ -203,6 +204,15 @@ sse.onerror = (err) => {
         </div>
       </div>
     </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#controller">Implementação no Controller</a></li>
+        <li><a href="#frontend">Consumindo no Frontend</a></li>
+      </ul>
+    </aside>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>

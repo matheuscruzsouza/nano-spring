@@ -292,7 +292,7 @@ a:hover {
   border-left: 1px solid var(--border-color);
 }
 
-@media (min-width: 1300px) {
+@media (min-width: 1200px) {
   .toc-sidebar {
     display: block;
   }
@@ -937,7 +937,8 @@ tr:hover td {
   background: var(--bg-card-hover);
 }
 
-.page-nav-link span.hint {
+.page-nav-link span.hint,
+.page-nav-link span.page-nav-label {
   font-size: 0.72rem;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -947,7 +948,8 @@ tr:hover td {
   font-family: 'JetBrains Mono', monospace;
 }
 
-.page-nav-link span.title {
+.page-nav-link span.title,
+.page-nav-link span.page-nav-title {
   font-weight: 600;
   color: #fff;
   font-size: 0.95rem;

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novidades da Versão 1.10.0 | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span class="logo-icon">🌱</span>
+      <span>Nano-Spring</span>
+      <span class="badge">v1.10.0</span>
+    </div>
+
+    <div class="topbar-center">
+      <button class="search-btn" aria-label="Buscar na documentação">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <span>Buscar na documentação...</span>
+        <kbd>⌘K</kbd>
+      </button>
+    </div>
+
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="../getting-started.html">Instalação</a>
+      <a href="../spring-boot-vs-nano-spring.html">Comparativo ⚖️</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener" class="github-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span>GitHub</span>
+      </a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+          <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
+          <li><a href="v1-10-0.html" class="active">✨ Novidades da v1.10.0</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Core Web</div>
+        <ul class="sidebar-menu">
+          <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="swagger-openapi.html">📑 Swagger & OpenAPI 3.0</a></li>
+          <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Infraestrutura Local</div>
+        <ul class="sidebar-menu">
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
+          <li><a href="templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="content">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+          <a href="../index.html">Documentação</a>
+          <span class="breadcrumb-separator">/</span>
+          <span>Começando</span>
+          <span class="breadcrumb-separator">/</span>
+          <span style="color: #fff;">Novidades da v1.10.0</span>
+        </div>
+
+        <h1>✨ Novidades da Versão 1.10.0</h1>
+        <p class="lead-text">O <strong>Nano-Spring v1.10.0</strong> traz uma evolução histórica para o ecossistema Android: documentação viva e interativa com <strong>Nano-Swagger & OpenAPI 3.0.1 embutido</strong>, zero dependências externas de npm ou CDNs e funcionamento 100% offline em redes locais.</p>
+
+        <div class="callout callout-tip">
+          <p><strong>🚀 100% Retrocompatível:</strong> A versão 1.10.0 preserva compatibilidade integral com todas as APIs, anotações e controladores existentes da v1.9.0. Basta atualizar a dependência no Gradle.</p>
+        </div>
+
+        <h2 id="resumo">📌 Destaques do Release</h2>
+        <ul>
+          <li><strong>Interface Nano-Swagger Embutida:</strong> Acesse <code>/swagger-ui</code> no navegador do tablet, smartphone ou PC na mesma rede Wi-Fi e visualize todas as rotas registradas.</li>
+          <li><strong>Especificação OpenAPI 3.0.1 Dinâmica:</strong> Endpoint <code>GET /v3/api-docs</code> gerado por reflexão em tempo real a partir das anotações das suas rotas.</li>
+          <li><strong>Arquitetura Ultra-Leve (~15 KB):</strong> Sem pacotes NPM gigantescos (que chegavam a 10 MB no Swagger tradicional). Todo o HTML, CSS e Vanilla JS são embutidos e rodam de forma autônoma.</li>
+          <li><strong>Runner Interativo ("Try it out"):</strong> Execute chamadas HTTP reais via <code>fetch()</code> diretamente da página, com visualização de tempo de resposta (ms), headers e payload formatado.</li>
+          <li><strong>Mapeamento Automático de Bean Validation:</strong> Restrições como <code>@NotNull</code>, <code>@Size</code>, <code>@Min</code>, <code>@Max</code> e <code>@Email</code> nos seus DTOs são refletidas nos JSON Schemas da documentação.</li>
+          <li><strong>Novas Anotações OpenAPI:</strong> Pacote <code>com.github.matheuscruzsouza.nanospring.openapi.annotation</code> com <code>@Tag</code>, <code>@Operation</code>, <code>@Parameter</code> e <code>@ApiResponse</code>.</li>
+          <li><strong>Atualização de Telemetria:</strong> Endpoint <code>GET /actuator/info</code> agora reporta <code>"version": "1.10.0"</code>.</li>
+        </ul>
+
+        <h2 id="swagger-openapi">📑 O que é o Nano-Swagger?</h2>
+        <p>No desenvolvimento tradicional com Spring Boot, ferramentas como <em>Springdoc</em> ou <em>Swagger-UI</em> adicionam dezenas de megabytes de dependências e assets pesados. Em dispositivos móveis e embarcados (como PDVs de 1 GB de RAM ou TV Boxes), isso causaria consumo inaceitável de memória ou falhas de Out-Of-Memory.</p>
+        <p>O <strong>Nano-Swagger</strong> foi projetado do zero com uma filosofia <em>mobile-first</em> e <em>embedded-first</em>: um único arquivo de UI responsivo e elegante servido instantaneamente pela memória do servidor:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">Endpoints Padrão</span>
+          </div>
+          <pre><code class="language-bash"># Interface gráfica interativa no navegador
+http://&lt;ip-do-android&gt;:8080/swagger-ui
+
+# Especificação OpenAPI 3.0.1 em JSON para importação no Postman ou Insomnia
+http://&lt;ip-do-android&gt;:8080/v3/api-docs</code></pre>
+        </div>
+
+        <h2 id="offline-first">📶 Arquitetura 100% Offline</h2>
+        <p>A maioria das interfaces Swagger depende de CDNs externas (como cdnjs ou unpkg) para baixar fontes, ícones e scripts. O Nano-Swagger <strong>não depende de nenhuma conexão com a internet</strong>. Ele funciona perfeitamente em redes Wi-Fi ou Ethernet isoladas, permitindo que técnicos e equipes de integração testem endpoints de campo sem conectividade externa.</p>
+
+        <h2 id="anotacoes">🏷️ Novas Anotações OpenAPI</h2>
+        <p>Importe as anotações do pacote <code>com.github.matheuscruzsouza.nanospring.openapi.annotation.*</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">ProdutoController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.exemplo.pdv.controller;
+
+import com.github.matheuscruzsouza.nanospring.annotation.*;
+import com.github.matheuscruzsouza.nanospring.http.HttpStatus;
+import com.github.matheuscruzsouza.nanospring.http.ResponseEntity;
+import com.github.matheuscruzsouza.nanospring.openapi.annotation.*;
+import com.github.matheuscruzsouza.nanospring.validation.*;
+
+@Tag(name = "Catálogo", description = "Gestão de produtos do PDV")
+@RestController("/api/produtos")
+public class ProdutoController {
+
+    @Operation(summary = "Buscar produto por código de barras", description = "Retorna detalhes de preço e estoque")
+    @GetMethod("/:ean")
+    public ResponseEntity&lt;ProdutoDTO&gt; findByEan(
+            @PathVariable("ean") @Parameter(description = "Código EAN-13 numérico", example = "7891000100103") String ean
+    ) {
+        return ResponseEntity.ok(new ProdutoDTO(ean, "Café Gourmet 500g", 24.90));
+    }
+
+    @Operation(summary = "Cadastrar produto")
+    @ResponseStatus(HttpStatus.CREATED)
+    @ApiResponse(responseCode = 201, description = "Produto cadastrado com sucesso", responseClass = ProdutoDTO.class)
+    @ApiResponse(responseCode = 400, description = "Erro de validação dos campos")
+    @PostMethod("")
+    public ResponseEntity&lt;ProdutoDTO&gt; cadastrar(@Valid @RequestBody ProdutoDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+    }
+}</code></pre>
+        </div>
+
+        <h2 id="schemas-validacao">🛡️ Schemas & Validação Automática</h2>
+        <p>Quando você utiliza Bean Validation nos seus DTOs, o gerador do OpenAPI extrai os metadados de validação e os anexa às definições de esquema em <code>components.schemas</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">ProdutoDTO.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">public class ProdutoDTO {
+    @NotBlank
+    @Size(min = 8, max = 14)
+    @Parameter(description = "Código de barras universal", example = "7891000100103")
+    private String ean;
+
+    @NotBlank
+    @Size(min = 2, max = 100)
+    private String descricao;
+
+    @Min(0)
+    private double preco;
+
+    // Getters e Construtores...
+}</code></pre>
+        </div>
+
+        <h2 id="migracao">📦 Como Atualizar para a v1.10.0</h2>
+        <p>No arquivo <code>build.gradle</code> do seu projeto principal (app):</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">app/build.gradle</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-groovy">dependencies {
+    // Atualize a versão para 1.10.0
+    implementation 'com.github.matheuscruzsouza:nano-spring:1.10.0'
+}</code></pre>
+        </div>
+
+        <h2 id="configuracao">⚙️ Configurações Opcionais</h2>
+        <p>Você pode personalizar ou desativar o Swagger através do arquivo <code>application.properties</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">src/main/assets/application.properties</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-properties"># Habilitar ou desabilitar o Swagger (padrão: true)
+nano.swagger.enabled=true
+
+# Metadados do OpenAPI 3.0
+nano.swagger.title=Minha API Android
+nano.swagger.version=1.10.0
+nano.swagger.description=Documentação interativa servida diretamente do Android
+nano.swagger.server-url=/</code></pre>
+        </div>
+
+        <!-- Pagination -->
+        <div class="page-nav">
+          <a href="../spring-boot-vs-nano-spring.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← Comparativo com Spring Boot</span>
+          </a>
+          <a href="rest-api.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">APIs RESTful →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#resumo">Destaques do Release</a></li>
+        <li><a href="#swagger-openapi">O que é o Nano-Swagger?</a></li>
+        <li><a href="#offline-first">Arquitetura 100% Offline</a></li>
+        <li><a href="#anotacoes">Novas Anotações OpenAPI</a></li>
+        <li><a href="#schemas-validacao">Schemas & Validação</a></li>
+        <li><a href="#migracao">Como Atualizar</a></li>
+        <li><a href="#configuracao">Configurações Opcionais</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-groovy.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-properties.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

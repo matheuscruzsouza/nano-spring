@@ -46,15 +46,7 @@
           <li><a href="../index.html">Visão Geral</a></li>
           <li><a href="../getting-started.html">Instalação & Setup</a></li>
           <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
-          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
-          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="v1-10-0.html">🚀 Novidades da v1.10.0</a></li>
         </ul>
       </div>
 
@@ -67,6 +59,15 @@
           <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
           <li><a href="files.html">Upload & Download</a></li>
           <li><a href="interceptors-errors.html" class="active">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
         </ul>
       </div>
 
@@ -94,7 +95,7 @@
 <h1>🔒 Interceptadores & Tratamento Global de Exceções</h1>
         <p>O <strong>Nano-Spring</strong> fornece middlewares poderosos para validação de segurança e auditoria, além de um Advice centralizado para tratamento de erros.</p>
 
-        <h2>🛡️ Interceptadores (HandlerInterceptor)</h2>
+        <h2 id="interceptadores">🛡️ Interceptadores (HandlerInterceptor)</h2>
         <p>Para interceptar requisições antes que alcancem o controller:</p>
         <ol>
           <li>Implemente a interface <code>HandlerInterceptor</code>.</li>
@@ -144,7 +145,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 }</code></pre>
         </div>
 
-        <h2>🚨 Tratamento Global de Exceções (@ControllerAdvice)</h2>
+        <h2 id="erros">🚨 Tratamento Global de Exceções (@ControllerAdvice)</h2>
         <p>Centralize o tratamento de erros sem encher seus controllers com blocos <code>try-catch</code>:</p>
 
         <div class="code-wrapper">
@@ -193,13 +194,22 @@ public class GlobalAdvice {
             <span class="hint">Anterior</span>
             <span class="title">← Upload & Download</span>
           </a>
-          <a href="templates-static.html" class="page-nav-link next">
+          <a href="logging-diagnostics.html" class="page-nav-link next">
             <span class="hint">Próximo</span>
-            <span class="title">Templates & Estáticos →</span>
+            <span class="title">Diagnósticos & Perfis (v1.9.0) →</span>
           </a>
         </div>
       </div>
     </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#interceptadores">Interceptadores</a></li>
+        <li><a href="#erros">Tratamento Global de Exceções</a></li>
+      </ul>
+    </aside>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>

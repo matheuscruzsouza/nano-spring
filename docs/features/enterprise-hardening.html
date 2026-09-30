@@ -46,15 +46,7 @@
           <li><a href="../index.html">Visão Geral</a></li>
           <li><a href="../getting-started.html">Instalação & Setup</a></li>
           <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
-          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
-          <li><a href="enterprise-hardening.html" class="active">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="v1-10-0.html">🚀 Novidades da v1.10.0</a></li>
         </ul>
       </div>
 
@@ -67,6 +59,15 @@
           <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
           <li><a href="files.html">Upload & Download</a></li>
           <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html" class="active">🛡️ Enterprise & Resiliência</a></li>
         </ul>
       </div>
 
@@ -99,7 +100,7 @@
           <div>Todos os 5 pilares de estabilidade corporativa vêm <strong>habilitados por padrão com valores seguros</strong>, podendo ser afinados via <code>application.properties</code>.</div>
         </div>
 
-        <h2>1. Pool de Threads Controlado (Anti-OOM)</h2>
+        <h2 id="thread-pool">1. Pool de Threads Controlado (Anti-OOM)</h2>
         <p>O NanoHTTPD original cria uma nova thread nativa no Linux para cada requisição recebida. Sob picos de tráfego em aparelhos modestos (1 GB de RAM), o sistema operacional encerra a aplicação com <code>OutOfMemoryError: unable to create new native thread</code>.</p>
         <p>O <code>ThreadPoolAsyncRunner</code> substitui o executor padrão por um pool delimitado com fila de espera:</p>
 
@@ -126,7 +127,7 @@ nano.server.threads.queue-capacity=100
 nano.server.threads.keep-alive=60</code></pre>
         </div>
 
-        <h2>2. Concorrência SQLite com Modo WAL (Write-Ahead Logging)</h2>
+        <h2 id="sqlite-wal">2. Concorrência SQLite com Modo WAL (Write-Ahead Logging)</h2>
         <p>Por padrão, o SQLite no Android impede que uma thread leia o banco de dados enquanto outra estiver escrevendo, disparando <code>SQLiteDatabaseLockedException</code>.</p>
         <p>O Nano-Spring ativa automaticamente o modo WAL (<code>db.enableWriteAheadLogging()</code>), permitindo leituras concorrentes em paralelo sem bloquear transações de escrita.</p>
 
@@ -144,7 +145,7 @@ nano.server.threads.keep-alive=60</code></pre>
 nano.datasource.wal.enabled=true</code></pre>
         </div>
 
-        <h2>3. Monitoramento Dinâmico de Rede & Reanúncio mDNS</h2>
+        <h2 id="network-watcher">3. Monitoramento Dinâmico de Rede & Reanúncio mDNS</h2>
         <p>Quando um roteador reinicia, o sinal Wi-Fi oscila ou o DHCP atribui um novo IP ao dispositivo Android, o <code>NetworkWatcher</code> detecta a troca de IP e renova o registro mDNS/DNS-SD automaticamente, sem necessidade de reiniciar o aplicativo.</p>
 
         <div class="code-wrapper">
@@ -161,7 +162,7 @@ nano.datasource.wal.enabled=true</code></pre>
 nano.network.watcher.enabled=true</code></pre>
         </div>
 
-        <h2>4. Classe Base NanoSpringService (Android Foreground Service)</h2>
+        <h2 id="foreground-service">4. Classe Base NanoSpringService (Android Foreground Service)</h2>
         <p>Para manter o servidor HTTP ativo ininterruptamente sem ser finalizado pelo gerenciador de bateria do Android, herde de <code>NanoSpringService</code>:</p>
 
         <div class="code-wrapper">
@@ -205,7 +206,7 @@ public class MyServerService extends NanoSpringService {
           <li>Parada limpa de todos os sockets no <code>onDestroy()</code>.</li>
         </ul>
 
-        <h2>5. Endpoints Actuator: /actuator/health e /actuator/info</h2>
+        <h2 id="actuator-endpoints">5. Endpoints Actuator: /actuator/health e /actuator/info</h2>
         <p>Monitore o estado do servidor remotamente através de endpoints JSON compatíveis com Spring Boot Actuator:</p>
 
         <div class="code-wrapper">
@@ -269,8 +270,31 @@ public class MyServerService extends NanoSpringService {
   }
 }</code></pre>
         </div>
+
+        <div class="page-nav">
+          <a href="security-validation.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← Segurança & Validação</span>
+          </a>
+          <a href="sqlite-migrations.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">SQLite & Migrações →</span>
+          </a>
+        </div>
       </div>
     </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#thread-pool">Pool de Threads (Anti-OOM)</a></li>
+        <li><a href="#sqlite-wal">Concorrência SQLite (WAL)</a></li>
+        <li><a href="#network-watcher">Monitoramento de Rede</a></li>
+        <li><a href="#foreground-service">Foreground Service</a></li>
+        <li><a href="#actuator-endpoints">Endpoints Actuator</a></li>
+      </ul>
+    </aside>
   </div>
 
   <script src="../assets/js/app.js"></script>

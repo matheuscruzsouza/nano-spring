@@ -46,15 +46,7 @@
           <li><a href="../index.html">Visão Geral</a></li>
           <li><a href="../getting-started.html">Instalação & Setup</a></li>
           <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
-          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
-          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="v1-10-0.html">✨ Novidades da v1.10.0</a></li>
         </ul>
       </div>
 
@@ -67,6 +59,15 @@
           <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
           <li><a href="files.html">Upload & Download</a></li>
           <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
         </ul>
       </div>
 
@@ -99,14 +100,14 @@
           <p><strong>💡 100% Funcional Offline:</strong> Ao contrário dos Swagger UIs tradicionais que exigem downloads de 8 MB+ ou conexões CDN na nuvem, o Nano-Swagger roda com HTML5/CSS/JS nativo e auto-contido. É ideal para PDVs, totens e TV Boxes sem acesso à internet.</p>
         </div>
 
-        <h2>🚀 Como Acessar</h2>
+        <h2 id="como-acessar">🚀 Como Acessar</h2>
         <p>Por padrão, o Swagger já vem habilitado em seu servidor Nano-Spring:</p>
         <ul>
           <li><strong>Interface Interativa:</strong> <code>http://&lt;ip-do-dispositivo&gt;:8080/swagger-ui</code> (ou <code>/swagger-ui.html</code>)</li>
           <li><strong>Especificação JSON OpenAPI 3.0:</strong> <code>http://&lt;ip-do-dispositivo&gt;:8080/v3/api-docs</code></li>
         </ul>
 
-        <h2>⚙️ Configuração via <code>application.properties</code></h2>
+        <h2 id="configuracao">⚙️ Configuração via <code>application.properties</code></h2>
         <p>Personalize o título, a versão e a descrição que aparecem na documentação:</p>
 
         <div class="code-block">
@@ -128,7 +129,7 @@ nano.swagger.description=API REST de Vendas e Integração Local
 nano.swagger.server-url=/</code></pre>
         </div>
 
-        <h2>🏷️ Anotações Disponíveis</h2>
+        <h2 id="anotacoes">🏷️ Anotações Disponíveis</h2>
         <p>Utilize as anotações do pacote <code>com.github.matheuscruzsouza.nanospring.openapi.annotation</code> para enriquecer seus endpoints:</p>
 
         <div class="table-wrapper">
@@ -165,7 +166,7 @@ nano.swagger.server-url=/</code></pre>
           </table>
         </div>
 
-        <h2>💻 Exemplo Prático de Controller Documentado</h2>
+        <h2 id="exemplo">💻 Exemplo Prático de Controller Documentado</h2>
 
         <div class="code-block">
           <div class="code-header">
@@ -208,7 +209,7 @@ public class UserController {
 }</code></pre>
         </div>
 
-        <h2>🛡️ Mapeamento Automático de Schemas e Validação (Bean Validation)</h2>
+        <h2 id="validacao">🛡️ Mapeamento Automático de Schemas e Validação (Bean Validation)</h2>
         <p>O gerador inspeciona automaticamente seus DTOs e reflete regras de validação (como tamanho mínimo, formato de email e restrições numéricas) diretamente no JSON Schema do OpenAPI:</p>
 
         <div class="code-block">
@@ -250,7 +251,7 @@ public class UserDTO {
 }</code></pre>
         </div>
 
-        <h2>🎯 Interface Interativa ("Try it out")</h2>
+        <h2 id="try-it-out">🎯 Interface Interativa ("Try it out")</h2>
         <p>Na interface web embutida, desenvolvedores e equipes de integração podem:</p>
         <ol>
           <li><strong>Filtrar rotas em tempo real</strong> pelo campo de busca superior.</li>
@@ -272,6 +273,19 @@ public class UserDTO {
         </div>
       </div>
     </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#como-acessar">Como Acessar</a></li>
+        <li><a href="#configuracao">Configuração</a></li>
+        <li><a href="#anotacoes">Anotações Disponíveis</a></li>
+        <li><a href="#exemplo">Exemplo Prático</a></li>
+        <li><a href="#validacao">Mapeamento e Schemas</a></li>
+        <li><a href="#try-it-out">Interface Interativa</a></li>
+      </ul>
+    </aside>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>

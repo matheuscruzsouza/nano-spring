@@ -46,15 +46,7 @@
           <li><a href="../index.html">Visão Geral</a></li>
           <li><a href="../getting-started.html">Instalação & Setup</a></li>
           <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
-          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
-          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="v1-10-0.html">🚀 Novidades da v1.10.0</a></li>
         </ul>
       </div>
 
@@ -67,6 +59,15 @@
           <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
           <li><a href="files.html">Upload & Download</a></li>
           <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
         </ul>
       </div>
 
@@ -94,7 +95,7 @@
 <h1>🛡️ Módulo Nativo de CORS</h1>
         <p>O <strong>Nano-Spring</strong> possui suporte integrado e declarativo a <strong>Cross-Origin Resource Sharing (CORS)</strong>, eliminando dores de cabeça ao consumir as rotas do celular a partir de aplicações frontend modernas (React, Vue, Angular, Svelte ou páginas web externas).</p>
 
-        <h2>⚡ Recursos Principais</h2>
+        <h2 id="recursos">⚡ Recursos Principais</h2>
         <ul>
           <li><strong>Ativado por padrão:</strong> Pronto para uso imediato com política permissiva (<code>nano.cors.enabled=true</code>).</li>
           <li><strong>Pre-flight Automático:</strong> Requisições HTTP com método <code>OPTIONS</code> são interceptadas imediatamente pelo pipeline, retornando <code>200 OK</code> com corpo vazio e cabeçalhos CORS completos, sem acionar controladores ou gastar processamento.</li>
@@ -102,7 +103,7 @@
           <li><strong>Zero Overhead:</strong> Caso desabilitado (<code>nano.cors.enabled=false</code>), o overhead é de apenas uma checagem booleana.</li>
         </ul>
 
-        <h2>⚙️ Configuração via application.properties</h2>
+        <h2 id="configuracao">⚙️ Configuração via application.properties</h2>
         <div class="code-wrapper">
           <div class="code-header">
             <div class="window-dots">
@@ -129,7 +130,7 @@ nano.cors.allowed-headers=Content-Type,Authorization,X-Requested-With,Accept,X-C
 nano.cors.max-age=86400</code></pre>
         </div>
 
-        <h2>💻 Ajuste Programático em Tempo de Execução</h2>
+        <h2 id="ajuste-programatico">💻 Ajuste Programático em Tempo de Execução</h2>
         <div class="code-wrapper">
           <div class="code-header">
             <div class="window-dots">
@@ -161,13 +162,23 @@ cors.setMaxAge(3600); // 1 hora de cache pre-flight</code></pre>
             <span class="hint">Anterior</span>
             <span class="title">← Descoberta mDNS (.local)</span>
           </a>
-          <a href="sse.html" class="page-nav-link next">
+          <a href="templates-static.html" class="page-nav-link next">
             <span class="hint">Próximo</span>
-            <span class="title">Server-Sent Events (SSE) →</span>
+            <span class="title">Templates & Estáticos →</span>
           </a>
         </div>
       </div>
     </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#recursos">Recursos Principais</a></li>
+        <li><a href="#configuracao">Configuração</a></li>
+        <li><a href="#ajuste-programatico">Ajuste Programático</a></li>
+      </ul>
+    </aside>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>

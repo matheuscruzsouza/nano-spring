@@ -46,15 +46,7 @@
           <li><a href="../index.html">Visão Geral</a></li>
           <li><a href="../getting-started.html">Instalação & Setup</a></li>
           <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="logging-diagnostics.html" class="active">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
-          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
-          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="v1-10-0.html">🚀 Novidades da v1.10.0</a></li>
         </ul>
       </div>
 
@@ -67,6 +59,15 @@
           <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
           <li><a href="files.html">Upload & Download</a></li>
           <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html" class="active">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
         </ul>
       </div>
 
@@ -101,7 +102,7 @@
 
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
 
-        <h2>1. Rotação de Logs Local em Armazenamento Interno</h2>
+        <h2 id="rotacao-logs">1. Rotação de Logs Local em Armazenamento Interno</h2>
         <p>Dispositivos embarcados operam 24/7 sem intervenção manual. O <code>RotatingFileLogger</code> garante que os logs persistam no armazenamento interno seguro do app (<code>context.getFilesDir() + "/logs/nano-spring.log"</code>), prevenindo que a memória flash do dispositivo seja saturada através de rotação geracional controlada.</p>
 
         <pre><code class="language-properties"># assets/application.properties
@@ -137,7 +138,7 @@ public class ImpressaoService {
 
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
 
-        <h2>2. Endpoint Remoto de Diagnóstico: <code>/actuator/logfile</code></h2>
+        <h2 id="actuator-logfile">2. Endpoint Remoto de Diagnóstico: <code>/actuator/logfile</code></h2>
         <p>A equipe de suporte técnico e pós-venda pode auditar remotamente os logs de um totem ou POS diretamente via HTTP, sem precisar de acesso root ou cabo USB:</p>
 
         <ul>
@@ -159,7 +160,7 @@ curl -i http://pdv-caixa-01.local:8080/actuator/logfile?lines=50
 
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
 
-        <h2>3. Perfis de Ambiente (Profiles)</h2>
+        <h2 id="perfis-ambiente">3. Perfis de Ambiente (Profiles)</h2>
         <p>Segregue ambientes de desenvolvimento, homologação e produção facilmente com o mesmo padrão consagrado do Spring Boot: <code>application-{profile}.properties</code>.</p>
 
         <pre><code class="language-properties"># assets/application.properties
@@ -181,7 +182,7 @@ nano.datasource.name=banco_dev.db</code></pre>
 
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
 
-        <h2>4. Métodos Assíncronos Não Bloqueantes (<code>CompletableFuture&lt;T&gt;</code>)</h2>
+        <h2 id="metodos-assincronos">4. Métodos Assíncronos Não Bloqueantes (<code>CompletableFuture&lt;T&gt;</code>)</h2>
         <p>Em sistemas comerciais embarcados, determinadas operações são inerentemente lentas: comunicação Bluetooth com pinpads, impressão térmica de cupons fiscais, e consultas a gateways TEF.</p>
         <p>Ao retornar <code>CompletableFuture&lt;T&gt;</code>, o endpoint executa fora da thread do dispatcher do servidor. Caso o tempo de execução ultrapasse o teto definido, o framework responde automaticamente com <code>408 Request Timeout</code>.</p>
 
@@ -214,23 +215,35 @@ nano.async.timeout-seconds=25</code></pre>
 
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
 
-        <h2>5. Timeout de Leitura do Socket (<code>nano.server.read-timeout</code>)</h2>
+        <h2 id="socket-timeout">5. Timeout de Leitura do Socket (<code>nano.server.read-timeout</code>)</h2>
         <p>Ambientes de chão de fábrica ou redes Wi-Fi instáveis exigem controle fino de sockets ociosos (Slowloris attacks ou desconexões súbitas de clientes):</p>
         <pre><code class="language-properties"># Tempo limite em milissegundos para leitura de dados no socket NanoHTTPD (padrão 5000 ms)
 nano.server.read-timeout=10000</code></pre>
 
-        <div class="doc-pagination">
-          <a href="security-validation.html" class="prev">
-            <span class="label">← Anterior</span>
-            <span class="title">Segurança & Validação Declarativa</span>
+        <div class="page-nav">
+          <a href="interceptors-errors.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← Interceptadores & Erros</span>
           </a>
-          <a href="enterprise-hardening.html" class="next">
-            <span class="label">Próximo →</span>
-            <span class="title">Enterprise & Resiliência</span>
+          <a href="security-validation.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">Segurança & Validação →</span>
           </a>
         </div>
       </div>
     </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#rotacao-logs">Rotação de Logs Local</a></li>
+        <li><a href="#actuator-logfile">Endpoint /actuator/logfile</a></li>
+        <li><a href="#perfis-ambiente">Perfis de Ambiente</a></li>
+        <li><a href="#metodos-assincronos">Métodos Assíncronos</a></li>
+        <li><a href="#socket-timeout">Timeout do Socket</a></li>
+      </ul>
+    </aside>
   </div>
 
   <footer class="footer">

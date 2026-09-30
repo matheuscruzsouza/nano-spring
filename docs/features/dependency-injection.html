@@ -46,15 +46,7 @@
           <li><a href="../index.html">Visão Geral</a></li>
           <li><a href="../getting-started.html">Instalação & Setup</a></li>
           <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
-          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
-          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="v1-10-0.html">🚀 Novidades da v1.10.0</a></li>
         </ul>
       </div>
 
@@ -67,6 +59,15 @@
           <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
           <li><a href="files.html">Upload & Download</a></li>
           <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
         </ul>
       </div>
 
@@ -94,7 +95,7 @@
 <h1>💉 Injeção de Dependências & Configurações</h1>
         <p>O <strong>Nano-Spring</strong> implementa um container IoC (Inversion of Control) leve e eficiente que gerencia componentes no padrão <strong>Singleton</strong>, eliminando o acoplamento manual entre classes.</p>
 
-        <h2>📌 Componentes Principais</h2>
+        <h2 id="componentes">📌 Componentes Principais</h2>
         <div class="table-wrapper">
           <table>
             <thead>
@@ -129,7 +130,7 @@
           </table>
         </div>
 
-        <h2>💡 Arquitetura em Camadas</h2>
+        <h2 id="arquitetura">💡 Arquitetura em Camadas</h2>
         <p>Veja como estruturar Repositório, Serviço e Controlador com injeção automática:</p>
 
         <h3>1. Repositório (`@Repository`)</h3>
@@ -233,7 +234,7 @@ public class ClienteController {
 }</code></pre>
         </div>
 
-        <h2>⚙️ Configurações com application.properties</h2>
+        <h2 id="configuracoes">⚙️ Configurações com application.properties</h2>
         <p>Crie o arquivo <code>assets/application.properties</code>:</p>
         <div class="code-wrapper">
           <div class="code-header">
@@ -282,13 +283,23 @@ public class ConfigController {
             <span class="hint">Anterior</span>
             <span class="title">← Swagger & OpenAPI 3.0</span>
           </a>
-          <a href="sqlite-migrations.html" class="page-nav-link next">
+          <a href="sse.html" class="page-nav-link next">
             <span class="hint">Próximo</span>
-            <span class="title">SQLite & Migrações →</span>
+            <span class="title">Server-Sent Events (SSE) →</span>
           </a>
         </div>
       </div>
     </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#componentes">Componentes Principais</a></li>
+        <li><a href="#arquitetura">Arquitetura em Camadas</a></li>
+        <li><a href="#configuracoes">Configurações</a></li>
+      </ul>
+    </aside>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>

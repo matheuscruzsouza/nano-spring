@@ -46,15 +46,7 @@
           <li><a href="../index.html">Visão Geral</a></li>
           <li><a href="../getting-started.html">Instalação & Setup</a></li>
           <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
-          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
-          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="v1-10-0.html">🚀 Novidades da v1.10.0</a></li>
         </ul>
       </div>
 
@@ -67,6 +59,15 @@
           <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
           <li><a href="files.html" class="active">Upload & Download</a></li>
           <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
         </ul>
       </div>
 
@@ -94,7 +95,7 @@
 <h1>📁 Upload & Streaming de Arquivos</h1>
         <p>O <strong>Nano-Spring</strong> oferece suporte nativo a <em>multipart/form-data</em> para uploads e transmissão em blocos (<em>Chunked Transfer Encoding</em>) para download de arquivos pesados sem sobrecarregar a memória do Android.</p>
 
-        <h2>📤 Upload de Arquivos (@UploadedFile)</h2>
+        <h2 id="upload">📤 Upload de Arquivos (@UploadedFile)</h2>
         <p>Use a anotação <code>@UploadedFile("campo")</code> recebendo um parâmetro do tipo <code>java.io.File</code>:</p>
 
         <div class="code-wrapper">
@@ -133,7 +134,7 @@ public class UploadController {
 }</code></pre>
         </div>
 
-        <h2>📥 Download e Streaming em Chunks</h2>
+        <h2 id="download">📥 Download e Streaming em Chunks</h2>
         <p>Ao retornar diretamente uma instância de <code>java.io.File</code>, o Nano-Spring ativa transmissão em fluxo (streaming chunked):</p>
 
         <div class="code-wrapper">
@@ -193,6 +194,15 @@ public class DownloadController {
         </div>
       </div>
     </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#upload">Upload de Arquivos</a></li>
+        <li><a href="#download">Download e Streaming</a></li>
+      </ul>
+    </aside>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>

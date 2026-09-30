@@ -46,15 +46,7 @@
           <li><a href="../index.html">Visão Geral</a></li>
           <li><a href="../getting-started.html">Instalação & Setup</a></li>
           <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
-          <li><a href="security-validation.html" class="active">🔒 Segurança & Validação</a></li>
-          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="v1-10-0.html">🚀 Novidades da v1.10.0</a></li>
         </ul>
       </div>
 
@@ -67,6 +59,15 @@
           <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
           <li><a href="files.html">Upload & Download</a></li>
           <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
+          <li><a href="security-validation.html" class="active">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
         </ul>
       </div>
 
@@ -99,7 +100,7 @@
           <div>Totalmente compatível com o padrão consagrado do Spring Boot: HTTPS transparente via Keystore, proteção contra DoS via Token Bucket e anotações <code>@Valid</code> com retorno automático de <code>400 Bad Request</code>.</div>
         </div>
 
-        <h2>1. HTTPS / TLS Nativo via Keystore</h2>
+        <h2 id="https-tls">1. HTTPS / TLS Nativo via Keystore</h2>
         <p>Habilite tráfego criptografado SSL/TLS diretamente pelo <code>application.properties</code> sem alterar uma única linha do seu código Java:</p>
 
         <div class="code-wrapper">
@@ -128,7 +129,7 @@ server.ssl.key-store-type=PKCS12
 server.ssl.protocols=TLSv1.2,TLSv1.3</code></pre>
         </div>
 
-        <h2>2. Proteção Anti-DoS com Rate Limiting (Token Bucket)</h2>
+        <h2 id="rate-limiting">2. Proteção Anti-DoS com Rate Limiting (Token Bucket)</h2>
         <p>Dispositivos Android possuem hardware limitado. O <code>TokenBucketRateLimiter</code> protege o dispositivo contra sobrecarga de requisições por IP tanto globalmente quanto por rota.</p>
 
         <h3>A. Proteção Global</h3>
@@ -194,7 +195,7 @@ public class PaymentController {
 }</code></pre>
         </div>
 
-        <h2>3. Bean Validation Declarativo com <code>@Valid</code></h2>
+        <h2 id="bean-validation">3. Bean Validation Declarativo com <code>@Valid</code></h2>
         <p>Valide DTOs recebidos no corpo das requisições declarativamente, sem escrever dezenas de <code>if</code> e validações manuais nos métodos:</p>
 
         <div class="code-wrapper">
@@ -286,8 +287,29 @@ public class ClienteController {
   ]
 }</code></pre>
         </div>
+
+        <div class="page-nav">
+          <a href="logging-diagnostics.html" class="page-nav-link prev">
+            <span class="hint">Anterior</span>
+            <span class="title">← Diagnósticos & Perfis (v1.9.0)</span>
+          </a>
+          <a href="enterprise-hardening.html" class="page-nav-link next">
+            <span class="hint">Próximo</span>
+            <span class="title">Enterprise & Resiliência →</span>
+          </a>
+        </div>
       </div>
     </main>
+
+    <!-- Right Table of Contents (TOC) -->
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#https-tls">HTTPS / TLS Keystore</a></li>
+        <li><a href="#rate-limiting">Proteção Anti-DoS</a></li>
+        <li><a href="#bean-validation">Bean Validation Declarativo</a></li>
+      </ul>
+    </aside>
   </div>
 
   <script src="../assets/js/app.js"></script>
