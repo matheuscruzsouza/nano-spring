@@ -13,6 +13,7 @@ import com.github.matheuscruzsouza.nanospring.annotation.Repository;
 import com.github.matheuscruzsouza.nanospring.annotation.RestController;
 import com.github.matheuscruzsouza.nanospring.annotation.Service;
 import com.github.matheuscruzsouza.nanospring.annotation.Interceptor;
+import com.github.matheuscruzsouza.nanospring.cors.CorsConfiguration;
 import com.github.matheuscruzsouza.nanospring.database.SqliteMigrator;
 import com.github.matheuscruzsouza.nanospring.discovery.NsdServiceManager;
 import com.github.matheuscruzsouza.nanospring.handler.ServerIndexHandler;
@@ -36,6 +37,7 @@ public class Server extends RouterNanoHTTPD {
     private static Context staticContext;
     private Map<Class<?>, Object> services = new HashMap<>();
     private NsdServiceManager nsdServiceManager = new NsdServiceManager();
+    private CorsConfiguration corsConfig;
 
     public static Context getContext() { return staticContext; }
 
@@ -50,6 +52,14 @@ public class Server extends RouterNanoHTTPD {
 
     public SQLiteDatabase getDatabase() {
         return getBean(SQLiteDatabase.class);
+    }
+
+    public CorsConfiguration getCorsConfiguration() {
+        return corsConfig;
+    }
+
+    public void setCorsConfiguration(CorsConfiguration corsConfig) {
+        this.corsConfig = corsConfig != null ? corsConfig : new CorsConfiguration();
     }
 
     public NsdServiceManager getNsdServiceManager() {
@@ -82,6 +92,8 @@ public class Server extends RouterNanoHTTPD {
         setNotFoundHandler(fi.iki.elonen.router.RouterNanoHTTPD.Error404UriHandler.class);
         this.context = context;
         staticContext = context;
+        this.corsConfig = new CorsConfiguration(Environment.getProperties());
+        this.services.put(CorsConfiguration.class, this.corsConfig);
         if (context != null) {
             this.services.put(Context.class, context);
             this.services.put(NsdServiceManager.class, nsdServiceManager);
@@ -121,6 +133,20 @@ public class Server extends RouterNanoHTTPD {
 
     @Override
     public NanoHTTPD.Response serve(NanoHTTPD.IHTTPSession session) {
+        if (corsConfig != null && corsConfig.isEnabled() && session.getMethod() == NanoHTTPD.Method.OPTIONS) {
+            NanoHTTPD.Response preflight = NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.OK, "text/plain", "");
+            applyCorsHeaders(preflight);
+            return preflight;
+        }
+
+        NanoHTTPD.Response response = handleInternal(session);
+        if (corsConfig != null && corsConfig.isEnabled() && response != null) {
+            applyCorsHeaders(response);
+        }
+        return response;
+    }
+
+    protected NanoHTTPD.Response handleInternal(NanoHTTPD.IHTTPSession session) {
         String uri = session.getUri();
 
         for (com.github.matheuscruzsouza.nanospring.handler.HandlerInterceptor interceptor : ServerIndexHandler.getInterceptors()) {
@@ -136,6 +162,14 @@ public class Server extends RouterNanoHTTPD {
         NanoHTTPD.Response response = ServerIndexHandler.process(session);
         if (response != null) return response;
         return super.serve(session);
+    }
+
+    public void applyCorsHeaders(NanoHTTPD.Response response) {
+        if (response == null || corsConfig == null || !corsConfig.isEnabled()) return;
+        response.addHeader("Access-Control-Allow-Origin", corsConfig.getAllowedOrigins());
+        response.addHeader("Access-Control-Allow-Methods", corsConfig.getAllowedMethods());
+        response.addHeader("Access-Control-Allow-Headers", corsConfig.getAllowedHeaders());
+        response.addHeader("Access-Control-Max-Age", corsConfig.getMaxAge());
     }
 
     private NanoHTTPD.Response serveStaticFile(String uri) {

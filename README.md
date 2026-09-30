@@ -16,6 +16,7 @@ Com o Nano-Spring, você transforma qualquer celular ou tablet Android em um pod
 - 📡 **Server-Sent Events (SSE):** Streaming de eventos unidirecionais em tempo real para navegadores com `SseEmitter`.
 - 📁 **Upload de Arquivos Nativo:** Receba imagens e documentos facilmente via *multipart/form-data* usando `@UploadedFile`.
 - 🛡️ **Middlewares (Interceptadores):** Intercepte requisições nativamente para validação de JWTs, logs e segurança.
+- 🌐 **CORS Nativo Declarativo:** Suporte a Cross-Origin Resource Sharing com resolução automática de pre-flight (`OPTIONS`).
 - 🚨 **Tratamento Global de Exceções:** Evite crashes de rotas usando `@ControllerAdvice` e `@ExceptionHandler`.
 - 🎨 **Motor de Templates HTML:** Renderização Server-Side nativa utilizando `JMustache` e `ModelAndView`.
 - ⚡ **Servidor de Arquivos Estáticos:** Entregue CSS, JS e Imagens da pasta `assets` sem esforço.
@@ -401,6 +402,33 @@ server.enableNsd("meu-servidor", true);
 server.disableNsd();
 ```
 Quando o servidor é parado com `server.stop()`, o serviço e a resolução mDNS são automaticamente desregistrados da rede.
+
+### 13. Suporte Nativo a CORS (Cross-Origin Resource Sharing)
+O Nano-Spring possui suporte nativo e declarativo a **CORS**, habilitado por padrão para requerer o mínimo de configuração do desenvolvedor. Ele resolve automaticamente requisições pre-flight (`OPTIONS`) com resposta `200 OK` vazia e injeta os cabeçalhos apropriados em todas as rotas (incluindo respostas de erro e arquivos estáticos).
+
+#### 1. Configurações (`application.properties`):
+```properties
+# Habilita ou desabilita o filtro global de CORS (padrão: true)
+nano.cors.enabled=true
+
+# Origens permitidas (padrão: *)
+nano.cors.allowed-origins=*
+
+# Métodos HTTP permitidos (padrão: GET,POST,PUT,DELETE,OPTIONS)
+nano.cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS
+
+# Cabeçalhos permitidos (padrão: Content-Type,Authorization,X-Requested-With,Accept)
+nano.cors.allowed-headers=Content-Type,Authorization,X-Requested-With,Accept
+
+# Tempo de cache em segundos do pre-flight (padrão: 86400)
+nano.cors.max-age=86400
+```
+
+#### 2. Configuração programática:
+```java
+// Ajustar configurações em tempo de execução:
+CorsConfiguration cors = server.getCorsConfiguration();
+```
 
 ---
 
