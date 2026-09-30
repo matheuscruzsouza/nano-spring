@@ -13,12 +13,17 @@ import com.github.matheuscruzsouza.nanospring.annotation.Repository;
 import com.github.matheuscruzsouza.nanospring.annotation.RestController;
 import com.github.matheuscruzsouza.nanospring.annotation.Service;
 import com.github.matheuscruzsouza.nanospring.annotation.Interceptor;
+import com.github.matheuscruzsouza.nanospring.actuator.ActuatorHealthHandler;
 import com.github.matheuscruzsouza.nanospring.cors.CorsConfiguration;
 import com.github.matheuscruzsouza.nanospring.database.SqliteMigrator;
+import com.github.matheuscruzsouza.nanospring.discovery.NetworkWatcher;
 import com.github.matheuscruzsouza.nanospring.discovery.NsdServiceManager;
 import com.github.matheuscruzsouza.nanospring.handler.ServerIndexHandler;
+import com.github.matheuscruzsouza.nanospring.security.SslConfiguration;
+import com.github.matheuscruzsouza.nanospring.security.TokenBucketRateLimiter;
 
 import java.io.IOException;
+import javax.net.ssl.SSLServerSocketFactory;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -38,6 +43,10 @@ public class Server extends RouterNanoHTTPD {
     private Map<Class<?>, Object> services = new HashMap<>();
     private NsdServiceManager nsdServiceManager = new NsdServiceManager();
     private CorsConfiguration corsConfig;
+    private ThreadPoolAsyncRunner threadPoolAsyncRunner;
+    private NetworkWatcher networkWatcher;
+    private SslConfiguration sslConfig;
+    private TokenBucketRateLimiter rateLimiter;
 
     public static Context getContext() { return staticContext; }
 
@@ -66,6 +75,22 @@ public class Server extends RouterNanoHTTPD {
         return nsdServiceManager;
     }
 
+    public ThreadPoolAsyncRunner getThreadPoolAsyncRunner() {
+        return threadPoolAsyncRunner;
+    }
+
+    public NetworkWatcher getNetworkWatcher() {
+        return networkWatcher;
+    }
+
+    public SslConfiguration getSslConfiguration() {
+        return sslConfig;
+    }
+
+    public TokenBucketRateLimiter getRateLimiter() {
+        return rateLimiter;
+    }
+
     public void enableNsd(String serviceName) {
         enableNsd(serviceName, true);
     }
@@ -89,6 +114,8 @@ public class Server extends RouterNanoHTTPD {
     public Server(Context context, int port, String basePackage) {
         super(Integer.parseInt(Environment.getProperty("server.port", String.valueOf(port))));
         Environment.init(context);
+        this.threadPoolAsyncRunner = ThreadPoolAsyncRunner.fromEnvironment();
+        setAsyncRunner(this.threadPoolAsyncRunner);
         setNotFoundHandler(fi.iki.elonen.router.RouterNanoHTTPD.Error404UriHandler.class);
         this.context = context;
         staticContext = context;
@@ -105,10 +132,23 @@ public class Server extends RouterNanoHTTPD {
         processControllerAdvice(basePackage);
         processEndpoints(basePackage);
 
+        this.sslConfig = new SslConfiguration();
+        if (this.sslConfig.isEnabled()) {
+            SSLServerSocketFactory sslFactory = this.sslConfig.createSslSocketFactory(context);
+            if (sslFactory != null) {
+                makeSecure(sslFactory, this.sslConfig.getProtocols());
+                Log.i("SERVER_SSL", "HTTPS / TLS habilitado com sucesso.");
+            }
+        }
+
+        this.rateLimiter = new TokenBucketRateLimiter();
+        ServerIndexHandler.setRateLimiter(this.rateLimiter);
+
         try {
-            start();
+            int readTimeout = Integer.parseInt(Environment.getProperty("nano.server.read-timeout", "5000"));
+            start(readTimeout);
             int serverPort = Integer.parseInt(Environment.getProperty("server.port", String.valueOf(port)));
-            Log.d("SERVER_OK", "SERVIDOR RODANDO ONLINE NA PORTA " + serverPort + "!");
+            Log.d("SERVER_OK", "SERVIDOR RODANDO ONLINE NA PORTA " + serverPort + " (timeout=" + readTimeout + "ms)!");
 
             boolean nsdEnabled = Boolean.parseBoolean(Environment.getProperty("nano.nsd.enabled", "false"));
             if (nsdEnabled && context != null) {
@@ -116,6 +156,25 @@ public class Server extends RouterNanoHTTPD {
                 String nsdType = Environment.getProperty("nano.nsd.type", NsdServiceManager.DEFAULT_SERVICE_TYPE);
                 boolean hostResolution = Boolean.parseBoolean(Environment.getProperty("nano.nsd.host-resolution", "true"));
                 nsdServiceManager.register(context, nsdName, nsdType, serverPort, hostResolution);
+            }
+
+            boolean networkWatcherEnabled = Boolean.parseBoolean(Environment.getProperty("nano.network.watcher.enabled", "true"));
+            if (networkWatcherEnabled && context != null) {
+                this.networkWatcher = new NetworkWatcher(context);
+                this.networkWatcher.start(new NetworkWatcher.NetworkChangeListener() {
+                    @Override
+                    public void onNetworkChanged(String newIp) {
+                        Log.i("SERVER", "IP de rede alterado para " + newIp + ". Re-anunciando serviços mDNS...");
+                        if (nsdServiceManager != null && nsdServiceManager.isRegistered()) {
+                            nsdServiceManager.rebind();
+                        }
+                    }
+
+                    @Override
+                    public void onNetworkLost() {
+                        Log.w("SERVER", "Conexão de rede perdida.");
+                    }
+                });
             }
         } catch (IOException e) {
             Log.e("SERVER_FAIL", "ERRO AO INICIAR O SOCKET DO SERVIDOR", e);
@@ -125,8 +184,15 @@ public class Server extends RouterNanoHTTPD {
 
     @Override
     public void stop() {
+        if (networkWatcher != null) {
+            networkWatcher.stop();
+            networkWatcher = null;
+        }
         if (nsdServiceManager != null) {
             nsdServiceManager.unregister();
+        }
+        if (threadPoolAsyncRunner != null) {
+            threadPoolAsyncRunner.closeAll();
         }
         super.stop();
     }
@@ -149,9 +215,39 @@ public class Server extends RouterNanoHTTPD {
     protected NanoHTTPD.Response handleInternal(NanoHTTPD.IHTTPSession session) {
         String uri = session.getUri();
 
+        if (rateLimiter != null && rateLimiter.isGlobalEnabled()) {
+            String clientIp = session.getRemoteIpAddress();
+            if (!rateLimiter.checkGlobal(clientIp)) {
+                Map<String, Object> err = new HashMap<>();
+                err.put("status", 429);
+                err.put("error", "Too Many Requests");
+                err.put("message", "Global rate limit exceeded");
+                NanoHTTPD.Response r = NanoHTTPD.newFixedLengthResponse(
+                        com.github.matheuscruzsouza.nanospring.http.HttpStatus.custom(429, "Too Many Requests"),
+                        "application/json",
+                        new com.google.gson.Gson().toJson(err)
+                );
+                r.addHeader("Retry-After", "1");
+                return r;
+            }
+        }
+
         for (com.github.matheuscruzsouza.nanospring.handler.HandlerInterceptor interceptor : ServerIndexHandler.getInterceptors()) {
             if (!interceptor.preHandle(session, uri)) {
                 return NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.UNAUTHORIZED, "text/plain", "Unauthorized by Interceptor");
+            }
+        }
+
+        boolean actuatorEnabled = Boolean.parseBoolean(Environment.getProperty("nano.actuator.enabled", "true"));
+        if (actuatorEnabled) {
+            if ("/actuator/health".equals(uri)) {
+                return ActuatorHealthHandler.handleHealth(this, this.context);
+            }
+            if ("/actuator/info".equals(uri)) {
+                return ActuatorHealthHandler.handleInfo(this.context);
+            }
+            if ("/actuator/logfile".equals(uri)) {
+                return ActuatorHealthHandler.handleLogfile(session);
             }
         }
 
@@ -221,6 +317,15 @@ public class Server extends RouterNanoHTTPD {
         String dbName = Environment.getProperty("nano.datasource.name", "nanospring.db");
         try {
             SQLiteDatabase db = context.openOrCreateDatabase(dbName, Context.MODE_PRIVATE, null);
+            boolean walEnabled = Boolean.parseBoolean(Environment.getProperty("nano.datasource.wal.enabled", "true"));
+            if (walEnabled) {
+                try {
+                    boolean walSuccess = db.enableWriteAheadLogging();
+                    Log.d("DATABASE_WAL", "SQLite WAL mode habilitado: " + walSuccess);
+                } catch (Exception e) {
+                    Log.w("DATABASE_WAL", "Nao foi possivel ativar WAL mode: " + e.getMessage());
+                }
+            }
             SqliteMigrator.migrate(context, db);
             this.services.put(SQLiteDatabase.class, db);
             Log.d("DATABASE_OK", "Banco de dados SQLite inicializado com sucesso: " + dbName);

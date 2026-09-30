@@ -14,7 +14,7 @@
     <div class="brand">
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
       <span>🌱 Nano-Spring</span>
-      <span class="badge">v1.6.0</span>
+      <span class="badge">v1.9.0</span>
     </div>
     <nav class="nav-links">
       <a href="getting-started.html">Documentação</a>
@@ -30,12 +30,16 @@
         <ul class="sidebar-menu">
           <li><a href="index.html" class="active">Visão Geral</a></li>
           <li><a href="getting-started.html">Instalação & Setup</a></li>
+          <li><a href="spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
         </ul>
       </div>
 
       <div class="sidebar-section">
         <div class="sidebar-title">Funcionalidades</div>
         <ul class="sidebar-menu">
+          <li><a href="features/logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
+          <li><a href="features/security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="features/enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
           <li><a href="features/rest-api.html">APIs RESTful</a></li>
           <li><a href="features/dependency-injection.html">Injeção de Dependências</a></li>
           <li><a href="features/sqlite-migrations.html">SQLite & Migrações</a></li>
@@ -53,13 +57,14 @@
     <main class="main-content">
       <!-- Hero -->
       <section class="hero">
-        <div class="hero-pill">✨ Versão 1.6.0 com CORS & SQLite Flyway</div>
+        <div class="hero-pill">✨ Versão 1.9.0 com Diagnósticos em Campo, Perfis & Async Controllers</div>
         <h1>O poder do Spring Boot dentro do seu Android</h1>
         <p>Transforme qualquer celular, tablet ou POS Android em um servidor web de alta performance. APIs REST, injeção de dependências, banco SQLite versionado e mDNS consumindo entre 15 e 40 MB de RAM.</p>
         
         <div class="hero-actions">
           <a href="getting-started.html" class="btn btn-primary">Começar Agora 🚀</a>
-          <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener" class="btn btn-secondary">Repositório no GitHub ↗</a>
+          <a href="spring-boot-vs-nano-spring.html" class="btn btn-secondary">Comparar com Spring Boot ⚖️</a>
+          <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener" class="btn btn-secondary">GitHub ↗</a>
         </div>
       </section>
 
@@ -131,6 +136,13 @@ public class HelloController {
         <p>Explore a documentação aprofundada de cada recurso do framework:</p>
 
         <div class="cards-grid">
+          <div class="card">
+            <div class="card-icon">📜</div>
+            <h3>Diagnósticos & Perfis (v1.9.0)</h3>
+            <p>Logs rotativos em disco, endpoint /actuator/logfile, múltiplos perfis e controladores assíncronos com CompletableFuture.</p>
+            <a href="features/logging-diagnostics.html" class="card-link">Explorar Diagnósticos →</a>
+          </div>
+
           <div class="card">
             <div class="card-icon">🌐</div>
             <h3>APIs RESTful</h3>

@@ -15,12 +15,22 @@ public class NsdServiceManager {
     private boolean registered = false;
     private String registeredServiceName;
     private MdnsHostResponder hostResponder;
+    private Context lastContext;
+    private String lastServiceName;
+    private String lastServiceType;
+    private int lastPort;
+    private boolean lastEnableHostResolution;
 
     public synchronized void register(Context context, String serviceName, String serviceType, int port) {
         register(context, serviceName, serviceType, port, true);
     }
 
     public synchronized void register(Context context, String serviceName, String serviceType, int port, boolean enableHostResolution) {
+        this.lastContext = context;
+        this.lastServiceName = serviceName;
+        this.lastServiceType = serviceType;
+        this.lastPort = port;
+        this.lastEnableHostResolution = enableHostResolution;
         if (context == null) {
             Log.w(TAG, "Context is null, cannot register NSD service.");
             return;
@@ -124,5 +134,12 @@ public class NsdServiceManager {
 
     public synchronized MdnsHostResponder getHostResponder() {
         return hostResponder;
+    }
+
+    public synchronized void rebind() {
+        if (lastContext != null && lastPort > 0) {
+            Log.i(TAG, "Rebinding mDNS service registration on port " + lastPort);
+            register(lastContext, lastServiceName, lastServiceType, lastPort, lastEnableHostResolution);
+        }
     }
 }

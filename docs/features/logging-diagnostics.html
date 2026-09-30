@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnósticos & Perfis de Ambiente | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.9.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+          <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html" class="active">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
+          <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>📜 Diagnósticos de Campo, Perfis & Execução Assíncrona (v1.9.0)</h1>
+        <p>A versão <strong>v1.9.0</strong> do <strong>Nano-Spring</strong> eleva a maturidade operacional para aplicações em produção em dispositivos Android remotos (PDVs SmartPOS, totens de autoatendimento, hubs IoT e gateways industriais).</p>
+
+        <div class="callout callout-tip">
+          <span>✨</span>
+          <div>Diagnósticos remotos sem necessidade de depurador ADB conectado: inspeção de logs em tempo real via HTTP, rotação automática com teto de disco, perfis de configuração segregados e métodos assíncronos não bloqueantes com <code>CompletableFuture</code>.</div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+
+        <h2>1. Rotação de Logs Local em Armazenamento Interno</h2>
+        <p>Dispositivos embarcados operam 24/7 sem intervenção manual. O <code>RotatingFileLogger</code> garante que os logs persistam no armazenamento interno seguro do app (<code>context.getFilesDir() + "/logs/nano-spring.log"</code>), prevenindo que a memória flash do dispositivo seja saturada através de rotação geracional controlada.</p>
+
+        <pre><code class="language-properties"># assets/application.properties
+# Habilita ou desabilita gravação em disco
+nano.logging.enabled=true
+
+# Nível mínimo de log (TRACE, DEBUG, INFO, WARN, ERROR)
+nano.logging.level=INFO
+
+# Teto máximo de tamanho do arquivo antes de rotacionar (em MB ou KB)
+nano.logging.max-size-mb=5
+# nano.logging.max-size-kb=1024
+
+# Quantidade de arquivos de histórico mantidos (.1, .2, .3)
+nano.logging.max-history=3</code></pre>
+
+        <h3>Utilizando o <code>NanoLogger</code> no seu Código</h3>
+        <p>O <code>NanoLogger</code> grava simultaneamente no Logcat nativo do Android e no buffer circular/arquivo rotativo em disco:</p>
+        <pre><code class="language-java">import com.github.matheuscruzsouza.nanospring.logging.NanoLogger;
+
+@Service
+public class ImpressaoService {
+
+    public void imprimirCupom(Venda venda) {
+        NanoLogger.info("IMPRESSAO", "Iniciando spooler para venda: " + venda.getId());
+        try {
+            // comunicação com hardware de impressora térmica
+        } catch (Exception e) {
+            NanoLogger.error("IMPRESSAO", "Falha de hardware na impressora", e);
+        }
+    }
+}</code></pre>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+
+        <h2>2. Endpoint Remoto de Diagnóstico: <code>/actuator/logfile</code></h2>
+        <p>A equipe de suporte técnico e pós-venda pode auditar remotamente os logs de um totem ou POS diretamente via HTTP, sem precisar de acesso root ou cabo USB:</p>
+
+        <ul>
+          <li><code>GET /actuator/logfile</code> — Retorna as últimas 500 linhas em <code>text/plain; charset=utf-8</code>.</li>
+          <li><code>GET /actuator/logfile?lines=100</code> — Retorna especificamente as últimas 100 linhas.</li>
+          <li><code>GET /actuator/logfile?all=true</code> — Retorna o log completo arquivado.</li>
+        </ul>
+
+        <pre><code class="language-bash"># Exemplo de consulta remota via cURL
+curl -i http://pdv-caixa-01.local:8080/actuator/logfile?lines=50
+
+# Resposta:
+# HTTP/1.1 200 OK
+# Content-Type: text/plain; charset=utf-8
+# Cache-Control: no-cache, no-store, must-revalidate
+#
+# 2026-09-30 18:00:01.123 [NanoThread-1] INFO SERVER_OK - SERVIDOR RODANDO ONLINE NA PORTA 8080 (timeout=5000ms)!
+# 2026-09-30 18:00:15.892 [NanoThread-2] INFO IMPRESSAO - Iniciando spooler para venda: 4891</code></pre>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+
+        <h2>3. Perfis de Ambiente (Profiles)</h2>
+        <p>Segregue ambientes de desenvolvimento, homologação e produção facilmente com o mesmo padrão consagrado do Spring Boot: <code>application-{profile}.properties</code>.</p>
+
+        <pre><code class="language-properties"># assets/application.properties
+server.port=8080
+nano.logging.level=INFO
+nano.datasource.name=banco_prod.db
+
+# Ativação do perfil (também configurável via System Property ou Environment Variable)
+nano.profiles.active=dev</code></pre>
+
+        <p>Ao definir <code>nano.profiles.active=dev</code>, o Nano-Spring carrega e sobrepõe automaticamente as configurações de <code>assets/application-dev.properties</code>:</p>
+
+        <pre><code class="language-properties"># assets/application-dev.properties
+server.port=9090
+nano.logging.level=DEBUG
+nano.datasource.name=banco_dev.db</code></pre>
+
+        <p>Múltiplos perfis podem ser combinados separando por vírgula (ex: <code>dev,pos</code>).</p>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+
+        <h2>4. Métodos Assíncronos Não Bloqueantes (<code>CompletableFuture&lt;T&gt;</code>)</h2>
+        <p>Em sistemas comerciais embarcados, determinadas operações são inerentemente lentas: comunicação Bluetooth com pinpads, impressão térmica de cupons fiscais, e consultas a gateways TEF.</p>
+        <p>Ao retornar <code>CompletableFuture&lt;T&gt;</code>, o endpoint executa fora da thread do dispatcher do servidor. Caso o tempo de execução ultrapasse o teto definido, o framework responde automaticamente com <code>408 Request Timeout</code>.</p>
+
+        <pre><code class="language-java">@RestController("/api/pos")
+public class PosController {
+
+    @Autowired
+    private PinpadService pinpadService;
+
+    @PostMethod("/transacao")
+    public CompletableFuture&lt;ResponseEntity&lt;Map&lt;String, Object&gt;&gt;&gt; processarPagamento(
+            @Valid @RequestBody TransacaoRequest req) {
+
+        return CompletableFuture.supplyAsync(() -&gt; {
+            // Comunicação demorada com o leitor EMV / chip
+            ComprovanteTEF comprovante = pinpadService.capturarCartao(req.getValorCentavos());
+            
+            Map&lt;String, Object&gt; resposta = new HashMap&lt;&gt;();
+            resposta.put("nsu", comprovante.getNsu());
+            resposta.put("autorizado", true);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(resposta);
+        });
+    }
+}</code></pre>
+
+        <p>Configuração do timeout assíncrono no <code>application.properties</code>:</p>
+        <pre><code class="language-properties"># Timeout em segundos para CompletableFuture antes de devolver HTTP 408
+nano.async.timeout-seconds=25</code></pre>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+
+        <h2>5. Timeout de Leitura do Socket (<code>nano.server.read-timeout</code>)</h2>
+        <p>Ambientes de chão de fábrica ou redes Wi-Fi instáveis exigem controle fino de sockets ociosos (Slowloris attacks ou desconexões súbitas de clientes):</p>
+        <pre><code class="language-properties"># Tempo limite em milissegundos para leitura de dados no socket NanoHTTPD (padrão 5000 ms)
+nano.server.read-timeout=10000</code></pre>
+
+        <div class="doc-pagination">
+          <a href="security-validation.html" class="prev">
+            <span class="label">← Anterior</span>
+            <span class="title">Segurança & Validação Declarativa</span>
+          </a>
+          <a href="enterprise-hardening.html" class="next">
+            <span class="label">Próximo →</span>
+            <span class="title">Enterprise & Resiliência</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>© 2026 Nano-Spring Framework. Distribuído sob licença MIT. Feito para alta performance no Android.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-properties.min.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

@@ -65,4 +65,10 @@ public class SqliteMigratorTest {
         assertEquals(2, list.get(1).getVersion());
         assertEquals(10, list.get(2).getVersion());
     }
+
+    @Test
+    public void testMigrateNullSafe() {
+        SqliteMigrator.migrate(null, null);
+        SqliteMigrator.migrate(null, null, "custom/path");
+    }
 }

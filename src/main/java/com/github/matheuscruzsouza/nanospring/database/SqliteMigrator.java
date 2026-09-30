@@ -59,6 +59,15 @@ public class SqliteMigrator {
     public static void migrate(Context context, SQLiteDatabase db, String location) {
         if (context == null || db == null) return;
 
+        boolean walEnabled = Boolean.parseBoolean(Environment.getProperty("nano.datasource.wal.enabled", "true"));
+        if (walEnabled && !db.isReadOnly()) {
+            try {
+                db.enableWriteAheadLogging();
+            } catch (Exception e) {
+                Log.w(TAG, "Could not enable WAL mode: " + e.getMessage());
+            }
+        }
+
         createHistoryTableIfNotExists(db);
         Set<Integer> appliedVersions = getAppliedVersions(db);
         int currentRank = getMaxRank(db);

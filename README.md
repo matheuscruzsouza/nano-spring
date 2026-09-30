@@ -8,7 +8,17 @@ Com o Nano-Spring, você transforma qualquer celular ou tablet Android em um pod
 
 ## 🌟 Principais Funcionalidades
 
-- 🚀 **Roteamento RESTful:** `@RestController`, `@GetMethod`, `@PostMethod`, `@PutMethod`, `@DeleteMethod`.
+- 📜 **Diagnósticos & Rotação de Logs (v1.9.0):** `RotatingFileLogger` com teto de disco e endpoint remoto `/actuator/logfile`.
+- ⚙️ **Perfis de Ambiente Multi-Camada (v1.9.0):** Suporte a `application-{profile}.properties` com ativação dinâmica.
+- ⚡ **Controladores Assíncronos (v1.9.0):** Retornos com `CompletableFuture<T>`, timeout automático (`408`) e proteção de threads de hardware (POS/TEF).
+- ⏱️ **Timeout de Leitura Configurável (v1.9.0):** `nano.server.read-timeout` para redes instáveis ou dispositivos embarcados.
+- 🔒 **HTTPS / TLS Nativo:** Tráfego criptografado com Keystores `.p12` / `.bks` sem alterar código.
+- 🛡️ **Rate Limiting Anti-DoS:** Algoritmo *Token Bucket* thread-safe em memória por IP (global e `@RateLimit`).
+- 📋 **Bean Validation Declarativo:** Validação automática com `@Valid`, `@NotNull`, `@NotBlank`, `@Size`, `@Min`, `@Max`, `@Email`, `@Pattern`.
+- 🏢 **Módulo Enterprise & Resiliência:** Pool de threads anti-OOM (`ThreadPoolAsyncRunner`), SQLite WAL mode concorrente e reconexão de rede (`NetworkWatcher`).
+- 📊 **Actuator & Observabilidade:** Endpoints `/actuator/health`, `/actuator/info` e `/actuator/logfile` expondo telemetria e logs remotos.
+- ⚡ **Classe Base `NanoSpringService`:** Foreground Service Android pré-configurado com canais de notificação e Wake/Multicast locks.
+- 🚀 **Roteamento RESTful:** `@RestController`, `@GetMethod`, `@PostMethod`, `@PutMethod`, `@DeleteMethod`, `@RequestHeader`.
 - 💉 **Injeção de Dependências (DI):** Gerenciamento automático de ciclo de vida com `@Service`, `@Repository` e `@Autowired`.
 - 🗄️ **Banco de Dados SQLite & Migrações:** Suporte nativo ao SQLite com versionamento de esquemas por arquivos SQL (estilo Flyway).
 - 🔍 **Descoberta de Serviço (mDNS / DNS-SD):** Anúncio automático do servidor na rede local via Zeroconf / Bonjour com NsdManager nativo.
@@ -88,7 +98,7 @@ dependencyResolutionManagement {
 #### 3. Adicionar a dependência no `build.gradle` do seu app:
 ```gradle
 dependencies {
-    implementation 'com.github.matheuscruzsouza:nano-spring:1.6.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring:1.9.0'
 }
 ```
 
@@ -101,22 +111,32 @@ O Nano-Spring já encapsula as seguintes dependências:
 
 ## 🚀 Guia de Uso Completo e Exemplos
 
-### 1. Inicializando o Servidor
-Crie um serviço no Android para rodar o servidor em Background. O servidor mapeia automaticamente seus controladores:
+### 1. Inicializando o Servidor (Via `NanoSpringService` ou Manual)
+
+#### Opção A: Herdar de `NanoSpringService` (Recomendado para Produção / Foreground)
+A classe base cuida de `NotificationChannel`, notificação permanente, `WakeLock`, `MulticastLock` e parada limpa:
 
 ```java
-import com.github.matheuscruzsouza.nanospring.server.Server;
+package com.seupacote.app;
 
-public class MyBackendService extends android.app.Service {
-    private Server server;
+import com.github.matheuscruzsouza.nanospring.service.NanoSpringService;
+
+public class MyBackendService extends NanoSpringService {
+    @Override
+    protected String getBasePackage() {
+        return "com.seupacote.app";
+    }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        // Inicializa na porta 8080 (ou a definida no application.properties)
-        server = new Server(this, 8080, "com.seupacote.app");
-        return START_STICKY;
+    protected int getPort() {
+        return 8080;
     }
 }
+```
+
+#### Opção B: Instanciação Direta
+```java
+Server server = new Server(context, 8080, "com.seupacote.app");
 ```
 
 ### 2. Configurações (`application.properties`) e `@Value`
@@ -152,18 +172,43 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    // Acessível via GET /api/users/123
+    // Acessível via GET /api/users/123 com captura de Header
     @GetMethod("/:id")
-    public User getUser(@PathVariable("id") String id) {
+    public User getUser(
+            @PathVariable("id") String id,
+            @RequestHeader("Authorization") String token) {
         return userService.findById(Integer.parseInt(id));
     }
 
-    // Acessível via POST /api/users com JSON no Body
+    // Acessível via POST /api/users com JSON no Body e status 201 Created
     @PostMethod("")
-    public User createUser(@RequestBody User newUser) {
-        return userService.save(newUser);
+    public ResponseEntity<User> createUser(@RequestBody User newUser) {
+        User salvo = userService.save(newUser);
+        return ResponseEntity.created("/api/users/" + salvo.getId()).body(salvo);
     }
 }
+```
+
+#### Respostas com `ResponseEntity` (Padrão Spring Boot):
+Você pode controlar status HTTP e cabeçalhos fluentes com a classe `ResponseEntity`:
+```java
+// 200 OK com corpo
+return ResponseEntity.ok(user);
+
+// 200 OK com builder fluente
+return ResponseEntity.ok().header("X-Custom", "123").body(user);
+
+// 201 Created com header Location
+return ResponseEntity.created("/api/users/10").body(user);
+
+// 204 No Content
+return ResponseEntity.noContent().build();
+
+// 404 Not Found
+return ResponseEntity.notFound().build();
+
+// Resolução de Optional (200 OK ou 404 Not Found)
+return ResponseEntity.of(userService.findOptionalById(id));
 ```
 
 ### 4. Upload de Arquivos (`multipart/form-data`)
@@ -429,6 +474,172 @@ nano.cors.max-age=86400
 // Ajustar configurações em tempo de execução:
 CorsConfiguration cors = server.getCorsConfiguration();
 ```
+
+### 14. Módulo Enterprise: Resiliência, Concorrência & Observabilidade (v1.7.0)
+
+O Nano-Spring inclui endurecimento de infraestrutura para dispositivos embarcados em produção (PDVs, totens e hubs IoT):
+
+#### A. Pool de Threads Controlado (`ThreadPoolAsyncRunner` - Anti-OOM)
+Elimina o risco de esgotamento de threads nativas do Linux no Android através de um executor delimitado:
+```properties
+nano.server.threads.core=4
+nano.server.threads.max=16
+nano.server.threads.queue-capacity=100
+nano.server.threads.keep-alive=60
+```
+
+#### B. Concorrência SQLite com Modo WAL (Write-Ahead Logging)
+Permite que múltiplas requisições façam leituras em paralelo sem serem travadas por transações de escrita:
+```properties
+nano.datasource.wal.enabled=true
+```
+
+#### C. Monitoramento Dinâmico de Rede (`NetworkWatcher`)
+Detecta alterações de IP / Wi-Fi via `ConnectivityManager.NetworkCallback` e re-anuncia automaticamente os serviços mDNS sem reiniciar a aplicação:
+```properties
+nano.network.watcher.enabled=true
+```
+
+#### D. Endpoints de Observabilidade Actuator (`/actuator/health` e `/actuator/info`)
+Telemetria remota em formato JSON contendo memória JVM, conectividade do banco, IP/porta e métricas de bateria do Android:
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+### 15. Segurança Corporativa & Validação Declarativa (v1.8.0)
+
+#### A. HTTPS / TLS Nativo via Keystore
+Habilite criptografia TLS no servidor configurando o Keystore no `application.properties`:
+```properties
+server.ssl.enabled=true
+server.ssl.key-store=certificates/keystore.p12
+server.ssl.key-store-password=senha-do-certificado
+server.ssl.key-store-type=PKCS12
+```
+
+#### B. Proteção Anti-DoS com Rate Limiting
+Limite o fluxo de requisições por IP globalmente ou em rotas críticas com `@RateLimit`:
+```java
+@RateLimit(requests = 5, durationSeconds = 60)
+@PostMethod("/api/checkout")
+public ResponseEntity<?> pagar(@RequestBody PagamentoDTO dto) { ... }
+```
+Se excedido, responde imediatamente com status HTTP `429 Too Many Requests`.
+
+#### C. Bean Validation Declarativo (`@Valid`)
+Valide dados de entrada com anotações declarativas no DTO:
+```java
+public class UsuarioDTO {
+    @NotNull @NotBlank
+    private String nome;
+
+    @Email
+    private String email;
+
+    @Min(18) @Max(120)
+    private int idade;
+}
+```
+No controlador:
+```java
+@PostMethod("/api/usuarios")
+public ResponseEntity<?> criar(@Valid @RequestBody UsuarioDTO dto) {
+    // Executa apenas se o payload for 100% válido; caso contrário retorna 400 Bad Request
+    return ResponseEntity.ok(service.salvar(dto));
+}
+```
+
+### 16. Diagnósticos de Campo, Perfis & Execução Assíncrona (v1.9.0)
+
+#### A. Rotação Local de Logs & Endpoint `/actuator/logfile`
+Persistência de logs no armazenamento interno do Android sem risco de esgotar a memória interna do equipamento (rotação geracional com teto de tamanho):
+```properties
+nano.logging.enabled=true
+nano.logging.level=INFO
+nano.logging.max-size-mb=5
+nano.logging.max-history=3
+```
+Suporte técnico pode auditar o dispositivo remotamente via HTTP:
+```bash
+curl http://terminal-pos.local:8080/actuator/logfile?lines=100
+```
+
+#### B. Perfis de Ambiente (`application-{profile}.properties`)
+Segregação transparente de configurações por ambiente:
+```properties
+# assets/application.properties
+nano.profiles.active=dev
+```
+O Nano-Spring carrega e sobrepõe automaticamente as chaves de `assets/application-dev.properties`.
+
+#### C. Controladores Assíncronos com `CompletableFuture`
+Desacople chamadas de hardware lentas (impressão térmica, leitura de chip EMV, Bluetooth) com timeout automático (`408 Request Timeout`):
+```java
+@PostMethod("/api/pos/imprimir")
+public CompletableFuture<ResponseEntity<Map<String, Object>>> imprimir(@RequestBody CupomDTO cupom) {
+    return CompletableFuture.supplyAsync(() -> {
+        impressoraHardware.imprimir(cupom);
+        return ResponseEntity.ok(Map.of("impresso", true));
+    });
+}
+```
+Configuração de timeout no `application.properties`:
+```properties
+nano.async.timeout-seconds=30
+nano.server.read-timeout=10000
+```
+
+---
+
+## ⚖️ Comparativo: Nano-Spring vs Spring Boot no Android
+
+Por que não rodar o Spring Boot tradicional diretamente no Android? E como o Nano-Spring se compara rodando uma mesma estrutura de projeto?
+
+| Dimensão / Métrica | 🌱 Nano-Spring (Android Nativo) | 🍃 Spring Boot (Stack Padrão) |
+| :--- | :--- | :--- |
+| **Consumo de Memória RAM** | **15 MB a 40 MB** *(Sem risco de OOM / LMK)* | **250 MB a 650 MB+** *(Morte iminente em 1GB-2GB RAM)* |
+| **Tempo de Inicialização (Cold Start)** | **~150 ms a 400 ms** *(Escaneamento DexFile)* | **8 a 25+ segundos** *(Auto-configurations pesadas em ARM)* |
+| **Impacto no APK / Footprint** | **&lt; 350 KB** *(Biblioteca enxuta)* | **35 MB a 70 MB** *(Fat JAR com centenas de libs transitivas)* |
+| **Execução no Android Runtime (ART)** | **100% Nativo** *(Compila com D8/R8 sem hacks)* | **Incompatível Nativamente** *(Requer Termux / Proot / JVM hack)* |
+| **Ciclo de Vida & Background Locks** | **Nativo** (`NanoSpringService`, WakeLock, Multicast) | **Sem integração com ciclo de vida do Android** |
+| **Banco de Dados Embutido** | **SQLite Nativo do Android** *(WAL mode sem JNI)* | **H2 / SQLite via JDBC JNI de desktop** |
+| **Descoberta na Rede Local (mDNS)** | **Nativo via NsdManager** (`http://device.local`) | **Requer JmDNS externo e gerenciamento manual de locks** |
+| **Google Play Store / Segurança MDM** | **100% Compliant** | **Rejeição por execução de binários Linux fora da sandbox** |
+
+### Ergonomia de Código Lado a Lado
+
+Desenvolvedores habituados ao Spring Boot têm **curva de aprendizado zero** ao migrar ou desenvolver para o Nano-Spring:
+
+```java
+// 🍃 Spring Boot (Cloud / Desktop)
+@RestController
+@RequestMapping("/api/pedidos")
+public class PedidoController {
+    @Autowired
+    private PedidoService service;
+
+    @PostMapping
+    public ResponseEntity<Pedido> criar(@Valid @RequestBody PedidoDTO dto,
+                                        @RequestHeader("Authorization") String token) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.salvar(dto));
+    }
+}
+
+// 🌱 Nano-Spring (Android Embarcado)
+@RestController("/api/pedidos")
+public class PedidoController {
+    @Autowired
+    private PedidoService service;
+
+    @PostMethod("")
+    public ResponseEntity<Pedido> criar(@Valid @RequestBody PedidoDTO dto,
+                                        @RequestHeader("Authorization") String token) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.salvar(dto));
+    }
+}
+```
+
+> 📖 Para a análise aprofundada completa com matriz de decisão e gráficos, consulte a [Página de Comparativo Arquitetural na Documentação](docs/spring-boot-vs-nano-spring.html).
 
 ---
 

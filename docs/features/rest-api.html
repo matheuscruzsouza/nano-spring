@@ -99,6 +99,11 @@
                 <td>Extrai parâmetros de Query String (ex: <code>?pagina=1</code>)</td>
               </tr>
               <tr>
+                <td><code>@RequestHeader(name)</code></td>
+                <td>Parâmetro</td>
+                <td>Injeta cabeçalhos HTTP com suporte a default value, required e conversão de tipo</td>
+              </tr>
+              <tr>
                 <td><code>@RequestBody</code></td>
                 <td>Parâmetro</td>
                 <td>Desserializa o corpo JSON da requisição em um POJO Java via Gson</td>
@@ -173,21 +178,77 @@ public class UserController {
 }</code></pre>
         </div>
 
-        <h2>⚙️ Controle de Resposta com ResponseEntity</h2>
-        <p>A classe <code>ResponseEntity&lt;T&gt;</code> permite definir status HTTP customizados e cabeçalhos arbitrários:</p>
+        <h2>🛡️ Injetando Cabeçalhos com @RequestHeader</h2>
+        <p>Injete valores de cabeçalhos HTTP com suporte a case-insensitivity, obrigatoriedade e valores padrão:</p>
 
         <div class="code-wrapper">
           <div class="code-header">
-            <span>CustomResponseController.java</span>
+            <span>HeaderController.java</span>
             <button class="copy-btn">Copiar</button>
           </div>
-          <pre><code class="language-java">@GetMethod("/status")
-public ResponseEntity&lt;String&gt; getStatus() {
-    return ResponseEntity.status(HttpStatus.ACCEPTED)
-            .header("X-App-Version", "1.6.0")
-            .header("X-Powered-By", "Nano-Spring-Android")
-            .body("Solicitação recebida com sucesso");
+          <pre><code class="language-java">@RestController("/api/auth")
+public class AuthController {
+
+    // 1. Cabeçalho obrigatório (retorna 400 Bad Request se não for enviado)
+    @GetMethod("/profile")
+    public ResponseEntity&lt;User&gt; getProfile(@RequestHeader("Authorization") String token) {
+        return ResponseEntity.ok(authService.validateAndGetUser(token));
+    }
+
+    // 2. Com valor padrão e conversão automática de tipo
+    @GetMethod("/items")
+    public List&lt;Item&gt; listItems(@RequestHeader(value = "X-Page-Size", defaultValue = "20") int pageSize) {
+        return itemService.list(pageSize);
+    }
+
+    // 3. Captura de todos os headers da requisição em um Map
+    @GetMethod("/all-headers")
+    public Map&lt;String, String&gt; getAllHeaders(@RequestHeader Map&lt;String, String&gt; headers) {
+        return headers;
+    }
 }</code></pre>
+        </div>
+
+        <h2>⚙️ Controle Total de Respostas com ResponseEntity (Spring-Like)</h2>
+        <p>A classe <code>ResponseEntity&lt;T&gt;</code> oferece total paridade com o Spring Boot para status HTTP, cabeçalhos fluentes e manipulação de respostas:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>ResponseEntityExamples.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">// 200 OK direto com corpo
+return ResponseEntity.ok(usuario);
+
+// 200 OK com encadeamento de cabeçalhos e builder
+return ResponseEntity.ok()
+        .contentType("application/json")
+        .header("X-App-Version", "1.6.0")
+        .body(usuario);
+
+// 201 CREATED com header Location
+return ResponseEntity.created("/api/users/42").body(novoUsuario);
+
+// 202 ACCEPTED
+return ResponseEntity.accepted().body("Processando em segundo plano");
+
+// 204 NO CONTENT (sem corpo)
+return ResponseEntity.noContent().build();
+
+// 400 BAD REQUEST
+return ResponseEntity.badRequest().body(Map.of("erro", "Parâmetros inválidos"));
+
+// 404 NOT FOUND
+return ResponseEntity.notFound().build();
+
+// 422 UNPROCESSABLE ENTITY
+return ResponseEntity.unprocessableEntity().body(errosValidacao);
+
+// 500 INTERNAL SERVER ERROR
+return ResponseEntity.internalServerError().body("Falha inesperada no servidor");
+
+// Resolução elegante de Optional (200 OK se presente ou 404 NOT FOUND se vazio):
+return ResponseEntity.of(userService.buscarOptionalPorId(id));</code></pre>
         </div>
 
         <div class="page-nav">

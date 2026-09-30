@@ -12,11 +12,18 @@ import com.github.matheuscruzsouza.nanospring.server.Server;
 import com.google.gson.Gson;
 import com.samskivert.mustache.Mustache;
 
+import com.github.matheuscruzsouza.nanospring.security.RateLimit;
+import com.github.matheuscruzsouza.nanospring.security.TokenBucketRateLimiter;
+import com.github.matheuscruzsouza.nanospring.validation.BeanValidator;
+import com.github.matheuscruzsouza.nanospring.validation.Valid;
+import com.github.matheuscruzsouza.nanospring.validation.ValidationResult;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -32,6 +39,15 @@ public class ServerIndexHandler {
     // path -> HTTP Method -> (Controller Instance -> Method)
     private final static Map<String, Map<NanoHTTPD.Method, Map<Object, Method>>> INSTANCES = new ConcurrentHashMap<>();
     private final static Map<Class<? extends Throwable>, Map.Entry<Object, Method>> EXCEPTION_HANDLERS = new ConcurrentHashMap<>();
+    private static TokenBucketRateLimiter rateLimiter = new TokenBucketRateLimiter();
+
+    public static TokenBucketRateLimiter getRateLimiter() {
+        return rateLimiter;
+    }
+
+    public static void setRateLimiter(TokenBucketRateLimiter limiter) {
+        rateLimiter = limiter != null ? limiter : new TokenBucketRateLimiter();
+    }
 
     public static void registerExceptionHandler(Class<? extends Throwable> exceptionClass, Object instance, Method method) {
         EXCEPTION_HANDLERS.put(exceptionClass, new java.util.AbstractMap.SimpleEntry<>(instance, method));
@@ -164,11 +180,69 @@ public class ServerIndexHandler {
                         }
                         matched = true;
                         break;
+                    } else if (ann instanceof com.github.matheuscruzsouza.nanospring.annotation.RequestHeader) {
+                        com.github.matheuscruzsouza.nanospring.annotation.RequestHeader rh = (com.github.matheuscruzsouza.nanospring.annotation.RequestHeader) ann;
+                        String headerName = !rh.value().isEmpty() ? rh.value() : rh.name();
+                        Map<String, String> headers = session.getHeaders();
+
+                        if (headerName.isEmpty() && Map.class.isAssignableFrom(targetType)) {
+                            convertedArgs[i] = headers != null ? headers : Collections.emptyMap();
+                        } else {
+                            String headerVal = getHeaderCaseInsensitive(headers, headerName);
+                            if (headerVal == null && !com.github.matheuscruzsouza.nanospring.annotation.RequestHeader.DEFAULT_NONE.equals(rh.defaultValue())) {
+                                headerVal = rh.defaultValue();
+                            }
+                            if (headerVal == null && rh.required()) {
+                                return newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", "Missing required request header: " + headerName);
+                            }
+                            convertedArgs[i] = convertStringToType(headerVal, targetType);
+                        }
+                        matched = true;
+                        break;
                     }
                 }
                 
                 if (!matched) {
                     convertedArgs[i] = getPrimitiveDefault(targetType);
+                }
+            }
+
+            // 1. Bean Validation for parameters annotated with @Valid
+            for (int i = 0; i < parameterAnnotations.length; i++) {
+                boolean hasValid = false;
+                for (Annotation a : parameterAnnotations[i]) {
+                    if (a instanceof Valid) {
+                        hasValid = true;
+                        break;
+                    }
+                }
+                if (hasValid && convertedArgs[i] != null) {
+                    ValidationResult vr = BeanValidator.validate(convertedArgs[i]);
+                    if (!vr.isValid()) {
+                        return newFixedLengthResponse(Status.BAD_REQUEST, "application/json", gson.toJson(vr.toErrorMap()));
+                    }
+                }
+            }
+
+            // 2. Route Rate Limit check
+            RateLimit rl = method.isAnnotationPresent(RateLimit.class)
+                    ? method.getAnnotation(RateLimit.class)
+                    : instance.getClass().getAnnotation(RateLimit.class);
+            if (rl != null) {
+                String clientIp = session.getRemoteIpAddress();
+                String routeKey = method.getDeclaringClass().getName() + "#" + method.getName();
+                if (!rateLimiter.checkRoute(clientIp, routeKey, rl.requests(), rl.durationSeconds())) {
+                    Map<String, Object> err = new HashMap<>();
+                    err.put("status", 429);
+                    err.put("error", "Too Many Requests");
+                    err.put("message", "Rate limit exceeded for route");
+                    NanoHTTPD.Response r = newFixedLengthResponse(
+                            com.github.matheuscruzsouza.nanospring.http.HttpStatus.custom(429, "Too Many Requests"),
+                            "application/json",
+                            gson.toJson(err)
+                    );
+                    r.addHeader("Retry-After", String.valueOf(rl.durationSeconds()));
+                    return r;
                 }
             }
 
@@ -201,6 +275,57 @@ public class ServerIndexHandler {
                 }
             }
 
+            // Asynchronous CompletableFuture / Future resolution
+            if (result instanceof java.util.concurrent.Future) {
+                java.util.concurrent.Future<?> future = (java.util.concurrent.Future<?>) result;
+                long timeoutSec = 30;
+                try {
+                    String toStr = com.github.matheuscruzsouza.nanospring.server.Environment.getProperty("nano.async.timeout-seconds", "30");
+                    timeoutSec = Long.parseLong(toStr.trim());
+                } catch (Exception ignored) {}
+
+                try {
+                    result = future.get(timeoutSec, java.util.concurrent.TimeUnit.SECONDS);
+                } catch (java.util.concurrent.TimeoutException te) {
+                    Map<String, Object> err = new HashMap<>();
+                    err.put("status", 408);
+                    err.put("error", "Request Timeout");
+                    err.put("message", "Asynchronous operation timed out after " + timeoutSec + "s");
+                    return newFixedLengthResponse(
+                            com.github.matheuscruzsouza.nanospring.http.HttpStatus.custom(408, "Request Timeout"),
+                            "application/json",
+                            gson.toJson(err)
+                    );
+                } catch (java.util.concurrent.ExecutionException ee) {
+                    Throwable cause = ee.getCause() != null ? ee.getCause() : ee;
+                    Map.Entry<Object, Method> handler = findExceptionHandler(cause.getClass());
+                    if (handler != null) {
+                        try {
+                            result = handler.getValue().invoke(handler.getKey(), cause);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Erro no ExceptionHandler: " + e.getMessage());
+                        }
+                    } else if (cause.getClass().isAnnotationPresent(com.github.matheuscruzsouza.nanospring.annotation.ResponseStatus.class)) {
+                        com.github.matheuscruzsouza.nanospring.annotation.ResponseStatus rs = cause.getClass().getAnnotation(com.github.matheuscruzsouza.nanospring.annotation.ResponseStatus.class);
+                        NanoHTTPD.Response.IStatus status = (rs.code() != 0)
+                                ? (com.github.matheuscruzsouza.nanospring.http.HttpStatus.valueOf(rs.code()) != null ? com.github.matheuscruzsouza.nanospring.http.HttpStatus.valueOf(rs.code()) : com.github.matheuscruzsouza.nanospring.http.HttpStatus.custom(rs.code(), rs.reason()))
+                                : rs.value();
+                        String reason = rs.reason().isEmpty() ? cause.getMessage() : rs.reason();
+                        Map<String, Object> errBody = new HashMap<>();
+                        errBody.put("status", status.getRequestStatus());
+                        errBody.put("error", status.getDescription());
+                        errBody.put("message", reason != null ? reason : "");
+                        return newFixedLengthResponse(status, "application/json", gson.toJson(errBody));
+                    } else {
+                        return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Erro assíncrono: " + cause.getMessage());
+                    }
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Requisição assíncrona interrompida: " + ie.getMessage());
+                }
+            }
+
             NanoHTTPD.Response.IStatus responseStatus = Status.OK;
             Map<String, String> customHeaders = null;
 
@@ -216,12 +341,22 @@ public class ServerIndexHandler {
                         : rs.value();
             }
 
+            String effectiveMimeType = mimeType;
+            if (customHeaders != null) {
+                for (Map.Entry<String, String> header : customHeaders.entrySet()) {
+                    if ("content-type".equalsIgnoreCase(header.getKey())) {
+                        effectiveMimeType = header.getValue();
+                        break;
+                    }
+                }
+            }
+
             NanoHTTPD.Response finalResponse;
 
             if (result instanceof java.io.File) {
                 java.io.File f = (java.io.File) result;
                 try {
-                    finalResponse = NanoHTTPD.newChunkedResponse(responseStatus, mimeType, new java.io.FileInputStream(f));
+                    finalResponse = NanoHTTPD.newChunkedResponse(responseStatus, effectiveMimeType, new java.io.FileInputStream(f));
                     finalResponse.addHeader("Content-Disposition", "attachment; filename=\"" + f.getName() + "\"");
                 } catch (Exception e) {
                     return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Erro lendo arquivo: " + e.getMessage());
@@ -245,18 +380,20 @@ public class ServerIndexHandler {
             } else {
                 String response = "";
                 if (result != null) {
-                    if (result instanceof String && !mimeType.equals("application/json")) {
+                    if (result instanceof String && !effectiveMimeType.equals("application/json")) {
                         response = (String) result;
                     } else {
                         response = gson.toJson(result);
                     }
                 }
-                finalResponse = newFixedLengthResponse(responseStatus, mimeType, response);
+                finalResponse = newFixedLengthResponse(responseStatus, effectiveMimeType, response);
             }
 
             if (customHeaders != null) {
                 for (Map.Entry<String, String> header : customHeaders.entrySet()) {
-                    finalResponse.addHeader(header.getKey(), header.getValue());
+                    if (!"content-type".equalsIgnoreCase(header.getKey())) {
+                        finalResponse.addHeader(header.getKey(), header.getValue());
+                    }
                 }
             }
 
@@ -306,5 +443,20 @@ public class ServerIndexHandler {
         if (type == byte.class) return (byte) 0;
         if (type == char.class) return '\0';
         return null; 
+    }
+
+    private static String getHeaderCaseInsensitive(Map<String, String> headers, String headerName) {
+        if (headers == null || headerName == null) return null;
+        String val = headers.get(headerName);
+        if (val != null) return val;
+        String lower = headerName.toLowerCase();
+        val = headers.get(lower);
+        if (val != null) return val;
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(headerName)) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 }

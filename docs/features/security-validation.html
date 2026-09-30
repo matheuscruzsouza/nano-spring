@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Segurança & Validação Declarativa | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.8.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="security-validation.html" class="active">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
+          <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>🔒 Módulo de Segurança & Validação Declarativa (v1.8.0)</h1>
+        <p>A versão <strong>v1.8.0</strong> do <strong>Nano-Spring</strong> adiciona recursos vitais para conformidade corporativa (LGPD, PCI-DSS) e proteção em tempo de execução para totens, PDVs e servidores embarcados no Android.</p>
+
+        <div class="callout callout-tip">
+          <span>✨</span>
+          <div>Totalmente compatível com o padrão consagrado do Spring Boot: HTTPS transparente via Keystore, proteção contra DoS via Token Bucket e anotações <code>@Valid</code> com retorno automático de <code>400 Bad Request</code>.</div>
+        </div>
+
+        <h2>1. HTTPS / TLS Nativo via Keystore</h2>
+        <p>Habilite tráfego criptografado SSL/TLS diretamente pelo <code>application.properties</code> sem alterar uma única linha do seu código Java:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>assets/application.properties</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-properties"># Habilita o socket seguro TLS
+server.ssl.enabled=true
+
+# Caminho para o certificado (buscado em assets/ ou caminho absoluto)
+server.ssl.key-store=certificates/keystore.p12
+
+# Senha do arquivo keystore
+server.ssl.key-store-password=minha-senha-segura
+
+# Tipo do Keystore (padrão: PKCS12, suporta também BKS e JKS)
+server.ssl.key-store-type=PKCS12
+
+# Protocolos permitidos (opcional)
+server.ssl.protocols=TLSv1.2,TLSv1.3</code></pre>
+        </div>
+
+        <h2>2. Proteção Anti-DoS com Rate Limiting (Token Bucket)</h2>
+        <p>Dispositivos Android possuem hardware limitado. O <code>TokenBucketRateLimiter</code> protege o dispositivo contra sobrecarga de requisições por IP tanto globalmente quanto por rota.</p>
+
+        <h3>A. Proteção Global</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>assets/application.properties</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-properties"># Habilita limitador global por IP
+nano.ratelimit.enabled=true
+
+# Requisições normais por segundo por IP
+nano.ratelimit.requests-per-second=50
+
+# Capacidade de pico (burst)
+nano.ratelimit.burst-capacity=100</code></pre>
+        </div>
+
+        <h3>B. Proteção por Rota com <code>@RateLimit</code></h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>PaymentController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">@RestController("/api/pagamentos")
+public class PaymentController {
+
+    // Limita este endpoint a no máximo 5 requisições por minuto por cliente
+    @RateLimit(requests = 5, durationSeconds = 60)
+    @PostMethod("/processar")
+    public ResponseEntity<String> processarPagamento(@RequestBody PagamentoDTO dto) {
+        return ResponseEntity.ok("Pagamento processado com sucesso!");
+    }
+}</code></pre>
+        </div>
+
+        <p>Quando o limite é excedido, o servidor retorna instantaneamente <strong><code>429 Too Many Requests</code></strong> com cabeçalho <code>Retry-After</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>Resposta HTTP 429</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-json">{
+  "status": 429,
+  "error": "Too Many Requests",
+  "message": "Rate limit exceeded for route"
+}</code></pre>
+        </div>
+
+        <h2>3. Bean Validation Declarativo com <code>@Valid</code></h2>
+        <p>Valide DTOs recebidos no corpo das requisições declarativamente, sem escrever dezenas de <code>if</code> e validações manuais nos métodos:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>ClienteRequest.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.minhaempresa.dto;
+
+import com.github.matheuscruzsouza.nanospring.validation.*;
+import java.util.List;
+
+public class ClienteRequest {
+
+    @NotNull(message = "Nome é obrigatório")
+    @NotBlank(message = "Nome não pode estar em branco")
+    private String nome;
+
+    @Email(message = "Formato de e-mail inválido")
+    private String email;
+
+    @Min(value = 18, message = "Cliente deve ser maior de idade")
+    @Max(value = 120, message = "Idade inválida")
+    private int idade;
+
+    @Size(min = 1, max = 5, message = "Informe entre 1 e 5 telefones")
+    private List<String> telefones;
+
+    @Pattern(regexp = "^[0-9]{5}-[0-9]{3}$", message = "CEP deve estar no formato 99999-999")
+    private String cep;
+}</code></pre>
+        </div>
+
+        <h3>Validação no Controller:</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>ClienteController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">@RestController("/api/clientes")
+public class ClienteController {
+
+    @PostMethod("")
+    public ResponseEntity<?> cadastrar(@Valid @RequestBody ClienteRequest request) {
+        // Só executa se passar em todas as validações!
+        clienteService.salvar(request);
+        return ResponseEntity.status(201).body("Cadastrado com sucesso!");
+    }
+}</code></pre>
+        </div>
+
+        <p>Se qualquer campo violar as restrições, o Nano-Spring interrompe o processamento antes do método e retorna <strong><code>400 Bad Request</code></strong> com os detalhes:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>Resposta 400 Bad Request</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-json">{
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Validation failed. 2 error(s) found.",
+  "errors": [
+    {
+      "field": "email",
+      "message": "Formato de e-mail inválido",
+      "rejectedValue": "cliente@"
+    },
+    {
+      "field": "idade",
+      "message": "Cliente deve ser maior de idade",
+      "rejectedValue": 16
+    }
+  ]
+}</code></pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-properties.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+</body>
+</html>

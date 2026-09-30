@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo Enterprise & Resiliência | Nano-Spring 🌱</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span>🌱 Nano-Spring</span>
+      <span class="badge">v1.7.0</span>
+    </div>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="../index.html">Visão Geral</a></li>
+          <li><a href="../getting-started.html">Instalação & Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Funcionalidades</div>
+        <ul class="sidebar-menu">
+          <li><a href="enterprise-hardening.html" class="active">🛡️ Enterprise & Resiliência</a></li>
+          <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
+          <li><a href="sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="files.html">Upload & Download</a></li>
+          <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+          <li><a href="templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <h1>🛡️ Módulo Enterprise & Resiliência Corporativa (v1.7.0)</h1>
+        <p>O <strong>Nano-Spring v1.7.0</strong> foi projetado para ambientes corporativos com restrições severas de hardware e processos em segundo plano (como maquininhas POS/PDV Android, totens de autoatendimento, coletores de dados e hubs IoT).</p>
+
+        <div class="callout callout-info">
+          <span>🏢</span>
+          <div>Todos os 5 pilares de estabilidade corporativa vêm <strong>habilitados por padrão com valores seguros</strong>, podendo ser afinados via <code>application.properties</code>.</div>
+        </div>
+
+        <h2>1. Pool de Threads Controlado (Anti-OOM)</h2>
+        <p>O NanoHTTPD original cria uma nova thread nativa no Linux para cada requisição recebida. Sob picos de tráfego em aparelhos modestos (1 GB de RAM), o sistema operacional encerra a aplicação com <code>OutOfMemoryError: unable to create new native thread</code>.</p>
+        <p>O <code>ThreadPoolAsyncRunner</code> substitui o executor padrão por um pool delimitado com fila de espera:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>assets/application.properties</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-properties"># Threads mínimas sempre ativas (padrão: 4)
+nano.server.threads.core=4
+
+# Threads máximas para picos (padrão: 16)
+nano.server.threads.max=16
+
+# Capacidade da fila de conexões pendentes (padrão: 100)
+nano.server.threads.queue-capacity=100
+
+# Tempo ocioso para liberação de threads excedentes em segundos (padrão: 60)
+nano.server.threads.keep-alive=60</code></pre>
+        </div>
+
+        <h2>2. Concorrência SQLite com Modo WAL (Write-Ahead Logging)</h2>
+        <p>Por padrão, o SQLite no Android impede que uma thread leia o banco de dados enquanto outra estiver escrevendo, disparando <code>SQLiteDatabaseLockedException</code>.</p>
+        <p>O Nano-Spring ativa automaticamente o modo WAL (<code>db.enableWriteAheadLogging()</code>), permitindo leituras concorrentes em paralelo sem bloquear transações de escrita.</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>assets/application.properties</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-properties"># Ativação do modo Write-Ahead Logging (padrão: true)
+nano.datasource.wal.enabled=true</code></pre>
+        </div>
+
+        <h2>3. Monitoramento Dinâmico de Rede & Reanúncio mDNS</h2>
+        <p>Quando um roteador reinicia, o sinal Wi-Fi oscila ou o DHCP atribui um novo IP ao dispositivo Android, o <code>NetworkWatcher</code> detecta a troca de IP e renova o registro mDNS/DNS-SD automaticamente, sem necessidade de reiniciar o aplicativo.</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>assets/application.properties</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-properties"># Monitor de troca dinâmica de IP e conectividade (padrão: true)
+nano.network.watcher.enabled=true</code></pre>
+        </div>
+
+        <h2>4. Classe Base NanoSpringService (Android Foreground Service)</h2>
+        <p>Para manter o servidor HTTP ativo ininterruptamente sem ser finalizado pelo gerenciador de bateria do Android, herde de <code>NanoSpringService</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>MyServerService.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.minhaempresa.pdv;
+
+import com.github.matheuscruzsouza.nanospring.service.NanoSpringService;
+
+public class MyServerService extends NanoSpringService {
+
+    @Override
+    protected String getBasePackage() {
+        return "com.minhaempresa.pdv";
+    }
+
+    @Override
+    protected int getPort() {
+        return 8080;
+    }
+
+    @Override
+    protected String getNotificationTitle() {
+        return "PDV Local Server";
+    }
+}</code></pre>
+        </div>
+
+        <p>A classe base gerencia automaticamente:</p>
+        <ul>
+          <li>Criação do <code>NotificationChannel</code> e notificação persistente.</li>
+          <li>Aquisição e liberação segura de <code>PowerManager.WakeLock</code>.</li>
+          <li>Aquisição de <code>WifiManager.MulticastLock</code> para tráfego mDNS.</li>
+          <li>Parada limpa de todos os sockets no <code>onDestroy()</code>.</li>
+        </ul>
+
+        <h2>5. Endpoints Actuator: /actuator/health e /actuator/info</h2>
+        <p>Monitore o estado do servidor remotamente através de endpoints JSON compatíveis com Spring Boot Actuator:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span>Requisição GET /actuator/health</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-json">{
+  "status": "UP",
+  "timestamp": 1759258200000,
+  "components": {
+    "memory": {
+      "status": "UP",
+      "details": {
+        "usedBytes": 18432000,
+        "freeBytes": 42598400,
+        "totalBytes": 61030400,
+        "maxBytes": 268435456
+      }
+    },
+    "database": {
+      "status": "UP",
+      "details": {
+        "open": true,
+        "readOnly": false,
+        "walEnabled": true
+      }
+    },
+    "threads": {
+      "status": "UP",
+      "details": {
+        "corePoolSize": 4,
+        "maxPoolSize": 16,
+        "activeCount": 2,
+        "queueSize": 0,
+        "queueCapacity": 100
+      }
+    },
+    "network": {
+      "status": "UP",
+      "details": {
+        "ip": "192.168.1.105",
+        "port": 8080
+      }
+    },
+    "battery": {
+      "status": "UP",
+      "details": {
+        "level": 98,
+        "percentage": 98,
+        "charging": true,
+        "pluggedAc": true,
+        "temperatureCelsius": 28.5
+      }
+    }
+  }
+}</code></pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-properties.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+</body>
+</html>
