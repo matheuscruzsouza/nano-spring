@@ -409,6 +409,14 @@ public class ServerIndexHandler {
         INSTANCES.get(path).put(httpMethod, Map.of(klass, method));
     }
 
+    public static Map<String, Map<NanoHTTPD.Method, Map<Object, Method>>> getInstances() {
+        return Collections.unmodifiableMap(INSTANCES);
+    }
+
+    public static void clearInstances() {
+        INSTANCES.clear();
+    }
+
     private static Map.Entry<Object, Method> findExceptionHandler(Class<?> clazz) {
         if (clazz == null || clazz == Object.class) return null;
         if (EXCEPTION_HANDLERS.containsKey(clazz)) return EXCEPTION_HANDLERS.get(clazz);

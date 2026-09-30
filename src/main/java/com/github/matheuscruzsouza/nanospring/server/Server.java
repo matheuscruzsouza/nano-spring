@@ -19,6 +19,7 @@ import com.github.matheuscruzsouza.nanospring.database.SqliteMigrator;
 import com.github.matheuscruzsouza.nanospring.discovery.NetworkWatcher;
 import com.github.matheuscruzsouza.nanospring.discovery.NsdServiceManager;
 import com.github.matheuscruzsouza.nanospring.handler.ServerIndexHandler;
+import com.github.matheuscruzsouza.nanospring.openapi.SwaggerUiHandler;
 import com.github.matheuscruzsouza.nanospring.security.SslConfiguration;
 import com.github.matheuscruzsouza.nanospring.security.TokenBucketRateLimiter;
 
@@ -248,6 +249,16 @@ public class Server extends RouterNanoHTTPD {
             }
             if ("/actuator/logfile".equals(uri)) {
                 return ActuatorHealthHandler.handleLogfile(session);
+            }
+        }
+
+        boolean swaggerEnabled = Boolean.parseBoolean(Environment.getProperty("nano.swagger.enabled", "true"));
+        if (swaggerEnabled) {
+            if ("/v3/api-docs".equals(uri)) {
+                return SwaggerUiHandler.handleApiDocs();
+            }
+            if ("/swagger-ui".equals(uri) || "/swagger-ui/".equals(uri) || "/swagger-ui.html".equals(uri)) {
+                return SwaggerUiHandler.handleUi();
             }
         }
 

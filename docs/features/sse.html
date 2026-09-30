@@ -9,39 +9,73 @@
 </head>
 <body>
 
+    <!-- Topbar -->
   <header class="topbar">
     <div class="brand">
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
-      <span>🌱 Nano-Spring</span>
-      <span class="badge">v1.6.0</span>
+      <span class="logo-icon">🌱</span>
+      <span>Nano-Spring</span>
+      <span class="badge">v1.9.0</span>
     </div>
+
+    <div class="topbar-center">
+      <button class="search-btn" aria-label="Buscar na documentação">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <span>Buscar na documentação...</span>
+        <kbd>⌘K</kbd>
+      </button>
+    </div>
+
     <nav class="nav-links">
       <a href="../index.html">Início</a>
-      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener">GitHub ↗</a>
+      <a href="../getting-started.html">Instalação</a>
+      <a href="../spring-boot-vs-nano-spring.html">Comparativo ⚖️</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener" class="github-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span>GitHub</span>
+      </a>
     </nav>
   </header>
 
   <div class="docs-layout">
+        <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-section">
         <div class="sidebar-title">Começando</div>
         <ul class="sidebar-menu">
           <li><a href="../index.html">Visão Geral</a></li>
           <li><a href="../getting-started.html">Instalação & Setup</a></li>
+          <li><a href="../spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
         </ul>
       </div>
 
       <div class="sidebar-section">
-        <div class="sidebar-title">Funcionalidades</div>
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="logging-diagnostics.html">📜 Diagnósticos & Perfis (v1.9.0)</a></li>
+          <li><a href="security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Core Web</div>
         <ul class="sidebar-menu">
           <li><a href="rest-api.html">APIs RESTful</a></li>
+          <li><a href="swagger-openapi.html">📑 Swagger & OpenAPI 3.0</a></li>
           <li><a href="dependency-injection.html">Injeção de Dependências</a></li>
-          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
-          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
-          <li><a href="cors.html">CORS Nativo</a></li>
           <li><a href="sse.html" class="active">Server-Sent Events (SSE)</a></li>
           <li><a href="files.html">Upload & Download</a></li>
           <li><a href="interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Infraestrutura Local</div>
+        <ul class="sidebar-menu">
+          <li><a href="sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="cors.html">CORS Nativo</a></li>
           <li><a href="templates-static.html">Templates & Estáticos</a></li>
         </ul>
       </div>
@@ -49,7 +83,15 @@
 
     <main class="main-content">
       <div class="content">
-        <h1>📡 Server-Sent Events (SSE) em Tempo Real</h1>
+                <!-- Breadcrumb -->
+        <div class="breadcrumb">
+          <a href="../index.html">Documentação</a>
+          <span class="breadcrumb-separator">/</span>
+          <span>Funcionalidades</span>
+          <span class="breadcrumb-separator">/</span>
+          <span style="color: #fff;">Server-Sent Events (SSE)</span>
+        </div>
+<h1>📡 Server-Sent Events (SSE) em Tempo Real</h1>
         <p>Com a classe <code>SseEmitter</code>, o <strong>Nano-Spring</strong> viabiliza o envio contínuo de eventos do servidor Android diretamente para o navegador sobre uma única conexão HTTP persistente, dispensando WebSockets complexos.</p>
 
         <h2>💻 Implementação no Controller</h2>
@@ -57,7 +99,12 @@
 
         <div class="code-wrapper">
           <div class="code-header">
-            <span>SensoresController.java</span>
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">SensoresController.java</span>
             <button class="copy-btn">Copiar</button>
           </div>
           <pre><code class="language-java">package com.exemplo.meuapp.controller;
@@ -106,7 +153,12 @@ public class SensoresController {
         <h3>1. JavaScript Puro com EventSource</h3>
         <div class="code-wrapper">
           <div class="code-header">
-            <span>app.js (Cliente)</span>
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">app.js (Cliente)</span>
             <button class="copy-btn">Copiar</button>
           </div>
           <pre><code class="language-javascript">const sse = new EventSource('/api/stream/leituras');
@@ -126,7 +178,12 @@ sse.onerror = (err) => {
         <h3>2. Com HTMX (Extensão SSE)</h3>
         <div class="code-wrapper">
           <div class="code-header">
-            <span>index.html (HTMX)</span>
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">index.html (HTMX)</span>
             <button class="copy-btn">Copiar</button>
           </div>
           <pre><code class="language-markup">&lt;div hx-ext="sse" sse-connect="/api/stream/leituras" sse-swap="sensor_update"&gt;

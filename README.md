@@ -9,6 +9,7 @@ Com o Nano-Spring, você transforma qualquer celular ou tablet Android em um pod
 ## 🌟 Principais Funcionalidades
 
 - 📜 **Diagnósticos & Rotação de Logs (v1.9.0):** `RotatingFileLogger` com teto de disco e endpoint remoto `/actuator/logfile`.
+- 📑 **Swagger & OpenAPI 3.0 Embutido (v1.9.0):** Interface interativa embutida (`/swagger-ui`) e OpenAPI 3.0.1 (`/v3/api-docs`) ultra-leve (~15 KB) e 100% offline.
 - ⚙️ **Perfis de Ambiente Multi-Camada (v1.9.0):** Suporte a `application-{profile}.properties` com ativação dinâmica.
 - ⚡ **Controladores Assíncronos (v1.9.0):** Retornos com `CompletableFuture<T>`, timeout automático (`408`) e proteção de threads de hardware (POS/TEF).
 - ⏱️ **Timeout de Leitura Configurável (v1.9.0):** `nano.server.read-timeout` para redes instáveis ou dispositivos embarcados.
@@ -587,6 +588,46 @@ Configuração de timeout no `application.properties`:
 ```properties
 nano.async.timeout-seconds=30
 nano.server.read-timeout=10000
+```
+
+### 17. Swagger & OpenAPI 3.0 Embutido (v1.9.0)
+
+Documente e teste suas rotas interativamente sem precisar instalar pacotes NPM ou bibliotecas pesadas de 8 MB+. O **Nano-Swagger** gera um endpoint OpenAPI 3.0.1 dinâmico e serve uma interface HTML5/CSS/JS ultra-leve (~15 KB) que funciona 100% offline em redes locais de TV-Box ou terminais POS:
+
+- **Interface Gráfica Interativa:** `http://<ip-do-dispositivo>:8080/swagger-ui` (ou `/swagger-ui.html`)
+- **Especificação OpenAPI JSON:** `http://<ip-do-dispositivo>:8080/v3/api-docs`
+
+#### Exemplo de Controller Documentado:
+```java
+@Tag(name = "Produtos", description = "Operações do catálogo de produtos")
+@RestController("/api/produtos")
+public class ProdutoController {
+
+    @Operation(summary = "Consultar produto por código de barras")
+    @GetMethod("/:ean")
+    public ResponseEntity<ProdutoDTO> buscarPorEan(
+            @PathVariable("ean") @Parameter(description = "EAN-13 numérico", example = "7891000100103") String ean
+    ) {
+        return ResponseEntity.ok(produtoService.buscarPorEan(ean));
+    }
+
+    @Operation(summary = "Cadastrar novo produto")
+    @ResponseStatus(HttpStatus.CREATED)
+    @ApiResponse(responseCode = 201, description = "Criado com sucesso", responseClass = ProdutoDTO.class)
+    @ApiResponse(responseCode = 400, description = "Validação falhou")
+    @PostMethod("")
+    public ResponseEntity<ProdutoDTO> cadastrar(@Valid @RequestBody ProdutoDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(produtoService.salvar(dto));
+    }
+}
+```
+
+Configuração opcional em `application.properties`:
+```properties
+nano.swagger.enabled=true
+nano.swagger.title=PDV Smart API
+nano.swagger.version=1.0.0
+nano.swagger.description=API REST de Vendas e Integração Local
 ```
 
 ---
