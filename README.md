@@ -115,11 +115,13 @@ O Nano-Spring já encapsula as seguintes dependências:
 ### 1. Inicializando o Servidor (Via `NanoSpringService` ou Manual)
 
 #### Opção A: Herdar de `NanoSpringService` (Recomendado para Produção / Foreground)
-A classe base cuida de `NotificationChannel`, notificação permanente, `WakeLock`, `MulticastLock` e parada limpa:
+A classe base cuida de `NotificationChannel`, notificação permanente, `WakeLock`, `MulticastLock`, diagnóstico de Doze Mode e parada limpa:
 
 ```java
 package com.seupacote.app;
 
+import android.content.pm.ServiceInfo;
+import android.os.Build;
 import com.github.matheuscruzsouza.nanospring.service.NanoSpringService;
 
 public class MyBackendService extends NanoSpringService {
@@ -132,6 +134,24 @@ public class MyBackendService extends NanoSpringService {
     protected int getPort() {
         return 8080;
     }
+
+    // Opcional: no Android 10+ / 14+, declare o tipo de serviço (ex: dataSync)
+    @Override
+    protected int getForegroundServiceType() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
+        }
+        return 0;
+    }
+}
+```
+
+##### 🔋 Prevenção contra Suspensão com a Tela Apagada (Doze Mode):
+Para evitar que o Android corte a CPU ou a rede quando a tela apagar:
+```java
+// Na sua Activity antes ou logo após iniciar o serviço:
+if (!BatteryOptimizationHelper.isIgnoringBatteryOptimizations(this)) {
+    startActivity(BatteryOptimizationHelper.createRequestIgnoreBatteryOptimizationsIntent(getPackageName()));
 }
 ```
 
