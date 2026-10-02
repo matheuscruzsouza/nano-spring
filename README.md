@@ -312,6 +312,38 @@ eventSource.addEventListener('alerta', (event) => {
 });
 ```
 
+#### Gerenciamento de Ciclo de Vida e Prevenção de Starvation:
+O `SseEmitter` possui heartbeat keep-alive automático periódico (`: keep-alive\n\n`) para detectar desconexões do cliente precocemente e liberar threads do pool de workers:
+```java
+SseEmitter emitter = new SseEmitter(60_000L); // Opcional: timeout de 60 segundos
+
+emitter.onCompletion(() -> {
+    hub.remover(emitter); // Remove de listas de broadcast ao fechar
+});
+
+emitter.onTimeout(() -> {
+    hub.remover(emitter);
+});
+
+emitter.onError(throwable -> {
+    Log.w("SSE", "Cliente desconectou com erro: " + throwable.getMessage());
+});
+```
+
+Propriedades configuráveis no `application.properties`:
+```properties
+# Intervalo de ping/heartbeat em ms para detectar clientes desconectados (padrão: 15000, 0 desabilita)
+nano.sse.heartbeat-interval-ms=15000
+
+# Timeout global padrão de inatividade para conexões SSE (opcional, em ms)
+nano.sse.timeout-ms=60000
+
+# Se utilizar muitas conexões SSE simultâneas, dimensione o pool de workers:
+nano.server.threads.core=8
+nano.server.threads.max=32
+nano.server.threads.queue-capacity=100
+```
+
 ### 7. Interceptadores (Segurança e Logs)
 Crie classes que implementam `HandlerInterceptor` para barrar ou auditar rotas antes que elas cheguem no Controller.
 

@@ -362,10 +362,22 @@ public class ServerIndexHandler {
                     return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Erro lendo arquivo: " + e.getMessage());
                 }
             } else if (result instanceof com.github.matheuscruzsouza.nanospring.sse.SseEmitter) {
-                com.github.matheuscruzsouza.nanospring.sse.SseEmitter emitter = (com.github.matheuscruzsouza.nanospring.sse.SseEmitter) result;
-                finalResponse = NanoHTTPD.newChunkedResponse(responseStatus, "text/event-stream", emitter.getInputStream());
-                finalResponse.addHeader("Cache-Control", "no-cache");
+                final com.github.matheuscruzsouza.nanospring.sse.SseEmitter emitter = (com.github.matheuscruzsouza.nanospring.sse.SseEmitter) result;
+                java.io.InputStream rawStream = emitter.getInputStream();
+                java.io.InputStream wrappedStream = new java.io.FilterInputStream(rawStream) {
+                    @Override
+                    public void close() throws IOException {
+                        try {
+                            super.close();
+                        } finally {
+                            emitter.complete();
+                        }
+                    }
+                };
+                finalResponse = NanoHTTPD.newChunkedResponse(responseStatus, "text/event-stream", wrappedStream);
+                finalResponse.addHeader("Cache-Control", "no-cache, no-transform");
                 finalResponse.addHeader("Connection", "keep-alive");
+                finalResponse.addHeader("X-Accel-Buffering", "no");
                 finalResponse.addHeader("Access-Control-Allow-Origin", "*");
             } else if (result instanceof ModelAndView) {
                 ModelAndView mav = (ModelAndView) result;
