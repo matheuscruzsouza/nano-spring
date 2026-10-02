@@ -126,7 +126,13 @@ nano.swagger.enabled=true
 nano.swagger.title=PDV Smart API
 nano.swagger.version=1.0.0
 nano.swagger.description=API REST de Vendas e Integração Local
-nano.swagger.server-url=/</code></pre>
+nano.swagger.server-url=/
+
+# Segurança / Autorização OpenAPI 3.0 (Opcional)
+nano.swagger.security.enabled=true
+nano.swagger.security.type=bearer          # bearer, apiKey ou basic
+nano.swagger.security.name=Authorization   # Nome do header (ex: Authorization ou X-Api-Key)
+nano.swagger.security.bearer-format=JWT    # Formato do token (ex: JWT)</code></pre>
         </div>
 
         <h2 id="anotacoes">🏷️ Anotações Disponíveis</h2>
@@ -261,6 +267,15 @@ public class UserDTO {
           <li><strong>Inspecionar a latência</strong> (tempo de resposta em ms), o código HTTP e o JSON retornado com formatação legível.</li>
         </ol>
 
+        <h2 id="autorizacao-headers">🔒 Envio de Header & Autorização (Authorize)</h2>
+        <p>Endpoints protegidos por interceptores de autenticação (como <code>HandlerInterceptor</code> com validação de JWT / API Key) ou parâmetros <code>@RequestHeader</code> podem ser testados diretamente pela interface:</p>
+        <ul>
+          <li><strong>Botão "Authorize 🔓":</strong> Localizado no topo da barra de navegação do Swagger UI. Permite configurar o cabeçalho global de requisições.</li>
+          <li><strong>Configuração de Prefixo:</strong> Suporta automaticamente prefixos convencionais como <code>Bearer </code> (para tokens JWT/OAuth2), <code>Basic </code> ou envio sem prefixo (para chaves <code>X-Api-Key</code>).</li>
+          <li><strong>Persistência no Navegador:</strong> A credencial fica salva no <code>localStorage</code> do navegador durante a sessão de testes e o botão muda para <strong>Authorized 🔒</strong> com destaque verde.</li>
+          <li><strong>Injeção Transparente:</strong> Em todas as chamadas disparadas pelo botão "Executar (Try it out)", o cabeçalho configurado é anexado automaticamente.</li>
+        </ul>
+
         <div class="page-nav">
           <a href="rest-api.html" class="page-nav-link prev">
             <span class="hint">Anterior</span>
@@ -284,6 +299,7 @@ public class UserDTO {
         <li><a href="#exemplo">Exemplo Prático</a></li>
         <li><a href="#validacao">Mapeamento e Schemas</a></li>
         <li><a href="#try-it-out">Interface Interativa</a></li>
+        <li><a href="#autorizacao-headers">Autorização & Headers</a></li>
       </ul>
     </aside>
   </div>

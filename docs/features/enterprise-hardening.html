@@ -201,10 +201,56 @@ public class MyServerService extends NanoSpringService {
         <p>A classe base gerencia automaticamente:</p>
         <ul>
           <li>Criação do <code>NotificationChannel</code> e notificação persistente.</li>
-          <li>Aquisição e liberação segura de <code>PowerManager.WakeLock</code>.</li>
+          <li>Aquisição e liberação segura de <code>PowerManager.WakeLock</code> (mantendo a CPU acordada quando a tela apaga).</li>
           <li>Aquisição de <code>WifiManager.MulticastLock</code> para tráfego mDNS.</li>
+          <li>Diagnóstico automático de status do Doze Mode / Otimizações de bateria.</li>
+          <li>Suporte a <code>getForegroundServiceType()</code> para Android 10+ e 14+.</li>
           <li>Parada limpa de todos os sockets no <code>onDestroy()</code>.</li>
         </ul>
+
+        <h3>Prevenindo Suspensão com a Tela Desligada (Doze Mode & Android 14+)</h3>
+        <p>Para evitar que fabricantes (Samsung, Xiaomi, etc.) ou o Doze Mode matem o serviço com a tela apagada:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">AndroidManifest.xml (App Cliente)</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-xml">&lt;!-- Permissão opcional para solicitar isenção direta de Doze Mode --&gt;
+&lt;uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" /&gt;
+
+&lt;application&gt;
+    &lt;service
+        android:name=".MyServerService"
+        android:exported="false"
+        android:foregroundServiceType="dataSync" /&gt;
+&lt;/application&gt;</code></pre>
+        </div>
+
+        <p>Utilize o <code>BatteryOptimizationHelper</code> para solicitar isenção de otimização de bateria ao usuário:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">MainActivity.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">import com.github.matheuscruzsouza.nanospring.service.BatteryOptimizationHelper;
+
+if (!BatteryOptimizationHelper.isIgnoringBatteryOptimizations(this)) {
+    Intent intent = BatteryOptimizationHelper.createRequestIgnoreBatteryOptimizationsIntent(getPackageName());
+    startActivity(intent);
+}</code></pre>
+        </div>
 
         <h2 id="actuator-endpoints">5. Endpoints Actuator: /actuator/health e /actuator/info</h2>
         <p>Monitore o estado do servidor remotamente através de endpoints JSON compatíveis com Spring Boot Actuator:</p>

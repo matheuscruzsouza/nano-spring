@@ -22,6 +22,7 @@ import com.github.matheuscruzsouza.nanospring.validation.Size;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -64,6 +65,49 @@ public class OpenApiGenerator {
         Map<String, Object> components = new LinkedHashMap<>();
         Map<String, Object> schemas = new LinkedHashMap<>();
         components.put("schemas", schemas);
+
+        // Security configuration
+        boolean securityEnabled = "true".equalsIgnoreCase(Environment.getProperty("nano.swagger.security.enabled", "false"))
+                || Environment.getProperty("nano.swagger.security.type") != null;
+
+        if (securityEnabled) {
+            String secType = Environment.getProperty("nano.swagger.security.type", "bearer").toLowerCase();
+            String secName = Environment.getProperty("nano.swagger.security.name", "Authorization");
+            String secScheme = Environment.getProperty("nano.swagger.security.scheme", "bearer");
+            String bearerFormat = Environment.getProperty("nano.swagger.security.bearer-format", "JWT");
+
+            Map<String, Object> securitySchemes = new LinkedHashMap<>();
+            Map<String, Object> schemeDef = new LinkedHashMap<>();
+
+            String schemeKey;
+            if ("apikey".equals(secType) || "api-key".equals(secType)) {
+                schemeKey = "apiKeyAuth";
+                schemeDef.put("type", "apiKey");
+                schemeDef.put("name", secName);
+                schemeDef.put("in", Environment.getProperty("nano.swagger.security.in", "header"));
+            } else if ("basic".equals(secType)) {
+                schemeKey = "basicAuth";
+                schemeDef.put("type", "http");
+                schemeDef.put("scheme", "basic");
+            } else {
+                schemeKey = "bearerAuth";
+                schemeDef.put("type", "http");
+                schemeDef.put("scheme", secScheme);
+                if (bearerFormat != null && !bearerFormat.isEmpty()) {
+                    schemeDef.put("bearerFormat", bearerFormat);
+                }
+            }
+
+            securitySchemes.put(schemeKey, schemeDef);
+            components.put("securitySchemes", securitySchemes);
+
+            List<Map<String, Object>> security = new ArrayList<>();
+            Map<String, Object> secReq = new LinkedHashMap<>();
+            secReq.put(schemeKey, Collections.emptyList());
+            security.add(secReq);
+            root.put("security", security);
+        }
+
         root.put("components", components);
 
         // Paths
@@ -125,32 +169,47 @@ public class OpenApiGenerator {
 
                 // Parameters
                 List<Map<String, Object>> parameters = new ArrayList<>();
-                java.lang.reflect.Parameter[] methodParams = method.getParameters();
+                Class<?>[] paramTypes = method.getParameterTypes();
+                Annotation[][] paramAnnotations = method.getParameterAnnotations();
 
-                for (java.lang.reflect.Parameter param : methodParams) {
-                    if (param.isAnnotationPresent(PathVariable.class)) {
-                        PathVariable pv = param.getAnnotation(PathVariable.class);
-                        String pName = (pv.value() != null && !pv.value().isEmpty()) ? pv.value() : param.getName();
-                        Map<String, Object> pObj = buildParameterMap(pName, "path", true, param.getType(), param.getAnnotation(Parameter.class), schemas);
+                for (int i = 0; i < paramTypes.length; i++) {
+                    Class<?> pType = paramTypes[i];
+                    Annotation[] pAnns = paramAnnotations[i];
+
+                    PathVariable pv = null;
+                    RequestParam rp = null;
+                    RequestHeader rh = null;
+                    RequestBody rb = null;
+                    Parameter pDoc = null;
+
+                    for (Annotation a : pAnns) {
+                        if (a instanceof PathVariable) pv = (PathVariable) a;
+                        else if (a instanceof RequestParam) rp = (RequestParam) a;
+                        else if (a instanceof RequestHeader) rh = (RequestHeader) a;
+                        else if (a instanceof RequestBody) rb = (RequestBody) a;
+                        else if (a instanceof Parameter) pDoc = (Parameter) a;
+                    }
+
+                    if (pv != null) {
+                        String pName = (pv.value() != null && !pv.value().isEmpty()) ? pv.value() : "param" + i;
+                        Map<String, Object> pObj = buildParameterMap(pName, "path", true, pType, pDoc, schemas);
                         parameters.add(pObj);
-                    } else if (param.isAnnotationPresent(RequestParam.class)) {
-                        RequestParam rp = param.getAnnotation(RequestParam.class);
-                        String pName = (rp.value() != null && !rp.value().isEmpty()) ? rp.value() : param.getName();
-                        Map<String, Object> pObj = buildParameterMap(pName, "query", false, param.getType(), param.getAnnotation(Parameter.class), schemas);
+                    } else if (rp != null) {
+                        String pName = (rp.value() != null && !rp.value().isEmpty()) ? rp.value() : "param" + i;
+                        Map<String, Object> pObj = buildParameterMap(pName, "query", false, pType, pDoc, schemas);
                         parameters.add(pObj);
-                    } else if (param.isAnnotationPresent(RequestHeader.class)) {
-                        RequestHeader rh = param.getAnnotation(RequestHeader.class);
-                        String pName = !rh.value().isEmpty() ? rh.value() : (!rh.name().isEmpty() ? rh.name() : param.getName());
-                        if (!pName.isEmpty() && param.getType() != Map.class) {
-                            Map<String, Object> pObj = buildParameterMap(pName, "header", rh.required(), param.getType(), param.getAnnotation(Parameter.class), schemas);
+                    } else if (rh != null) {
+                        String pName = !rh.value().isEmpty() ? rh.value() : (!rh.name().isEmpty() ? rh.name() : "param" + i);
+                        if (!pName.isEmpty() && pType != Map.class) {
+                            Map<String, Object> pObj = buildParameterMap(pName, "header", rh.required(), pType, pDoc, schemas);
                             parameters.add(pObj);
                         }
-                    } else if (param.isAnnotationPresent(RequestBody.class)) {
+                    } else if (rb != null) {
                         Map<String, Object> reqBody = new LinkedHashMap<>();
                         reqBody.put("required", true);
                         Map<String, Object> content = new LinkedHashMap<>();
                         Map<String, Object> jsonContent = new LinkedHashMap<>();
-                        jsonContent.put("schema", registerAndGetSchema(param.getType(), schemas));
+                        jsonContent.put("schema", registerAndGetSchema(pType, schemas));
                         content.put("application/json", jsonContent);
                         reqBody.put("content", content);
                         operation.put("requestBody", reqBody);

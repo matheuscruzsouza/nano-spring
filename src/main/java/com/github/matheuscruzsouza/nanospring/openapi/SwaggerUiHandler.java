@@ -43,6 +43,27 @@ public class SwaggerUiHandler {
                 "    .search-box input { width: 100%; background: #1f2937; border: 1px solid #374151; color: #f9fafb; padding: 0.45rem 0.85rem; border-radius: 0.5rem; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }\n" +
                 "    .search-box input:focus { border-color: #10b981; }\n" +
                 "    .actions { display: flex; align-items: center; gap: 0.75rem; }\n" +
+                "    .btn-auth { background: #1f2937; color: #f59e0b; border: 1px solid #d97706; padding: 0.45rem 0.85rem; border-radius: 0.5rem; font-size: 0.825rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }\n" +
+                "    .btn-auth:hover { background: #78350f; color: #fef3c7; border-color: #f59e0b; }\n" +
+                "    .btn-auth.active { background: #064e3b; color: #6ee7b7; border-color: #059669; }\n" +
+                "    .btn-auth.active:hover { background: #047857; color: #ffffff; }\n" +
+                "    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(3px); }\n" +
+                "    .modal-backdrop.open { display: flex; }\n" +
+                "    .modal-dialog { background: #111827; border: 1px solid #374151; border-radius: 0.75rem; width: 100%; max-width: 480px; padding: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); }\n" +
+                "    .modal-title { font-size: 1.15rem; font-weight: 700; color: #f9fafb; display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }\n" +
+                "    .modal-close { background: none; border: none; color: #9ca3af; font-size: 1.25rem; cursor: pointer; line-height: 1; padding: 0.2rem; }\n" +
+                "    .modal-close:hover { color: #f9fafb; }\n" +
+                "    .form-group { margin-bottom: 1rem; }\n" +
+                "    .form-label { display: block; font-size: 0.8rem; font-weight: 600; color: #9ca3af; margin-bottom: 0.35rem; }\n" +
+                "    .form-input { width: 100%; background: #1f2937; border: 1px solid #374151; color: #f9fafb; padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-family: ui-monospace, monospace; outline: none; transition: border-color 0.2s; }\n" +
+                "    .form-input:focus { border-color: #10b981; }\n" +
+                "    .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }\n" +
+                "    .btn-save { background: #10b981; color: #ffffff; border: none; padding: 0.5rem 1.25rem; border-radius: 0.375rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }\n" +
+                "    .btn-save:hover { background: #059669; }\n" +
+                "    .btn-clear { background: #374151; color: #fca5a5; border: 1px solid #4b5563; padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }\n" +
+                "    .btn-clear:hover { background: #4b5563; color: #fee2e2; }\n" +
+                "    .auth-lock { color: #6b7280; font-size: 0.85rem; margin-left: 0.5rem; }\n" +
+                "    .auth-lock.active { color: #10b981; }\n" +
                 "    .btn-link { background: #1f2937; color: #9ca3af; border: 1px solid #374151; padding: 0.45rem 0.85rem; border-radius: 0.5rem; font-size: 0.825rem; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }\n" +
                 "    .btn-link:hover { color: #f9fafb; border-color: #4b5563; background: #374151; }\n" +
                 "    main { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }\n" +
@@ -102,6 +123,10 @@ public class SwaggerUiHandler {
                 "      <input type=\"text\" id=\"filterInput\" placeholder=\"Filtrar rotas, tags ou métodos...\" oninput=\"filterEndpoints()\">\n" +
                 "    </div>\n" +
                 "    <div class=\"actions\">\n" +
+                "      <button id=\"btnAuth\" class=\"btn-auth\" onclick=\"openAuthModal()\" title=\"Configurar cabeçalho de autorização\">\n" +
+                "        <span id=\"authIcon\">🔓</span>\n" +
+                "        <span id=\"authBtnText\">Authorize</span>\n" +
+                "      </button>\n" +
                 "      <a href=\"/v3/api-docs\" target=\"_blank\" class=\"btn-link\">\n" +
                 "        <svg width=\"14\" height=\"14\" fill=\"currentColor\" viewBox=\"0 0 16 16\"><path d=\"M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z\"/></svg>\n" +
                 "        JSON Spec\n" +
@@ -120,10 +145,129 @@ public class SwaggerUiHandler {
                 "    </div>\n" +
                 "\n" +
                 "    <div id=\"endpointsContainer\"></div>\n" +
+                "\n" +
+                "    <div id=\"authModal\" class=\"modal-backdrop\" onclick=\"if(event.target===this) closeAuthModal()\">\n" +
+                "      <div class=\"modal-dialog\">\n" +
+                "        <div class=\"modal-title\">\n" +
+                "          <span>🔒 Autorização de Requisições</span>\n" +
+                "          <button class=\"modal-close\" onclick=\"closeAuthModal()\">✕</button>\n" +
+                "        </div>\n" +
+                "        <p style=\"font-size: 0.825rem; color: #9ca3af; margin-bottom: 1rem;\">\n" +
+                "          Configure o cabeçalho de autenticação enviado em todas as chamadas do <em>Try it out</em> (ideal para Bearer Token, JWT ou API Key).\n" +
+                "        </p>\n" +
+                "        <div class=\"form-group\">\n" +
+                "          <label class=\"form-label\">Nome do Cabeçalho</label>\n" +
+                "          <input type=\"text\" id=\"authHeaderName\" class=\"form-input\" value=\"Authorization\" placeholder=\"ex: Authorization ou X-Api-Key\">\n" +
+                "        </div>\n" +
+                "        <div class=\"form-group\">\n" +
+                "          <label class=\"form-label\">Prefixo Automático</label>\n" +
+                "          <select id=\"authPrefix\" class=\"form-input\" style=\"cursor: pointer;\">\n" +
+                "            <option value=\"Bearer \">Bearer (Token JWT / OAuth2)</option>\n" +
+                "            <option value=\"Basic \">Basic</option>\n" +
+                "            <option value=\"\">Nenhum (Valor direto / API Key)</option>\n" +
+                "          </select>\n" +
+                "        </div>\n" +
+                "        <div class=\"form-group\">\n" +
+                "          <label class=\"form-label\">Valor do Token / Credencial</label>\n" +
+                "          <input type=\"text\" id=\"authHeaderValue\" class=\"form-input\" placeholder=\"ex: eyJhbGciOi... ou SEGREDO_123\">\n" +
+                "        </div>\n" +
+                "        <div class=\"modal-actions\">\n" +
+                "          <button class=\"btn-clear\" onclick=\"clearAuth()\">Limpar / Sair</button>\n" +
+                "          <button class=\"btn-save\" onclick=\"saveAuth()\">Salvar & Ativar</button>\n" +
+                "        </div>\n" +
+                "      </div>\n" +
+                "    </div>\n" +
                 "  </main>\n" +
                 "\n" +
                 "  <script>\n" +
+                "    const AUTH_STORAGE_KEY = 'nano_swagger_auth';\n" +
                 "    let apiSpec = null;\n" +
+                "\n" +
+                "    function getStoredAuth() {\n" +
+                "      try {\n" +
+                "        const item = localStorage.getItem(AUTH_STORAGE_KEY);\n" +
+                "        return item ? JSON.parse(item) : null;\n" +
+                "      } catch (e) {\n" +
+                "        return null;\n" +
+                "      }\n" +
+                "    }\n" +
+                "\n" +
+                "    function updateAuthButton() {\n" +
+                "      const auth = getStoredAuth();\n" +
+                "      const btn = document.getElementById('btnAuth');\n" +
+                "      const icon = document.getElementById('authIcon');\n" +
+                "      const text = document.getElementById('authBtnText');\n" +
+                "      if (!btn || !icon || !text) return;\n" +
+                "      if (auth && auth.name && auth.value) {\n" +
+                "        btn.classList.add('active');\n" +
+                "        icon.innerText = '🔒';\n" +
+                "        text.innerText = 'Authorized';\n" +
+                "      } else {\n" +
+                "        btn.classList.remove('active');\n" +
+                "        icon.innerText = '🔓';\n" +
+                "        text.innerText = 'Authorize';\n" +
+                "      }\n" +
+                "    }\n" +
+                "\n" +
+                "    function openAuthModal() {\n" +
+                "      const auth = getStoredAuth();\n" +
+                "      if (auth) {\n" +
+                "        document.getElementById('authHeaderName').value = auth.name || 'Authorization';\n" +
+                "        document.getElementById('authPrefix').value = auth.prefix !== undefined ? auth.prefix : 'Bearer ';\n" +
+                "        document.getElementById('authHeaderValue').value = auth.token || '';\n" +
+                "      } else if (apiSpec && apiSpec.components && apiSpec.components.securitySchemes) {\n" +
+                "        const schemes = Object.values(apiSpec.components.securitySchemes);\n" +
+                "        if (schemes.length > 0) {\n" +
+                "          const s = schemes[0];\n" +
+                "          if (s.type === 'apiKey' && s.name) {\n" +
+                "            document.getElementById('authHeaderName').value = s.name;\n" +
+                "            document.getElementById('authPrefix').value = '';\n" +
+                "          } else if (s.scheme === 'bearer') {\n" +
+                "            document.getElementById('authHeaderName').value = 'Authorization';\n" +
+                "            document.getElementById('authPrefix').value = 'Bearer ';\n" +
+                "          } else if (s.scheme === 'basic') {\n" +
+                "            document.getElementById('authHeaderName').value = 'Authorization';\n" +
+                "            document.getElementById('authPrefix').value = 'Basic ';\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "      document.getElementById('authModal').classList.add('open');\n" +
+                "    }\n" +
+                "\n" +
+                "    function closeAuthModal() {\n" +
+                "      document.getElementById('authModal').classList.remove('open');\n" +
+                "    }\n" +
+                "\n" +
+                "    function saveAuth() {\n" +
+                "      const headerName = document.getElementById('authHeaderName').value.trim() || 'Authorization';\n" +
+                "      const prefix = document.getElementById('authPrefix').value;\n" +
+                "      const rawVal = document.getElementById('authHeaderValue').value.trim();\n" +
+                "      if (!rawVal) {\n" +
+                "        clearAuth();\n" +
+                "        return;\n" +
+                "      }\n" +
+                "      const fullValue = (prefix && !rawVal.startsWith(prefix)) ? (prefix + rawVal) : rawVal;\n" +
+                "      const authData = {\n" +
+                "        name: headerName,\n" +
+                "        prefix: prefix,\n" +
+                "        token: rawVal,\n" +
+                "        value: fullValue\n" +
+                "      };\n" +
+                "      try {\n" +
+                "        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));\n" +
+                "      } catch (e) {}\n" +
+                "      updateAuthButton();\n" +
+                "      closeAuthModal();\n" +
+                "    }\n" +
+                "\n" +
+                "    function clearAuth() {\n" +
+                "      try {\n" +
+                "        localStorage.removeItem(AUTH_STORAGE_KEY);\n" +
+                "      } catch (e) {}\n" +
+                "      document.getElementById('authHeaderValue').value = '';\n" +
+                "      updateAuthButton();\n" +
+                "      closeAuthModal();\n" +
+                "    }\n" +
                 "\n" +
                 "    async function loadSpec() {\n" +
                 "      try {\n" +
@@ -262,6 +406,11 @@ public class SwaggerUiHandler {
                 "      const queryParams = new URLSearchParams();\n" +
                 "      const headers = { 'Accept': 'application/json' };\n" +
                 "\n" +
+                "      const auth = getStoredAuth();\n" +
+                "      if (auth && auth.name && auth.value) {\n" +
+                "        headers[auth.name] = auth.value;\n" +
+                "      }\n" +
+                "\n" +
                 "      const inputs = document.querySelectorAll(`[id^=\"param_${id}_\"]`);\n" +
                 "      inputs.forEach(inp => {\n" +
                 "        const location = inp.dataset.in;\n" +
@@ -331,7 +480,10 @@ public class SwaggerUiHandler {
                 "      });\n" +
                 "    }\n" +
                 "\n" +
-                "    window.addEventListener('DOMContentLoaded', loadSpec);\n" +
+                "    window.addEventListener('DOMContentLoaded', () => {\n" +
+                "      loadSpec();\n" +
+                "      updateAuthButton();\n" +
+                "    });\n" +
                 "  </script>\n" +
                 "</body>\n" +
                 "</html>";

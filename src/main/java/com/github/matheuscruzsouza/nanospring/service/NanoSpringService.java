@@ -75,6 +75,15 @@ public abstract class NanoSpringService extends Service {
         return true;
     }
 
+    /**
+     * Foreground service type flag for Android 10+ (API 29+), e.g. {@code ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC}
+     * or {@code ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE}.
+     * Return 0 to use standard startForeground(id, notification).
+     */
+    protected int getForegroundServiceType() {
+        return 0;
+    }
+
     protected Server createServer() {
         return null;
     }
@@ -94,9 +103,20 @@ public abstract class NanoSpringService extends Service {
         try {
             startInForeground();
             acquireLocks();
+            checkBatteryOptimizations();
             initializeServer();
         } catch (Exception e) {
             Log.e(TAG, "Error during NanoSpringService startup", e);
+        }
+    }
+
+    protected void checkBatteryOptimizations() {
+        if (!BatteryOptimizationHelper.isIgnoringBatteryOptimizations(this)) {
+            Log.w(TAG, "Battery optimizations are ACTIVE for " + getPackageName() +
+                    ". Android Doze Mode may suspend network or CPU when the screen turns off. " +
+                    "Consider requesting exemption via BatteryOptimizationHelper.createRequestIgnoreBatteryOptimizationsIntent().");
+        } else {
+            Log.d(TAG, "Battery optimizations are IGNORED. Background execution will not be hindered by Doze Mode.");
         }
     }
 
@@ -125,7 +145,12 @@ public abstract class NanoSpringService extends Service {
                 .setOngoing(true)
                 .build();
 
-        startForeground(getNotificationId(), notification);
+        int serviceType = getForegroundServiceType();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && serviceType != 0) {
+            startForeground(getNotificationId(), notification, serviceType);
+        } else {
+            startForeground(getNotificationId(), notification);
+        }
     }
 
     protected void acquireLocks() {

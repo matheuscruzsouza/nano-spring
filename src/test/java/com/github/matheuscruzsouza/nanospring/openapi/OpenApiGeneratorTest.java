@@ -82,6 +82,7 @@ public class OpenApiGeneratorTest {
     @Before
     public void setUp() throws Exception {
         ServerIndexHandler.clearInstances();
+        Environment.reset();
         Environment.setProperty("nano.swagger.title", "Test Store API");
         Environment.setProperty("nano.swagger.version", "2.5.0");
         Environment.setProperty("nano.swagger.description", "Unit test API specification");
@@ -97,6 +98,7 @@ public class OpenApiGeneratorTest {
     @After
     public void tearDown() {
         ServerIndexHandler.clearInstances();
+        Environment.reset();
     }
 
     @Test
@@ -250,5 +252,71 @@ public class OpenApiGeneratorTest {
         // Must be parseable valid JSON
         Map<?, ?> parsed = new Gson().fromJson(json, Map.class);
         assertEquals("3.0.1", parsed.get("openapi"));
+    }
+
+    @Test
+    public void testSecuritySchemesDisabledByDefault() {
+        Map<String, Object> spec = OpenApiGenerator.generateSpec();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> components = (Map<String, Object>) spec.get("components");
+        assertNotNull(components);
+        assertNull(components.get("securitySchemes"));
+        assertNull(spec.get("security"));
+    }
+
+    @Test
+    public void testSecuritySchemesBearerDefault() {
+        Environment.setProperty("nano.swagger.security.enabled", "true");
+
+        Map<String, Object> spec = OpenApiGenerator.generateSpec();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> components = (Map<String, Object>) spec.get("components");
+        assertNotNull(components);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> securitySchemes = (Map<String, Object>) components.get("securitySchemes");
+        assertNotNull(securitySchemes);
+        assertTrue(securitySchemes.containsKey("bearerAuth"));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> bearerAuth = (Map<String, Object>) securitySchemes.get("bearerAuth");
+        assertEquals("http", bearerAuth.get("type"));
+        assertEquals("bearer", bearerAuth.get("scheme"));
+        assertEquals("JWT", bearerAuth.get("bearerFormat"));
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> security = (List<Map<String, Object>>) spec.get("security");
+        assertNotNull(security);
+        assertEquals(1, security.size());
+        assertTrue(security.get(0).containsKey("bearerAuth"));
+    }
+
+    @Test
+    public void testSecuritySchemesApiKey() {
+        Environment.setProperty("nano.swagger.security.type", "apiKey");
+        Environment.setProperty("nano.swagger.security.name", "X-Api-Key");
+        Environment.setProperty("nano.swagger.security.in", "header");
+
+        Map<String, Object> spec = OpenApiGenerator.generateSpec();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> components = (Map<String, Object>) spec.get("components");
+        assertNotNull(components);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> securitySchemes = (Map<String, Object>) components.get("securitySchemes");
+        assertNotNull(securitySchemes);
+        assertTrue(securitySchemes.containsKey("apiKeyAuth"));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> apiKeyAuth = (Map<String, Object>) securitySchemes.get("apiKeyAuth");
+        assertEquals("apiKey", apiKeyAuth.get("type"));
+        assertEquals("X-Api-Key", apiKeyAuth.get("name"));
+        assertEquals("header", apiKeyAuth.get("in"));
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> security = (List<Map<String, Object>>) spec.get("security");
+        assertNotNull(security);
+        assertEquals(1, security.size());
+        assertTrue(security.get(0).containsKey("apiKeyAuth"));
     }
 }
