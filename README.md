@@ -137,7 +137,7 @@ public class MyBackendService extends NanoSpringService {
 
     // Opcional: no Android 10+ / 14+, declare o tipo de serviço (ex: dataSync)
     @Override
-    protected int getForegroundServiceType() {
+    protected int getCustomForegroundServiceType() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             return ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
         }

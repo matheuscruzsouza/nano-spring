@@ -79,8 +79,9 @@ public abstract class NanoSpringService extends Service {
      * Foreground service type flag for Android 10+ (API 29+), e.g. {@code ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC}
      * or {@code ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE}.
      * Return 0 to use standard startForeground(id, notification).
+     * Note: Renamed to avoid collision with {@code Service#getForegroundServiceType()} which is final in Android SDK.
      */
-    protected int getForegroundServiceType() {
+    protected int getCustomForegroundServiceType() {
         return 0;
     }
 
@@ -145,7 +146,7 @@ public abstract class NanoSpringService extends Service {
                 .setOngoing(true)
                 .build();
 
-        int serviceType = getForegroundServiceType();
+        int serviceType = getCustomForegroundServiceType();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && serviceType != 0) {
             startForeground(getNotificationId(), notification, serviceType);
         } else {
