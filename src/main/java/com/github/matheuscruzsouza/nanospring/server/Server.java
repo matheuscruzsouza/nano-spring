@@ -356,19 +356,125 @@ public class Server extends RouterNanoHTTPD {
             }
         }
 
-        for (Class<?> klass : allComponents) {
-            try {
-                Constructor<?> ctor = klass.getConstructor();
-                Object instance = ctor.newInstance();
-                services.put(klass, instance);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        
+        instantiateComponents(allComponents);
+
         for (Object serviceInstance : services.values()) {
             injectDependencies(serviceInstance);
         }
+    }
+
+    private void instantiateComponents(List<Class<?>> componentClasses) {
+        List<Class<?>> pending = new ArrayList<>(componentClasses);
+        boolean progress = true;
+
+        while (!pending.isEmpty() && progress) {
+            progress = false;
+            List<Class<?>> retryList = new ArrayList<>();
+
+            for (Class<?> klass : pending) {
+                if (services.containsKey(klass)) {
+                    continue;
+                }
+
+                try {
+                    Object instance = createInstance(klass);
+                    if (instance != null) {
+                        services.put(klass, instance);
+                        progress = true;
+                    } else {
+                        retryList.add(klass);
+                    }
+                } catch (Exception e) {
+                    retryList.add(klass);
+                }
+            }
+
+            pending = retryList;
+        }
+
+        if (!pending.isEmpty()) {
+            for (Class<?> klass : pending) {
+                try {
+                    Object instance = createInstance(klass);
+                    if (instance != null) {
+                        services.put(klass, instance);
+                    }
+                } catch (Exception e) {
+                    Log.e("SERVER_DI", "Falha ao instanciar componente " + klass.getName() + " com injeção de construtor: " + e.getMessage(), e);
+                }
+            }
+        }
+    }
+
+    public Object createInstance(Class<?> klass) throws Exception {
+        Constructor<?>[] ctors = klass.getConstructors();
+        if (ctors.length == 0) {
+            ctors = klass.getDeclaredConstructors();
+        }
+
+        Constructor<?> selectedCtor = null;
+        for (Constructor<?> c : ctors) {
+            if (c.isAnnotationPresent(Autowired.class)) {
+                selectedCtor = c;
+                break;
+            }
+        }
+
+        if (selectedCtor == null) {
+            if (ctors.length == 1) {
+                selectedCtor = ctors[0];
+            } else {
+                try {
+                    selectedCtor = klass.getConstructor();
+                } catch (NoSuchMethodException e) {
+                    selectedCtor = ctors[0];
+                }
+            }
+        }
+
+        if (selectedCtor == null) {
+            return null;
+        }
+
+        Class<?>[] paramTypes = selectedCtor.getParameterTypes();
+        Annotation[][] paramAnnotations = selectedCtor.getParameterAnnotations();
+        Object[] args = new Object[paramTypes.length];
+
+        for (int i = 0; i < paramTypes.length; i++) {
+            Class<?> pType = paramTypes[i];
+            Annotation[] pAnns = paramAnnotations[i];
+
+            com.github.matheuscruzsouza.nanospring.annotation.Value valAnn = null;
+            for (Annotation a : pAnns) {
+                if (a instanceof com.github.matheuscruzsouza.nanospring.annotation.Value) {
+                    valAnn = (com.github.matheuscruzsouza.nanospring.annotation.Value) a;
+                    break;
+                }
+            }
+
+            if (valAnn != null) {
+                String resolved = resolveExpression(valAnn.value());
+                args[i] = resolved != null ? convertStringToType(resolved, pType) : null;
+            } else {
+                Object dep = services.get(pType);
+                if (dep == null) {
+                    for (Map.Entry<Class<?>, Object> entry : services.entrySet()) {
+                        if (pType.isAssignableFrom(entry.getKey())) {
+                            dep = entry.getValue();
+                            break;
+                        }
+                    }
+                }
+
+                if (dep == null) {
+                    return null;
+                }
+                args[i] = dep;
+            }
+        }
+
+        selectedCtor.setAccessible(true);
+        return selectedCtor.newInstance(args);
     }
 
     private String resolveExpression(String expr) {
@@ -403,6 +509,14 @@ public class Server extends RouterNanoHTTPD {
         for (Field field : clazz.getDeclaredFields()) {
             if (field.isAnnotationPresent(Autowired.class)) {
                 Object dependency = services.get(field.getType());
+                if (dependency == null) {
+                    for (Map.Entry<Class<?>, Object> entry : services.entrySet()) {
+                        if (field.getType().isAssignableFrom(entry.getKey())) {
+                            dependency = entry.getValue();
+                            break;
+                        }
+                    }
+                }
                 if (dependency != null) {
                     try {
                         field.setAccessible(true);
@@ -431,8 +545,10 @@ public class Server extends RouterNanoHTTPD {
         List<Class<?>> adviceClasses = getAnnotatedClasses(this.context, packageName, com.github.matheuscruzsouza.nanospring.annotation.ControllerAdvice.class);
         for (Class<?> klass : adviceClasses) {
             try {
-                java.lang.reflect.Constructor<?> ctor = klass.getConstructor();
-                Object instance = ctor.newInstance();
+                Object instance = createInstance(klass);
+                if (instance == null) {
+                    instance = klass.getConstructor().newInstance();
+                }
                 injectDependencies(instance);
                 for (java.lang.reflect.Method m : klass.getMethods()) {
                     if (m.isAnnotationPresent(com.github.matheuscruzsouza.nanospring.annotation.ExceptionHandler.class)) {
@@ -453,8 +569,10 @@ public class Server extends RouterNanoHTTPD {
         for (Class<?> klass : interceptorClasses) {
             try {
                 if (com.github.matheuscruzsouza.nanospring.handler.HandlerInterceptor.class.isAssignableFrom(klass)) {
-                    java.lang.reflect.Constructor<?> ctor = klass.getConstructor();
-                    Object instance = ctor.newInstance();
+                    Object instance = createInstance(klass);
+                    if (instance == null) {
+                        instance = klass.getConstructor().newInstance();
+                    }
                     injectDependencies(instance);
                     interceptors.add((com.github.matheuscruzsouza.nanospring.handler.HandlerInterceptor) instance);
                 }
@@ -482,8 +600,10 @@ public class Server extends RouterNanoHTTPD {
                 String path = klass.getAnnotationsByType(RestController.class)[0].value();
 
                 try {
-                    Constructor<?> ctor = klass.getConstructor();
-                    Object instance = ctor.newInstance();
+                    Object instance = createInstance(klass);
+                    if (instance == null) {
+                        instance = klass.getConstructor().newInstance();
+                    }
                     
                     injectDependencies(instance);
 

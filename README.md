@@ -1,190 +1,585 @@
 # Nano-Spring 🌱
 
-**Nano-Spring** é um micro-framework web ultra-leve construído exclusivamente para **Android**. Ele traz a elegância, produtividade e o padrão arquitetural do **Spring Boot** para dentro do ambiente móvel, utilizando o NanoHTTPD por baixo dos panos.
+**Turn old Android devices into local infrastructure.**
 
-Com o Nano-Spring, você transforma qualquer celular ou tablet Android em um poderoso servidor web (Frontend e Backend), escrevendo código limpo, sem boilerplate e focado em anotações.
+Nano-Spring is a lightweight, Spring-inspired runtime for building local services on Android devices — including hardware that is old, resource-constrained, or simply inexpensive enough to be repurposed as a dedicated local server.
 
----
+It brings familiar Java/Spring-style concepts such as dependency injection, controllers, services, repositories, configuration, validation and application lifecycle to Android, while integrating directly with the platform's networking, storage and device capabilities.
 
-## 🌟 Principais Funcionalidades
-
-- 📜 **Diagnósticos & Rotação de Logs (v1.9.0):** `RotatingFileLogger` com teto de disco e endpoint remoto `/actuator/logfile`.
-- 📑 **Swagger & OpenAPI 3.0 Embutido (v1.10.0):** Interface interativa embutida (`/swagger-ui`) e OpenAPI 3.0.1 (`/v3/api-docs`) ultra-leve (~15 KB) e 100% offline.
-- ⚙️ **Perfis de Ambiente Multi-Camada (v1.9.0):** Suporte a `application-{profile}.properties` com ativação dinâmica.
-- ⚡ **Controladores Assíncronos (v1.9.0):** Retornos com `CompletableFuture<T>`, timeout automático (`408`) e proteção de threads de hardware (POS/TEF).
-- ⏱️ **Timeout de Leitura Configurável (v1.9.0):** `nano.server.read-timeout` para redes instáveis ou dispositivos embarcados.
-- 🔒 **HTTPS / TLS Nativo:** Tráfego criptografado com Keystores `.p12` / `.bks` sem alterar código.
-- 🛡️ **Rate Limiting Anti-DoS:** Algoritmo *Token Bucket* thread-safe em memória por IP (global e `@RateLimit`).
-- 📋 **Bean Validation Declarativo:** Validação automática com `@Valid`, `@NotNull`, `@NotBlank`, `@Size`, `@Min`, `@Max`, `@Email`, `@Pattern`.
-- 🏢 **Módulo Enterprise & Resiliência:** Pool de threads anti-OOM (`ThreadPoolAsyncRunner`), SQLite WAL mode concorrente e reconexão de rede (`NetworkWatcher`).
-- 📊 **Actuator & Observabilidade:** Endpoints `/actuator/health`, `/actuator/info` e `/actuator/logfile` expondo telemetria e logs remotos.
-- ⚡ **Classe Base `NanoSpringService`:** Foreground Service Android pré-configurado com canais de notificação e Wake/Multicast locks.
-- 🚀 **Roteamento RESTful:** `@RestController`, `@GetMethod`, `@PostMethod`, `@PutMethod`, `@DeleteMethod`, `@RequestHeader`.
-- 💉 **Injeção de Dependências (DI):** Gerenciamento automático de ciclo de vida com `@Service`, `@Repository` e `@Autowired`.
-- 🗄️ **Banco de Dados SQLite & Migrações:** Suporte nativo ao SQLite com versionamento de esquemas por arquivos SQL (estilo Flyway).
-- 🔍 **Descoberta de Serviço (mDNS / DNS-SD):** Anúncio automático do servidor na rede local via Zeroconf / Bonjour com NsdManager nativo.
-- ⚙️ **Configurações Externalizadas:** Suporte nativo a `application.properties` e injeção via `@Value`.
-- 📡 **Server-Sent Events (SSE):** Streaming de eventos unidirecionais em tempo real para navegadores com `SseEmitter`.
-- 📁 **Upload de Arquivos Nativo:** Receba imagens e documentos facilmente via *multipart/form-data* usando `@UploadedFile`.
-- 🛡️ **Middlewares (Interceptadores):** Intercepte requisições nativamente para validação de JWTs, logs e segurança.
-- 🌐 **CORS Nativo Declarativo:** Suporte a Cross-Origin Resource Sharing com resolução automática de pre-flight (`OPTIONS`).
-- 🚨 **Tratamento Global de Exceções:** Evite crashes de rotas usando `@ControllerAdvice` e `@ExceptionHandler`.
-- 🎨 **Motor de Templates HTML:** Renderização Server-Side nativa utilizando `JMustache` e `ModelAndView`.
-- ⚡ **Servidor de Arquivos Estáticos:** Entregue CSS, JS e Imagens da pasta `assets` sem esforço.
+> **Spring-inspired. Android-native. Local-first.**
 
 ---
 
-## 📱 Requisitos do Sistema & Hardware
+## Why Nano-Spring?
 
-O **Nano-Spring** foi projetado para ser ultra-leve e rodar perfeitamente até mesmo em smartphones de entrada ou aparelhos antigos reaproveitados como servidores domésticos.
+An old Android phone may no longer be useful as a modern smartphone, but it still has many of the components required to provide useful local infrastructure:
 
-### Requisitos de Software
-- **Versão Mínima do Android:** Android 7.1.1 (Nougat)
-- **API Mínima (minSdk):** API 25
-- **API Alvo / Compilação:** API 34+ (compilado com API 36)
-- **Java Compatibility:** Java 11+
+* CPU
+* RAM
+* persistent storage
+* Wi-Fi
+* Bluetooth
+* USB
+* battery
+* sensors
+* Android's networking and hardware APIs
 
-### Requisitos Mínimos de Hardware
-- **Memória RAM:** 1 GB (o servidor consome entre **15 MB e 40 MB de RAM** em execução normal).
-- **Processador (CPU):** Quad-Core 1.3 GHz (qualquer chip ARMv7, ARM64 ou x86_64).
-- **Armazenamento:** Menos de **5 MB** de espaço para a biblioteca.
-- **Rede:** Conexão Wi-Fi, Ethernet ou dados móveis para expor a porta local (ex: `8080` ou `9090`).
+For many applications, that is enough.
 
-### Requisitos Recomendados (Cargas Maiores / Uploads Pesados)
-- **Memória RAM:** 2 GB ou mais.
-- **Processador (CPU):** Octa-Core 2.0 GHz ou superior (permite atender dezenas de conexões concorrentes sem perda de throughput).
-- **Dica de Bateria:** Manter o aparelho conectado à fonte de energia e desativar a "Otimização de Bateria" para o app nas configurações do Android.
+A home, small business, workshop, store or IoT installation may not need a cloud server or a dedicated computer.
+
+It may simply need a small local server.
+
+Nano-Spring exists to make that kind of application easier to build.
+
+### Examples
+
+An Android device can become:
+
+* a local inventory server;
+* a small POS backend;
+* an order management system;
+* a home automation hub;
+* an IoT gateway;
+* a local dashboard;
+* a printer or hardware gateway;
+* a device-control API;
+* an offline-first application backend;
+* a local data collection service;
+* or a local HTTP service for another application.
+
+The idea is simple:
+
+> **Reuse existing hardware before replacing it or introducing unnecessary infrastructure.**
 
 ---
 
-## 📦 Como Instalar
+# Local-first by design
 
-### Opção 1: Como Módulo Local (Dentro do mesmo projeto)
-No arquivo `build.gradle` do seu aplicativo principal (`app`):
+Nano-Spring is designed around applications that can operate primarily on the local network.
+
+Cloud infrastructure can be added when it is useful, but the core application does not need to depend on a remote server.
+
+```text
+                         Optional Cloud
+                              │
+                              │
+                              ▼
+┌──────────────┐       ┌───────────────┐
+│ Local Client │──────▶│  Nano-Spring  │
+│ Web / Mobile │       │    Runtime    │
+└──────────────┘       └───────┬───────┘
+                               │
+                ┌──────────────┼──────────────┐
+                │              │              │
+                ▼              ▼              ▼
+             SQLite        Android APIs     Network
+                │              │              │
+                └──────────────┼──────────────┘
+                               ▼
+                       Android Device
+```
+
+This architecture is particularly useful when:
+
+* Internet access is unreliable;
+* the application has a small number of users;
+* data should remain on-site;
+* local network latency matters;
+* cloud infrastructure would add unnecessary cost or complexity;
+* or an existing Android device is already available.
+
+---
+
+# Why Android devices?
+
+An Android device already provides much of the infrastructure required by a small local service.
+
+| Resource     | Possible use                                      |
+| ------------ | ------------------------------------------------- |
+| CPU          | Application and request processing                |
+| RAM          | Runtime, application state and caching            |
+| Storage      | SQLite databases and application data             |
+| Wi-Fi        | Local network connectivity                        |
+| Bluetooth    | Local peripherals and devices                     |
+| USB          | Hardware and peripheral integration               |
+| Battery      | Short-term power continuity                       |
+| Sensors      | IoT and environmental applications                |
+| Android APIs | Networking, connectivity and hardware integration |
+
+Nano-Spring uses Android as the underlying platform instead of requiring a separate server operating system or dedicated computer.
+
+---
+
+# Why "Spring-inspired"?
+
+The Spring ecosystem is widely known among Java developers.
+
+Many developers are already familiar with concepts such as:
+
+* Dependency Injection
+* Controllers
+* Services
+* Repositories
+* Configuration
+* Validation
+* Application lifecycle
+* Interceptors
+* Exception handling
+
+Nano-Spring uses these concepts as a **familiar development model**.
+
+It is not intended to reproduce Spring Boot or provide Spring compatibility.
+
+Instead, it brings a similar style of application development to a much smaller Android-oriented runtime.
+
+The goal is:
+
+> **Make local Android infrastructure familiar to developers who already understand the Spring programming model.**
+
+For example, a developer familiar with:
+
+```java
+@RestController
+@Service
+@Repository
+@Autowired
+```
+
+can recognize the architectural concepts immediately, even though Nano-Spring has its own runtime and Android-specific APIs.
+
+---
+
+# What can you build?
+
+## Small business
+
+* Inventory systems
+* Point-of-sale backends
+* Order management
+* Local reports
+* Product catalogs
+* Customer management
+* Printer gateways
+* Hardware integrations
+
+## Home
+
+* Home automation
+* Local dashboards
+* Sensor aggregation
+* Device control
+* Local APIs
+* Household services
+
+## IoT
+
+* Device gateways
+* Sensor collection
+* Local command APIs
+* Edge processing
+* Local data storage
+* Protocol bridges
+
+## Offline-first applications
+
+* Local data collection
+* Applications that continue operating without Internet access
+* Local synchronization gateways
+* Applications that synchronize with cloud services only when connectivity is available
+
+---
+
+# Features
+
+Nano-Spring provides a collection of infrastructure components for local Android services.
+
+## Application runtime
+
+* Dependency Injection
+* Component scanning
+* `@Service`
+* `@Repository`
+* `@Autowired`
+* Application configuration
+* Profiles
+* Environment properties
+* Application lifecycle
+
+## HTTP and REST
+
+* Embedded HTTP server based on NanoHTTPD
+* RESTful routing
+* `@RestController`
+* `@GetMethod`
+* `@PostMethod`
+* `@PutMethod`
+* `@DeleteMethod`
+* `@PathVariable`
+* `@RequestBody`
+* `@RequestHeader`
+* `ResponseEntity`
+* JSON serialization with Gson
+* Multipart file uploads
+* File downloads and streaming
+* Static files
+* Server-Sent Events
+* CORS
+* TLS/HTTPS
+* Rate limiting
+* Request interceptors
+* Global exception handling
+
+## Persistence
+
+* Native Android SQLite integration
+* SQLite WAL mode
+* Database migrations
+* Versioned SQL migration files
+* Automatic schema history
+* Repository integration
+
+## Validation
+
+Declarative validation using annotations such as:
+
+* `@Valid`
+* `@NotNull`
+* `@NotBlank`
+* `@Size`
+* `@Min`
+* `@Max`
+* `@Email`
+* `@Pattern`
+
+## Android integration
+
+* `NanoSpringService`
+* Android lifecycle integration
+* Wake locks
+* Wi-Fi multicast support
+* Network monitoring
+* Connectivity recovery
+* Native Android networking APIs
+
+## Local networking
+
+* mDNS / DNS-SD
+* `.local` host names
+* Android `NsdManager`
+* Automatic service registration
+* Network-change detection and re-announcement
+
+## Observability
+
+* Actuator-style health endpoint
+* Application information endpoint
+* Remote log endpoint
+* Rotating file logs
+* Configurable log retention
+* Runtime diagnostics
+
+## Developer experience
+
+* Environment profiles
+* `application.properties`
+* `@Value`
+* Asynchronous controllers using `CompletableFuture`
+* Configurable asynchronous timeouts
+* OpenAPI 3.0 generation
+* Built-in Swagger UI
+
+---
+
+# Reference hardware
+
+Nano-Spring is intentionally developed with constrained Android hardware in mind.
+
+The current reference development device is:
+
+> **Motorola Moto G4 Play**
+
+This is not because Nano-Spring is limited to that device.
+
+It is because an older device provides a useful constraint for development.
+
+The project therefore emphasizes:
+
+* predictable memory usage;
+* bounded concurrency;
+* controlled thread creation;
+* efficient persistence;
+* limited storage growth;
+* network recovery;
+* long-running operation;
+* and graceful failure handling.
+
+The objective is not simply to achieve the highest possible benchmark numbers.
+
+The objective is to make small local services practical on hardware that is already available.
+
+---
+
+# From old phone to local server
+
+The intended deployment model is simple:
+
+```text
+Old Android device
+        │
+        ▼
+Install application
+        │
+        ▼
+Start Nano-Spring
+        │
+        ▼
+Device joins local network
+        │
+        ▼
+HTTP server starts
+        │
+        ▼
+mDNS advertises the service
+        │
+        ▼
+Local clients connect
+        │
+        ▼
+Application runs locally
+```
+
+A device can therefore provide an HTTP service without requiring:
+
+* a VPS;
+* a cloud database;
+* a dedicated server;
+* a Kubernetes cluster;
+* or a permanent Internet connection.
+
+---
+
+# Local service discovery
+
+Local infrastructure should not require users to memorize an IP address.
+
+Nano-Spring includes mDNS / DNS-SD support through Android's `NsdManager`.
+
+For example, a device can expose a service using:
+
+```text
+http://meu-servidor-android.local:8080/
+```
+
+instead of requiring the user to discover an address such as:
+
+```text
+http://192.168.1.137:8080/
+```
+
+Configuration:
+
+```properties
+nano.nsd.enabled=true
+nano.nsd.name=meu-servidor-android
+nano.nsd.type=_http._tcp.
+nano.nsd.host-resolution=true
+```
+
+The service can also be enabled programmatically:
+
+```java
+server.enableNsd("meu-servidor", true);
+```
+
+and disabled with:
+
+```java
+server.disableNsd();
+```
+
+When the server stops, its mDNS registration is removed.
+
+---
+
+# Requirements
+
+## Android
+
+| Requirement             | Current value          |
+| ----------------------- | ---------------------- |
+| Minimum Android version | Android 7.1.1 / API 25 |
+| `minSdk`                | 25                     |
+| `targetSdk`             | 36                     |
+| `compileSdk`            | 36                     |
+| Java                    | 11                     |
+
+Nano-Spring is therefore compatible with Android devices starting from API 25, subject to the behavior and restrictions of the specific Android version and device.
+
+Older Android devices remain an important part of the project's testing strategy.
+
+---
+
+# Installation
+
+Nano-Spring can currently be used either as a local Gradle module or as a package published to GitHub Packages.
+
+## Option 1 — Local module
+
+Clone the repository and include it as a module in your Android project.
+
+Then:
+
 ```gradle
 dependencies {
     implementation project(':nano-spring')
 }
 ```
 
-### Opção 2: Via GitHub Packages (Como dependência remota)
+This is the simplest option when developing Nano-Spring itself or experimenting with the framework.
 
-> ⚠️ **Importante sobre o GitHub Packages:** O GitHub exige autenticação com token (Personal Access Token) para baixar pacotes, mesmo que o repositório seja público.
+---
 
-#### 1. Configurar suas credenciais do GitHub
-No arquivo global `~/.gradle/gradle.properties` (ou no `gradle.properties` do seu projeto):
-```properties
-gpr.user=SEU_USUARIO_GITHUB
-gpr.key=SEU_GITHUB_PERSONAL_ACCESS_TOKEN
+## Option 2 — GitHub Packages
+
+The current published artifact is:
+
+```text
+com.github.matheuscruzsouza:nano-spring:1.11.0
 ```
-*(O token precisa apenas do escopo `read:packages`).*
 
-#### 2. Declarar o repositório no `settings.gradle`:
+Nano-Spring is published through GitHub Packages.
+
+GitHub Packages requires authentication for package downloads, so configure credentials in your Gradle environment.
+
+For example, in `~/.gradle/gradle.properties`:
+
+```properties
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_GITHUB_PERSONAL_ACCESS_TOKEN
+```
+
+The token requires package read access.
+
+Then add the GitHub Packages repository to your application's `settings.gradle`:
+
 ```gradle
 dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+
         maven {
             url = uri("https://maven.pkg.github.com/matheuscruzsouza/nano-spring")
             credentials {
-                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR") ?: ""
-                password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN") ?: ""
+                username = providers.gradleProperty("gpr.user").orNull
+                        ?: System.getenv("GITHUB_ACTOR")
+                        ?: ""
+
+                password = providers.gradleProperty("gpr.key").orNull
+                        ?: System.getenv("GITHUB_TOKEN")
+                        ?: ""
             }
         }
     }
 }
 ```
 
-#### 3. Adicionar a dependência no `build.gradle` do seu app:
+Then add the dependency:
+
 ```gradle
 dependencies {
-    implementation 'com.github.matheuscruzsouza:nano-spring:1.10.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring:1.11.0'
 }
 ```
 
-O Nano-Spring já encapsula as seguintes dependências:
-- `org.nanohttpd:nanohttpd:2.3.1`
-- `com.google.code.gson:gson:2.8.9`
-- `com.samskivert:jmustache:1.15`
-
 ---
 
-## 🚀 Guia de Uso Completo e Exemplos
+# Starting the server
 
-### 1. Inicializando o Servidor (Via `NanoSpringService` ou Manual)
+Nano-Spring supports starting the HTTP server through `NanoSpringService` or directly through the `Server` class.
 
-#### Opção A: Herdar de `NanoSpringService` (Recomendado para Produção / Foreground)
-A classe base cuida de `NotificationChannel`, notificação permanente, `WakeLock`, `MulticastLock`, diagnóstico de Doze Mode e parada limpa:
+## Using `NanoSpringService`
+
+For applications that need an Android service lifecycle:
 
 ```java
-package com.seupacote.app;
-
-import android.content.pm.ServiceInfo;
-import android.os.Build;
-import com.github.matheuscruzsouza.nanospring.service.NanoSpringService;
-
 public class MyBackendService extends NanoSpringService {
+
     @Override
     protected String getBasePackage() {
-        return "com.seupacote.app";
+        return "com.example.app";
     }
 
     @Override
     protected int getPort() {
         return 8080;
     }
-
-    // Opcional: no Android 10+ / 14+, declare o tipo de serviço (ex: dataSync)
-    @Override
-    protected int getCustomForegroundServiceType() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            return ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
-        }
-        return 0;
-    }
 }
 ```
 
-##### 🔋 Prevenção contra Suspensão com a Tela Apagada (Doze Mode):
-Para evitar que o Android corte a CPU ou a rede quando a tela apagar:
+The service provides Android-specific infrastructure such as notification handling and device/network locks.
+
+The exact foreground-service configuration should be selected according to the Android version and the actual type of work performed by the application.
+
+---
+
+## Starting the server directly
+
+For applications that manage their own lifecycle:
+
 ```java
-// Na sua Activity antes ou logo após iniciar o serviço:
-if (!BatteryOptimizationHelper.isIgnoringBatteryOptimizations(this)) {
-    startActivity(BatteryOptimizationHelper.createRequestIgnoreBatteryOptimizationsIntent(getPackageName()));
-}
+Server server = new Server(
+        context,
+        8080,
+        "com.example.app"
+);
 ```
 
-#### Opção B: Instanciação Direta
-```java
-Server server = new Server(context, 8080, "com.seupacote.app");
-```
+---
 
-### 2. Configurações (`application.properties`) e `@Value`
-Crie um arquivo `application.properties` na sua pasta `assets/`.
+# Configuration
+
+Nano-Spring uses `application.properties` from the application's assets.
+
+Example:
+
 ```properties
 server.port=9090
-api.key=MINHA_CHAVE_SECRETA
+
+nano.nsd.enabled=true
+nano.nsd.name=meu-servidor
+nano.nsd.type=_http._tcp.
+nano.nsd.host-resolution=true
+
+nano.network.watcher.enabled=true
+
+nano.datasource.wal.enabled=true
 ```
 
-Injete os valores diretamente nas suas classes:
+Application-specific values can be injected using `@Value`:
+
 ```java
 @RestController("/api/config")
 public class ConfigController {
 
-    // Se não achar a chave, usa o valor padrão "Chave_Padrao"
-    @Value("${api.key:Chave_Padrao}") 
+    @Value("${api.key:default-key}")
     private String apiKey;
 
     @GetMethod("")
     public String getKey() {
-        return "Sua chave é: " + apiKey;
+        return apiKey;
     }
 }
 ```
 
-### 3. Criando APIs REST (JSON)
-A extração de variáveis da URL, parâmetros de query e conversão de JSON no Body é feita de forma automática via Reflection.
+For sensitive production credentials, do not treat `application.properties` as a secure secret store.
+
+---
+
+# Building a REST API
+
+A controller can be defined using familiar Spring-style annotations.
 
 ```java
 @RestController("/api/users")
@@ -193,261 +588,48 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    // Acessível via GET /api/users/123 com captura de Header
     @GetMethod("/:id")
     public User getUser(
             @PathVariable("id") String id,
             @RequestHeader("Authorization") String token) {
+
         return userService.findById(Integer.parseInt(id));
     }
 
-    // Acessível via POST /api/users com JSON no Body e status 201 Created
     @PostMethod("")
-    public ResponseEntity<User> createUser(@RequestBody User newUser) {
-        User salvo = userService.save(newUser);
-        return ResponseEntity.created("/api/users/" + salvo.getId()).body(salvo);
+    public ResponseEntity<User> createUser(
+            @RequestBody User newUser) {
+
+        User saved = userService.save(newUser);
+
+        return ResponseEntity
+                .created("/api/users/" + saved.getId())
+                .body(saved);
     }
 }
 ```
 
-#### Respostas com `ResponseEntity` (Padrão Spring Boot):
-Você pode controlar status HTTP e cabeçalhos fluentes com a classe `ResponseEntity`:
-```java
-// 200 OK com corpo
-return ResponseEntity.ok(user);
+---
 
-// 200 OK com builder fluente
-return ResponseEntity.ok().header("X-Custom", "123").body(user);
+# Dependency Injection
 
-// 201 Created com header Location
-return ResponseEntity.created("/api/users/10").body(user);
-
-// 204 No Content
-return ResponseEntity.noContent().build();
-
-// 404 Not Found
-return ResponseEntity.notFound().build();
-
-// Resolução de Optional (200 OK ou 404 Not Found)
-return ResponseEntity.of(userService.findOptionalById(id));
-```
-
-### 4. Upload de Arquivos (`multipart/form-data`)
-Receber arquivos de um formulário Web ou de um App cliente é trivial. Basta usar `@UploadedFile`.
+Components can be registered using familiar annotations:
 
 ```java
-@RestController("/api/uploads")
-public class UploadController {
+@Service
+public class UserService {
 
-    @PostMethod("")
-    public String handleFileUpload(@UploadedFile("fotoPerfil") java.io.File arquivo) {
-        if (arquivo == null) return "Nenhum arquivo recebido!";
-        
-        // O arquivo já foi baixado para o Cache do Android. 
-        // Agora você pode movê-lo para um armazenamento permanente.
-        long tamanhoEmBytes = arquivo.length();
-        return "Upload de " + tamanhoEmBytes + " bytes concluído!";
+    private final UserRepository repository;
+
+    public UserService(UserRepository repository) {
+        this.repository = repository;
     }
 }
 ```
 
-### 5. Download e Streaming de Arquivos (`java.io.File`)
-Seu endpoint pode retornar diretamente uma instância de `java.io.File`. O Nano-Spring ativa transmissão em blocos (*Chunked Transfer*) e adiciona o header `Content-Disposition` para download direto:
+Repositories can use the Android SQLite database:
 
 ```java
-@RestController("/api/files")
-public class DownloadController {
-
-    @GetMethod(value = "/download/:id", mimeType = "application/octet-stream")
-    public Object downloadFile(@PathVariable("id") String id) {
-        File file = fileService.getFileOnDisk(id);
-        if (file.exists()) {
-            return file; // O Nano-Spring faz streaming automático via chunked response
-        }
-        return "Arquivo não encontrado";
-    }
-}
-```
-
-### 6. Server-Sent Events (SSE) com `SseEmitter`
-Transmita notificações, métricas ou atualizações em tempo real diretamente para o navegador (compatível nativamente com o padrão JavaScript `EventSource` e extensões do HTMX):
-
-```java
-import com.github.matheuscruzsouza.nanospring.sse.SseEmitter;
-
-@RestController("/api/stream")
-public class NotificationController {
-
-    @GetMethod(value = "/alerts", mimeType = "text/event-stream")
-    public SseEmitter streamAlerts() {
-        SseEmitter emitter = new SseEmitter();
-
-        new Thread(() -> {
-            try {
-                emitter.send("Conexão estabelecida com sucesso!");
-                
-                for (int i = 1; i <= 5; i++) {
-                    Thread.sleep(1000);
-                    // Pode enviar objetos (convertidos para JSON) ou eventos nomeados:
-                    emitter.send("alerta", Map.of("step", i, "status", "Processando"));
-                }
-
-                emitter.complete(); // Encerra o fluxo
-            } catch (Exception e) {
-                emitter.completeWithError(e);
-            }
-        }).start();
-
-        return emitter;
-    }
-}
-```
-
-No frontend (JavaScript):
-```javascript
-const eventSource = new EventSource('/api/stream/alerts');
-eventSource.addEventListener('alerta', (event) => {
-    const data = JSON.parse(event.data);
-    console.log("Recebido:", data);
-});
-```
-
-#### Gerenciamento de Ciclo de Vida e Prevenção de Starvation:
-O `SseEmitter` possui heartbeat keep-alive automático periódico (`: keep-alive\n\n`) para detectar desconexões do cliente precocemente e liberar threads do pool de workers:
-```java
-SseEmitter emitter = new SseEmitter(60_000L); // Opcional: timeout de 60 segundos
-
-emitter.onCompletion(() -> {
-    hub.remover(emitter); // Remove de listas de broadcast ao fechar
-});
-
-emitter.onTimeout(() -> {
-    hub.remover(emitter);
-});
-
-emitter.onError(throwable -> {
-    Log.w("SSE", "Cliente desconectou com erro: " + throwable.getMessage());
-});
-```
-
-Propriedades configuráveis no `application.properties`:
-```properties
-# Intervalo de ping/heartbeat em ms para detectar clientes desconectados (padrão: 15000, 0 desabilita)
-nano.sse.heartbeat-interval-ms=15000
-
-# Timeout global padrão de inatividade para conexões SSE (opcional, em ms)
-nano.sse.timeout-ms=60000
-
-# Se utilizar muitas conexões SSE simultâneas, dimensione o pool de workers:
-nano.server.threads.core=8
-nano.server.threads.max=32
-nano.server.threads.queue-capacity=100
-```
-
-### 7. Interceptadores (Segurança e Logs)
-Crie classes que implementam `HandlerInterceptor` para barrar ou auditar rotas antes que elas cheguem no Controller.
-
-```java
-@Interceptor
-@Order(1) // Ordem de execução (1 é o primeiro)
-public class SecurityInterceptor implements HandlerInterceptor {
-    
-    @Override
-    public boolean preHandle(NanoHTTPD.IHTTPSession session, String path) {
-        // Bloqueia rotas /admin se não enviar o cabeçalho Authorization
-        if (path.startsWith("/admin")) {
-            String token = session.getHeaders().get("authorization");
-            if (token == null || !token.equals("Bearer SEGREDO")) {
-                return false; // Bloqueia a requisição retornando 401 Unauthorized
-            }
-        }
-        return true; // Deixa passar para o Controller
-    }
-}
-```
-
-### 8. Tratamento de Exceções Globais
-Cansado de blocos Try-Catch espalhados? Crie um Advice para responder adequadamente caso seu código dispare exceções (ex: formato de ID errado ou registro não encontrado).
-
-```java
-@ControllerAdvice
-public class GlobalExceptionHandler {
-
-    @ExceptionHandler(NumberFormatException.class)
-    public ErrorResponse handleFormatError(NumberFormatException ex) {
-        return new ErrorResponse("BAD_REQUEST", "Você enviou letras no lugar de números!");
-    }
-
-    @ExceptionHandler(IndexOutOfBoundsException.class)
-    public ErrorResponse handleNotFoundError(IndexOutOfBoundsException ex) {
-        return new ErrorResponse("NOT_FOUND", "O recurso solicitado não existe.");
-    }
-}
-```
-
-### 9. Retornando Páginas HTML e HTMX
-Para renderizar templates HTML (que devem ser colocados em `assets/templates/`), retorne um `ModelAndView`.
-
-```java
-@RestController("/web")
-public class WebController {
-
-    @GetMethod("/profile/:id")
-    public ModelAndView renderProfile(@PathVariable("id") String id) {
-        User user = userService.findById(id);
-        // O motor JMustache injetará as variáveis {{username}} no arquivo user_profile.html
-        return new ModelAndView("user_profile")
-                .addObject("username", user.getName());
-    }
-}
-```
-**Para HTMX:** Você também pode retornar um `String` simples definindo o `mimeType = "text/html"`, ideal para devolver pedaços/fragmentos de tela sem recarregar a página.
-
-### 10. Arquivos Estáticos (CSS, JS, Imagens)
-Coloque qualquer arquivo estático dentro de `app/src/main/assets/static/`.
-O Nano-Spring hospeda essa pasta automaticamente! No seu HTML, basta linkar:
-```html
-<link rel="stylesheet" href="/static/css/style.css">
-<script src="/static/js/main.js"></script>
-```
-
-### 11. Banco de Dados SQLite & Migrações (Estilo Flyway)
-O Nano-Spring possui suporte nativo ao **SQLite do Android** com controle de evolução de esquemas por meio de arquivos `.sql` versionados.
-
-#### 1. Criando as migrações
-Coloque seus scripts SQL na pasta `assets/db/migration/`:
-- `assets/db/migration/V1__create_users_table.sql`
-- `assets/db/migration/V2__add_status_column.sql`
-
-Exemplo (`V1__create_users_table.sql`):
-```sql
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE
-);
-
-INSERT INTO users (nome, email) VALUES ('Administrador', 'admin@local.com');
-```
-
-O Nano-Spring cria automaticamente a tabela de controle `nano_schema_history` no SQLite, rastreia as versões aplicadas e executa cada script pendente dentro de uma transação.
-
-#### 2. Configurações opcionais (`application.properties`):
-```properties
-nano.datasource.name=meu_banco.db
-nano.datasource.migration.location=db/migration
-nano.datasource.migration.enabled=true
-```
-
-#### 3. Usando com `@Repository` e `@Autowired`:
-O `SQLiteDatabase` é automaticamente registrado como singleton no container de injeção:
-
-```java
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
-import com.github.matheuscruzsouza.nanospring.annotation.Repository;
-
 @Repository
 public class UserRepository {
 
@@ -455,85 +637,165 @@ public class UserRepository {
     private SQLiteDatabase db;
 
     public List<String> listUsers() {
-        List<String> list = new ArrayList<>();
-        try (Cursor cursor = db.rawQuery("SELECT nome FROM users", null)) {
+        List<String> users = new ArrayList<>();
+
+        try (Cursor cursor =
+                     db.rawQuery("SELECT nome FROM users", null)) {
+
             while (cursor.moveToNext()) {
-                list.add(cursor.getString(0));
+                users.add(cursor.getString(0));
             }
         }
-        return list;
+
+        return users;
     }
 }
 ```
 
-### 12. Descoberta de Serviço e Acesso Direto via Navegador (`.local`)
-O Nano-Spring possui suporte integrado ao anúncio de rede mDNS / DNS-SD (Zeroconf / Bonjour) e **resolução direta de Host (registros A)**.
+---
 
-Isso significa que você pode acessar seu servidor digitando diretamente no navegador (Chrome, Firefox, Safari, Edge):
+# File uploads and downloads
+
+Multipart uploads are supported through `@UploadedFile`.
+
+```java
+@RestController("/api/uploads")
+public class UploadController {
+
+    @PostMethod("")
+    public String upload(
+            @UploadedFile("file") File file) {
+
+        if (file == null) {
+            return "No file received";
+        }
+
+        return "Uploaded " + file.length() + " bytes";
+    }
+}
+```
+
+Controllers can also return `File` objects for file streaming.
+
+```java
+@GetMethod(
+        value = "/download/:id",
+        mimeType = "application/octet-stream"
+)
+public Object download(
+        @PathVariable("id") String id) {
+
+    File file = fileService.getFileOnDisk(id);
+
+    if (file.exists()) {
+        return file;
+    }
+
+    return "File not found";
+}
+```
+
+---
+
+# Server-Sent Events
+
+Nano-Spring provides `SseEmitter` for streaming events to web clients.
+
+```java
+@RestController("/api/stream")
+public class NotificationController {
+
+    @GetMethod(
+            value = "/alerts",
+            mimeType = "text/event-stream"
+    )
+    public SseEmitter alerts() {
+
+        SseEmitter emitter = new SseEmitter();
+
+        // Produce events asynchronously.
+
+        return emitter;
+    }
+}
+```
+
+The client can consume the stream using the browser's native `EventSource` API:
+
+```javascript
+const eventSource =
+    new EventSource('/api/stream/alerts');
+
+eventSource.addEventListener('alerta', event => {
+    const data = JSON.parse(event.data);
+    console.log(data);
+});
+```
+
+`SseEmitter` also supports lifecycle callbacks and keep-alive behavior for long-running connections.
+
+---
+
+# SQLite and migrations
+
+Nano-Spring integrates with Android's native SQLite implementation.
+
+Database migrations can be placed under:
+
 ```text
-http://meu-servidor-android.local:8080/
+assets/db/migration/
 ```
-Sem precisar saber o IP do celular, sem configurar roteador e sem instalar nada!
 
-#### 1. Configuração (`application.properties`):
+For example:
+
+```text
+V1__create_users_table.sql
+V2__add_status_column.sql
+V3__create_orders_table.sql
+```
+
+Example:
+
+```sql
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE
+);
+```
+
+Nano-Spring maintains migration history and executes pending migrations within transactions.
+
+SQLite WAL mode can be enabled with:
+
 ```properties
-# Habilita o anúncio e descoberta mDNS
-nano.nsd.enabled=true
-
-# Nome do host e serviço (acessível como http://meu-servidor-android.local:porta)
-nano.nsd.name=meu-servidor-android
-
-# Tipo do serviço DNS-SD (padrão: _http._tcp.)
-nano.nsd.type=_http._tcp.
-
-# Habilita o responder mDNS para resolução de Host A/AAAA no navegador (padrão: true)
-nano.nsd.host-resolution=true
+nano.datasource.wal.enabled=true
 ```
 
-#### 2. Ativação programática ou injeção:
-Você também pode ativar, desativar ou injetar o gerenciador em tempo de execução:
-```java
-// Ativar programaticamente no Server com resolução de host:
-server.enableNsd("meu-servidor", true);
+---
 
-// Ou desativar:
-server.disableNsd();
-```
-Quando o servidor é parado com `server.stop()`, o serviço e a resolução mDNS são automaticamente desregistrados da rede.
+# Network recovery
 
-### 13. Suporte Nativo a CORS (Cross-Origin Resource Sharing)
-O Nano-Spring possui suporte nativo e declarativo a **CORS**, habilitado por padrão para requerer o mínimo de configuração do desenvolvedor. Ele resolve automaticamente requisições pre-flight (`OPTIONS`) com resposta `200 OK` vazia e injeta os cabeçalhos apropriados em todas as rotas (incluindo respostas de erro e arquivos estáticos).
+Android devices can change their network configuration while running.
 
-#### 1. Configurações (`application.properties`):
+Wi-Fi can disconnect, reconnect, or receive a different IP address.
+
+Nano-Spring provides `NetworkWatcher` for monitoring connectivity changes and re-announcing local services when appropriate.
+
 ```properties
-# Habilita ou desabilita o filtro global de CORS (padrão: true)
-nano.cors.enabled=true
-
-# Origens permitidas (padrão: *)
-nano.cors.allowed-origins=*
-
-# Métodos HTTP permitidos (padrão: GET,POST,PUT,DELETE,OPTIONS)
-nano.cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS
-
-# Cabeçalhos permitidos (padrão: Content-Type,Authorization,X-Requested-With,Accept)
-nano.cors.allowed-headers=Content-Type,Authorization,X-Requested-With,Accept
-
-# Tempo de cache em segundos do pre-flight (padrão: 86400)
-nano.cors.max-age=86400
+nano.network.watcher.enabled=true
 ```
 
-#### 2. Configuração programática:
-```java
-// Ajustar configurações em tempo de execução:
-CorsConfiguration cors = server.getCorsConfiguration();
-```
+This is particularly relevant when an Android device is being used as a permanent local server.
 
-### 14. Módulo Enterprise: Resiliência, Concorrência & Observabilidade (v1.7.0)
+---
 
-O Nano-Spring inclui endurecimento de infraestrutura para dispositivos embarcados em produção (PDVs, totens e hubs IoT):
+# Concurrency and resource limits
 
-#### A. Pool de Threads Controlado (`ThreadPoolAsyncRunner` - Anti-OOM)
-Elimina o risco de esgotamento de threads nativas do Linux no Android através de um executor delimitado:
+Resource-constrained hardware should avoid unbounded thread creation.
+
+Nano-Spring provides a bounded asynchronous execution model:
+
 ```properties
 nano.server.threads.core=4
 nano.server.threads.max=16
@@ -541,208 +803,622 @@ nano.server.threads.queue-capacity=100
 nano.server.threads.keep-alive=60
 ```
 
-#### B. Concorrência SQLite com Modo WAL (Write-Ahead Logging)
-Permite que múltiplas requisições façam leituras em paralelo sem serem travadas por transações de escrita:
+The exact values should be selected according to the device and workload.
+
+The purpose is to keep concurrency bounded instead of allowing traffic spikes to create an uncontrolled number of threads.
+
+---
+
+# CORS
+
+CORS can be configured globally:
+
 ```properties
-nano.datasource.wal.enabled=true
+nano.cors.enabled=true
+nano.cors.allowed-origins=*
+nano.cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS
+nano.cors.allowed-headers=Content-Type,Authorization,X-Requested-With,Accept
+nano.cors.max-age=86400
 ```
 
-#### C. Monitoramento Dinâmico de Rede (`NetworkWatcher`)
-Detecta alterações de IP / Wi-Fi via `ConnectivityManager.NetworkCallback` e re-anuncia automaticamente os serviços mDNS sem reiniciar a aplicação:
-```properties
-nano.network.watcher.enabled=true
-```
+For applications exposed beyond a trusted local environment, configure allowed origins explicitly rather than relying on permissive defaults.
 
-#### D. Endpoints de Observabilidade Actuator (`/actuator/health` e `/actuator/info`)
-Telemetria remota em formato JSON contendo memória JVM, conectividade do banco, IP/porta e métricas de bateria do Android:
-```bash
-curl http://localhost:8080/actuator/health
-```
+---
 
-### 15. Segurança Corporativa & Validação Declarativa (v1.8.0)
+# Security
 
-#### A. HTTPS / TLS Nativo via Keystore
-Habilite criptografia TLS no servidor configurando o Keystore no `application.properties`:
+Running a server on a local network does not automatically make it secure.
+
+Nano-Spring provides several building blocks for securing applications.
+
+## TLS
+
+HTTPS can be enabled using a Java/Android keystore:
+
 ```properties
 server.ssl.enabled=true
 server.ssl.key-store=certificates/keystore.p12
-server.ssl.key-store-password=senha-do-certificado
+server.ssl.key-store-password=YOUR_PASSWORD
 server.ssl.key-store-type=PKCS12
 ```
 
-#### B. Proteção Anti-DoS com Rate Limiting
-Limite o fluxo de requisições por IP globalmente ou em rotas críticas com `@RateLimit`:
-```java
-@RateLimit(requests = 5, durationSeconds = 60)
-@PostMethod("/api/checkout")
-public ResponseEntity<?> pagar(@RequestBody PagamentoDTO dto) { ... }
-```
-Se excedido, responde imediatamente com status HTTP `429 Too Many Requests`.
+## Rate limiting
 
-#### C. Bean Validation Declarativo (`@Valid`)
-Valide dados de entrada com anotações declarativas no DTO:
+Routes can define request limits:
+
 ```java
-public class UsuarioDTO {
-    @NotNull @NotBlank
-    private String nome;
+@RateLimit(
+        requests = 5,
+        durationSeconds = 60
+)
+@PostMethod("/api/checkout")
+public ResponseEntity<?> checkout(
+        @RequestBody PaymentDTO payment) {
+
+    // ...
+}
+```
+
+Requests exceeding the configured limit receive HTTP `429`.
+
+## Interceptors
+
+Custom `HandlerInterceptor` implementations can inspect and reject requests before they reach controllers.
+
+```java
+@Interceptor
+@Order(1)
+public class SecurityInterceptor
+        implements HandlerInterceptor {
+
+    @Override
+    public boolean preHandle(
+            NanoHTTPD.IHTTPSession session,
+            String path) {
+
+        // Authentication / authorization logic
+
+        return true;
+    }
+}
+```
+
+## Global exception handling
+
+Applications can centralize exception handling:
+
+```java
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(NumberFormatException.class)
+    public ErrorResponse handleFormatError(
+            NumberFormatException ex) {
+
+        return new ErrorResponse(
+                "BAD_REQUEST",
+                "Invalid number format"
+        );
+    }
+}
+```
+
+---
+
+# Validation
+
+DTOs can use declarative validation:
+
+```java
+public class UserDTO {
+
+    @NotNull
+    @NotBlank
+    private String name;
 
     @Email
     private String email;
 
-    @Min(18) @Max(120)
-    private int idade;
+    @Min(18)
+    @Max(120)
+    private int age;
 }
 ```
-No controlador:
+
+Then validate request bodies directly:
+
 ```java
-@PostMethod("/api/usuarios")
-public ResponseEntity<?> criar(@Valid @RequestBody UsuarioDTO dto) {
-    // Executa apenas se o payload for 100% válido; caso contrário retorna 400 Bad Request
-    return ResponseEntity.ok(service.salvar(dto));
+@PostMethod("/api/users")
+public ResponseEntity<?> create(
+        @Valid @RequestBody UserDTO user) {
+
+    return ResponseEntity.ok(
+            userService.save(user)
+    );
 }
 ```
 
-### 16. Diagnósticos de Campo, Perfis & Execução Assíncrona (v1.9.0)
+---
 
-#### A. Rotação Local de Logs & Endpoint `/actuator/logfile`
-Persistência de logs no armazenamento interno do Android sem risco de esgotar a memória interna do equipamento (rotação geracional com teto de tamanho):
+# HTML, templates and static files
+
+Nano-Spring can also serve web interfaces directly from the Android device.
+
+Templates can be placed under:
+
+```text
+assets/templates/
+```
+
+and rendered using `ModelAndView`.
+
+```java
+@RestController("/web")
+public class WebController {
+
+    @GetMethod("/profile/:id")
+    public ModelAndView profile(
+            @PathVariable("id") String id) {
+
+        User user = userService.findById(id);
+
+        return new ModelAndView("user_profile")
+                .addObject("username", user.getName());
+    }
+}
+```
+
+Static resources can be placed under:
+
+```text
+app/src/main/assets/static/
+```
+
+and accessed directly:
+
+```html
+<link
+    rel="stylesheet"
+    href="/static/css/style.css">
+
+<script
+    src="/static/js/main.js">
+</script>
+```
+
+---
+
+# Profiles
+
+Different configurations can be selected using profiles.
+
+For example:
+
+```properties
+nano.profiles.active=dev
+```
+
+with:
+
+```text
+assets/application.properties
+assets/application-dev.properties
+```
+
+The profile-specific properties override the base configuration.
+
+This is useful when the same application needs different configurations for development, testing and deployment.
+
+---
+
+# Async controllers
+
+Operations involving slow hardware or peripherals can be exposed asynchronously.
+
+For example:
+
+```java
+@PostMethod("/api/pos/imprimir")
+public CompletableFuture<ResponseEntity<Map<String, Object>>>
+        imprimir(@RequestBody CupomDTO cupom) {
+
+    return CompletableFuture.supplyAsync(() -> {
+
+        impressoraHardware.imprimir(cupom);
+
+        return ResponseEntity.ok(
+                Map.of("impresso", true)
+        );
+    });
+}
+```
+
+Timeouts can be configured:
+
+```properties
+nano.async.timeout-seconds=30
+nano.server.read-timeout=10000
+```
+
+This is useful for integrations involving hardware such as printers, Bluetooth peripherals or other operations that may take longer than a normal HTTP request.
+
+---
+
+# Observability
+
+Nano-Spring provides Actuator-style endpoints:
+
+```text
+/actuator/health
+/actuator/info
+/actuator/logfile
+```
+
+For example:
+
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+The health information can include runtime, database, network and Android-related information.
+
+---
+
+# Rotating logs
+
+Local servers should avoid unlimited log growth.
+
+Nano-Spring provides rotating file logging:
+
 ```properties
 nano.logging.enabled=true
 nano.logging.level=INFO
 nano.logging.max-size-mb=5
 nano.logging.max-history=3
 ```
-Suporte técnico pode auditar o dispositivo remotamente via HTTP:
+
+Logs can also be inspected remotely through:
+
+```text
+/actuator/logfile
+```
+
+For example:
+
 ```bash
-curl http://terminal-pos.local:8080/actuator/logfile?lines=100
+curl \
+  "http://device.local:8080/actuator/logfile?lines=100"
 ```
 
-#### B. Perfis de Ambiente (`application-{profile}.properties`)
-Segregação transparente de configurações por ambiente:
-```properties
-# assets/application.properties
-nano.profiles.active=dev
-```
-O Nano-Spring carrega e sobrepõe automaticamente as chaves de `assets/application-dev.properties`.
+Management endpoints should be protected appropriately when the service is exposed to untrusted networks.
 
-#### C. Controladores Assíncronos com `CompletableFuture`
-Desacople chamadas de hardware lentas (impressão térmica, leitura de chip EMV, Bluetooth) com timeout automático (`408 Request Timeout`):
-```java
-@PostMethod("/api/pos/imprimir")
-public CompletableFuture<ResponseEntity<Map<String, Object>>> imprimir(@RequestBody CupomDTO cupom) {
-    return CompletableFuture.supplyAsync(() -> {
-        impressoraHardware.imprimir(cupom);
-        return ResponseEntity.ok(Map.of("impresso", true));
-    });
-}
-```
-Configuração de timeout no `application.properties`:
-```properties
-nano.async.timeout-seconds=30
-nano.server.read-timeout=10000
+---
+
+# OpenAPI and Swagger UI
+
+Nano-Spring can generate OpenAPI 3.0 documentation and provide a local Swagger UI.
+
+The service exposes:
+
+```text
+/swagger-ui
+/swagger-ui.html
+/v3/api-docs
 ```
 
-### 17. Swagger & OpenAPI 3.0 Embutido (v1.10.0)
+For example:
 
-Documente e teste suas rotas interativamente sem precisar instalar pacotes NPM ou bibliotecas pesadas de 8 MB+. O **Nano-Swagger** gera um endpoint OpenAPI 3.0.1 dinâmico e serve uma interface HTML5/CSS/JS ultra-leve (~15 KB) que funciona 100% offline em redes locais de TV-Box ou terminais POS:
-
-- **Interface Gráfica Interativa:** `http://<ip-do-dispositivo>:8080/swagger-ui` (ou `/swagger-ui.html`)
-- **Especificação OpenAPI JSON:** `http://<ip-do-dispositivo>:8080/v3/api-docs`
-
-#### Exemplo de Controller Documentado:
-```java
-@Tag(name = "Produtos", description = "Operações do catálogo de produtos")
-@RestController("/api/produtos")
-public class ProdutoController {
-
-    @Operation(summary = "Consultar produto por código de barras")
-    @GetMethod("/:ean")
-    public ResponseEntity<ProdutoDTO> buscarPorEan(
-            @PathVariable("ean") @Parameter(description = "EAN-13 numérico", example = "7891000100103") String ean
-    ) {
-        return ResponseEntity.ok(produtoService.buscarPorEan(ean));
-    }
-
-    @Operation(summary = "Cadastrar novo produto")
-    @ResponseStatus(HttpStatus.CREATED)
-    @ApiResponse(responseCode = 201, description = "Criado com sucesso", responseClass = ProdutoDTO.class)
-    @ApiResponse(responseCode = 400, description = "Validação falhou")
-    @PostMethod("")
-    public ResponseEntity<ProdutoDTO> cadastrar(@Valid @RequestBody ProdutoDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(produtoService.salvar(dto));
-    }
-}
+```text
+http://device.local:8080/swagger-ui
 ```
 
-Configuração opcional em `application.properties`:
+The interface is served locally, so API documentation does not require an external Internet connection.
+
+Configuration:
+
 ```properties
 nano.swagger.enabled=true
-nano.swagger.title=PDV Smart API
+nano.swagger.title=My Local API
 nano.swagger.version=1.0.0
-nano.swagger.description=API REST de Vendas e Integração Local
+nano.swagger.description=Local application API
 ```
 
 ---
 
-## ⚖️ Comparativo: Nano-Spring vs Spring Boot no Android
+# Reliability on constrained hardware
 
-Por que não rodar o Spring Boot tradicional diretamente no Android? E como o Nano-Spring se compara rodando uma mesma estrutura de projeto?
+Nano-Spring is not primarily designed around maximum requests per second.
 
-| Dimensão / Métrica | 🌱 Nano-Spring (Android Nativo) | 🍃 Spring Boot (Stack Padrão) |
-| :--- | :--- | :--- |
-| **Consumo de Memória RAM** | **15 MB a 40 MB** *(Sem risco de OOM / LMK)* | **250 MB a 650 MB+** *(Morte iminente em 1GB-2GB RAM)* |
-| **Tempo de Inicialização (Cold Start)** | **~150 ms a 400 ms** *(Escaneamento DexFile)* | **8 a 25+ segundos** *(Auto-configurations pesadas em ARM)* |
-| **Impacto no APK / Footprint** | **&lt; 350 KB** *(Biblioteca enxuta)* | **35 MB a 70 MB** *(Fat JAR com centenas de libs transitivas)* |
-| **Execução no Android Runtime (ART)** | **100% Nativo** *(Compila com D8/R8 sem hacks)* | **Incompatível Nativamente** *(Requer Termux / Proot / JVM hack)* |
-| **Ciclo de Vida & Background Locks** | **Nativo** (`NanoSpringService`, WakeLock, Multicast) | **Sem integração com ciclo de vida do Android** |
-| **Banco de Dados Embutido** | **SQLite Nativo do Android** *(WAL mode sem JNI)* | **H2 / SQLite via JDBC JNI de desktop** |
-| **Descoberta na Rede Local (mDNS)** | **Nativo via NsdManager** (`http://device.local`) | **Requer JmDNS externo e gerenciamento manual de locks** |
-| **Google Play Store / Segurança MDM** | **100% Compliant** | **Rejeição por execução de binários Linux fora da sandbox** |
+The more important question is:
 
-### Ergonomia de Código Lado a Lado
+> **Can a local service continue operating predictably on inexpensive, resource-constrained hardware?**
 
-Desenvolvedores habituados ao Spring Boot têm **curva de aprendizado zero** ao migrar ou desenvolver para o Nano-Spring:
+For that reason, important engineering concerns include:
 
-```java
-// 🍃 Spring Boot (Cloud / Desktop)
+* memory usage;
+* CPU utilization;
+* thread count;
+* bounded queues;
+* garbage collection;
+* storage growth;
+* database behavior;
+* network recovery;
+* application restart;
+* long-running operation;
+* battery and power behavior;
+* Android background execution restrictions.
+
+The Motorola Moto G4 Play is used as a reference development device precisely because it provides a constrained environment for testing these characteristics.
+
+---
+
+# Performance
+
+Performance measurements should always describe their environment.
+
+Useful measurements include:
+
+* startup time;
+* memory consumption;
+* CPU utilization;
+* request latency;
+* concurrent connections;
+* database performance;
+* storage usage;
+* thread count;
+* garbage collection;
+* network recovery;
+* long-running stability.
+
+A benchmark should report at least:
+
+```text
+Device: Motorola Moto G4 Play
+Android: <version>
+Build: <debug/release>
+R8: <enabled/disabled>
+Database: <configuration>
+Workload: <description>
+Duration: <duration>
+```
+
+This makes results easier to reproduce and compare.
+
+---
+
+# Android lifecycle
+
+Android is not a conventional server operating system.
+
+Applications running long-lived local services must account for:
+
+* application lifecycle;
+* background execution restrictions;
+* foreground services;
+* Doze;
+* battery optimization;
+* Wi-Fi state;
+* connectivity changes;
+* vendor-specific Android behavior;
+* device restarts.
+
+Nano-Spring provides Android-specific infrastructure, but applications are still responsible for following the lifecycle and background-execution rules of the Android version on which they run.
+
+For deployments intended to operate continuously, the target Android version and device should therefore be tested explicitly.
+
+---
+
+# Architecture
+
+At a high level:
+
+```text
+┌──────────────────────────────────────┐
+│            Application               │
+│                                      │
+│ Controllers / Services / Repositories│
+└──────────────────┬───────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────┐
+│             Nano-Spring              │
+│                                      │
+│ DI │ HTTP │ Validation │ Persistence │
+│ Lifecycle │ Config │ Observability   │
+└──────────────────┬───────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────┐
+│              Android                 │
+│                                      │
+│ Network │ Storage │ Services │ APIs  │
+└──────────────────┬───────────────────┘
+                   │
+                   ▼
+             Android Device
+```
+
+The framework provides the application runtime while Android remains responsible for the underlying operating-system and hardware capabilities.
+
+---
+
+# Design principles
+
+## Local-first
+
+Applications should be useful on the local network without requiring permanent cloud infrastructure.
+
+## Small footprint
+
+The runtime should avoid unnecessary infrastructure and dependencies.
+
+## Predictability over peak performance
+
+Bounded resources and predictable behavior are more important than maximizing benchmark numbers.
+
+## Reuse before replacement
+
+Existing Android hardware can provide useful infrastructure long after its original smartphone role becomes obsolete.
+
+## Familiar development model
+
+Developers should be able to use concepts they already understand from the Java/Spring ecosystem.
+
+## Android-native
+
+The framework should use Android's native capabilities rather than requiring a separate server environment.
+
+## Recoverability
+
+Long-running services should be designed to recover from transient network and infrastructure failures.
+
+## Simple deployment
+
+Turning an Android device into a local service should require as little infrastructure as possible.
+
+---
+
+# What Nano-Spring is not
+
+Nano-Spring is not intended to be:
+
+* a replacement for Spring Boot;
+* a Spring-compatible runtime;
+* a general-purpose cloud platform;
+* a Kubernetes alternative;
+* a distributed systems platform;
+* a high-throughput Internet backend;
+* or a replacement for enterprise server infrastructure.
+
+Its target is different:
+
+> **Small, local services running directly on Android devices.**
+
+---
+
+# How it works internally
+
+Nano-Spring currently uses Java Reflection together with Android `DexFile` scanning during application startup.
+
+The framework scans the application package for components such as:
+
+```text
 @RestController
-@RequestMapping("/api/pedidos")
-public class PedidoController {
-    @Autowired
-    private PedidoService service;
-
-    @PostMapping
-    public ResponseEntity<Pedido> criar(@Valid @RequestBody PedidoDTO dto,
-                                        @RequestHeader("Authorization") String token) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.salvar(dto));
-    }
-}
-
-// 🌱 Nano-Spring (Android Embarcado)
-@RestController("/api/pedidos")
-public class PedidoController {
-    @Autowired
-    private PedidoService service;
-
-    @PostMethod("")
-    public ResponseEntity<Pedido> criar(@Valid @RequestBody PedidoDTO dto,
-                                        @RequestHeader("Authorization") String token) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.salvar(dto));
-    }
-}
+@Service
+@Repository
 ```
 
-> 📖 Para a análise aprofundada completa com matriz de decisão e gráficos, consulte a [Página de Comparativo Arquitetural na Documentação](docs/spring-boot-vs-nano-spring.html).
+and builds the runtime structures required for dependency injection and HTTP routing.
+
+The reflection work is concentrated during startup rather than being repeatedly performed for every request.
+
+This approach keeps the runtime programming model simple while remaining suitable for Android applications.
 
 ---
 
-## 🛠️ Como funciona por baixo dos panos?
+# Project status
 
-O Nano-Spring utiliza um mecanismo altamente otimizado de **introspecção via Java Reflection** e escaneamento direto no bytecode compilado do Android (`DexFile`), concentrado exclusivamente na inicialização (*boot phase*).
+Nano-Spring is an evolving project.
 
-Em vez de processar milhares de classes de bibliotecas externas, o framework inspeciona cirurgicamente apenas o pacote base delimitado por você, identificando anotações como `@RestController`, `@Service` e `@Repository`. Os componentes Singleton são instanciados e todas as rotas e injeções de dependência são pré-compiladas e indexadas em tabelas de dispersão (*Hash Maps*) em memória.
+The current development focus is on making the framework useful as a foundation for local infrastructure running on Android devices, especially older and resource-constrained hardware.
 
-Com isso, o custo de reflexão ocorre **uma única vez no arranque** (completando em cerca de 150 a 400 ms). Durante as requisições HTTP em tempo de execução, o despacho de rotas é praticamente instantâneo ($O(1)$), e o `Gson` converte fluxos de dados diretamente para seus modelos Java — proporcionando máxima vazão com consumo mínimo de memória e CPU no dispositivo.
+Current areas of focus include:
+
+* runtime stability;
+* Android compatibility;
+* resource efficiency;
+* local networking;
+* persistence;
+* security;
+* observability;
+* and long-running operation.
+
+APIs and implementation details may change as the project evolves.
 
 ---
-**Criado com ♥ para a comunidade Android.**
+
+# Roadmap
+
+## Reliability
+
+* [ ] Long-running stability tests
+* [ ] Memory/resource monitoring
+* [ ] Network recovery improvements
+* [ ] Database recovery
+* [ ] Runtime watchdog
+* [ ] Graceful restart
+* [ ] Failure recovery improvements
+
+## Android
+
+* [ ] Expanded Android compatibility matrix
+* [ ] Background execution improvements
+* [ ] Power-management handling
+* [ ] Device-specific compatibility testing
+
+## Security
+
+* [ ] Harden management endpoints
+* [ ] Improve secret management
+* [ ] Authentication and authorization improvements
+* [ ] Security documentation
+* [ ] Secure defaults
+
+## Infrastructure
+
+* [ ] Backup and restore
+* [ ] Device provisioning
+* [ ] Improved local service discovery
+* [ ] Device management
+
+## Developer experience
+
+* [ ] More documentation
+* [ ] More complete examples
+* [ ] Better diagnostics
+* [ ] Improved testing infrastructure
+* [ ] Generated metadata where appropriate
+
+---
+
+# Contributing
+
+Contributions are welcome.
+
+Particularly useful contributions include:
+
+* Android compatibility testing;
+* testing on older devices;
+* performance measurements;
+* long-running reliability testing;
+* security reviews;
+* documentation;
+* examples;
+* bug reports;
+* framework development.
+
+When reporting a device-specific problem, include:
+
+```text
+Device:
+Android version:
+Nano-Spring version:
+Build type:
+Workload:
+Expected behavior:
+Actual behavior:
+```
+
+Testing Nano-Spring on older Android hardware is especially valuable because constrained devices are an important part of the project's target environment.
+
+---
+
+# License
+
+See [LICENSE](LICENSE) for the project license.
+
+---
+
+## Repository
+
+[GitHub](https://github.com/matheuscruzsouza/nano-spring)
