@@ -60,7 +60,7 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-Verify the existance of version managers before try to execute commands like NVM/SDKMAN
+Verify the existance of version managers before try to execute commands like NVM/SDK
 
 ---
 
