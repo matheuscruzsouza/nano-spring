@@ -143,62 +143,70 @@ public class ServerIndexHandler {
                 Class<?> targetType = parameterTypes[i];
                 boolean matched = false;
 
-                for (Annotation ann : annotations) {
-                    if (ann instanceof PathVariable) {
-                        PathVariable pv = (PathVariable) ann;
-                        String value = pathVariables.get(pv.value());
-                        convertedArgs[i] = convertStringToType(value, targetType);
-                        matched = true;
-                        break;
-                    } else if (ann instanceof RequestParam) {
-                        RequestParam rp = (RequestParam) ann;
-                        Map<String, String> queryParams = session.getParms();
-                        String value = queryParams.get(rp.value());
-                        convertedArgs[i] = convertStringToType(value, targetType);
-                        matched = true;
-                        break;
-                    } else if (ann instanceof com.github.matheuscruzsouza.nanospring.annotation.UploadedFile) {
-                        com.github.matheuscruzsouza.nanospring.annotation.UploadedFile uf = (com.github.matheuscruzsouza.nanospring.annotation.UploadedFile) ann;
-                        String tempFilePath = files.get(uf.value());
-                        if (tempFilePath != null) {
-                            if (targetType == java.io.File.class) {
-                                convertedArgs[i] = new java.io.File(tempFilePath);
-                            } else {
-                                convertedArgs[i] = tempFilePath;
-                            }
-                        } else {
-                            convertedArgs[i] = null;
-                        }
-                        matched = true;
-                        break;
-                    } else if (ann instanceof RequestBody) {
-                        String postData = files.get("postData");
-                        if (postData != null) {
-                            convertedArgs[i] = gson.fromJson(postData, targetType);
-                        } else {
-                            convertedArgs[i] = null;
-                        }
-                        matched = true;
-                        break;
-                    } else if (ann instanceof com.github.matheuscruzsouza.nanospring.annotation.RequestHeader) {
-                        com.github.matheuscruzsouza.nanospring.annotation.RequestHeader rh = (com.github.matheuscruzsouza.nanospring.annotation.RequestHeader) ann;
-                        String headerName = !rh.value().isEmpty() ? rh.value() : rh.name();
-                        Map<String, String> headers = session.getHeaders();
+                // Parâmetros de infraestrutura do NanoHTTPD
+                if (targetType == NanoHTTPD.IHTTPSession.class) {
+                    convertedArgs[i] = session;
+                    matched = true;
+                }
 
-                        if (headerName.isEmpty() && Map.class.isAssignableFrom(targetType)) {
-                            convertedArgs[i] = headers != null ? headers : Collections.emptyMap();
-                        } else {
-                            String headerVal = getHeaderCaseInsensitive(headers, headerName);
-                            if (headerVal == null && !com.github.matheuscruzsouza.nanospring.annotation.RequestHeader.DEFAULT_NONE.equals(rh.defaultValue())) {
-                                headerVal = rh.defaultValue();
+                if (!matched) {
+                    for (Annotation ann : annotations) {
+                        if (ann instanceof PathVariable) {
+                            PathVariable pv = (PathVariable) ann;
+                            String value = pathVariables.get(pv.value());
+                            convertedArgs[i] = convertStringToType(value, targetType);
+                            matched = true;
+                            break;
+                        } else if (ann instanceof RequestParam) {
+                            RequestParam rp = (RequestParam) ann;
+                            Map<String, String> queryParams = session.getParms();
+                            String value = queryParams.get(rp.value());
+                            convertedArgs[i] = convertStringToType(value, targetType);
+                            matched = true;
+                            break;
+                        } else if (ann instanceof com.github.matheuscruzsouza.nanospring.annotation.UploadedFile) {
+                            com.github.matheuscruzsouza.nanospring.annotation.UploadedFile uf = (com.github.matheuscruzsouza.nanospring.annotation.UploadedFile) ann;
+                            String tempFilePath = files.get(uf.value());
+                            if (tempFilePath != null) {
+                                if (targetType == java.io.File.class) {
+                                    convertedArgs[i] = new java.io.File(tempFilePath);
+                                } else {
+                                    convertedArgs[i] = tempFilePath;
+                                }
+                            } else {
+                                convertedArgs[i] = null;
                             }
-                            if (headerVal == null && rh.required()) {
-                                return newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", "Missing required request header: " + headerName);
+                            matched = true;
+                            break;
+                        } else if (ann instanceof RequestBody) {
+                            String postData = files.get("postData");
+                            if (postData != null) {
+                                convertedArgs[i] = gson.fromJson(postData, targetType);
+                            } else {
+                                convertedArgs[i] = null;
                             }
-                            convertedArgs[i] = convertStringToType(headerVal, targetType);
+                            matched = true;
+                            break;
+                        } else if (ann instanceof com.github.matheuscruzsouza.nanospring.annotation.RequestHeader) {
+                            com.github.matheuscruzsouza.nanospring.annotation.RequestHeader rh = (com.github.matheuscruzsouza.nanospring.annotation.RequestHeader) ann;
+                            String headerName = !rh.value().isEmpty() ? rh.value() : rh.name();
+                            Map<String, String> headers = session.getHeaders();
+
+                            if (headerName.isEmpty() && Map.class.isAssignableFrom(targetType)) {
+                                convertedArgs[i] = headers != null ? headers : Collections.emptyMap();
+                            } else {
+                                String headerVal = getHeaderCaseInsensitive(headers, headerName);
+                                if (headerVal == null && !com.github.matheuscruzsouza.nanospring.annotation.RequestHeader.DEFAULT_NONE.equals(rh.defaultValue())) {
+                                    headerVal = rh.defaultValue();
+                                }
+                                if (headerVal == null && rh.required()) {
+                                    return newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", "Missing required request header: " + headerName);
+                                }
+                                convertedArgs[i] = convertStringToType(headerVal, targetType);
+                            }
+                            matched = true;
+                            break;
                         }
-                        matched = true;
-                        break;
                     }
                 }
                 
@@ -324,6 +332,10 @@ public class ServerIndexHandler {
                     Thread.currentThread().interrupt();
                     return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Requisição assíncrona interrompida: " + ie.getMessage());
                 }
+            }
+
+            if (result instanceof NanoHTTPD.Response) {
+                return (NanoHTTPD.Response) result;
             }
 
             NanoHTTPD.Response.IStatus responseStatus = Status.OK;
