@@ -16,6 +16,7 @@ public class SslConfigurationTest {
         assertFalse(config.isEnabled());
         assertNull(config.createSslSocketFactory(null));
         assertEquals("PKCS12", config.getKeyStoreType());
+        assertEquals("nanospring-ssl-key", config.getKeyAlias());
     }
 
     @Test
@@ -25,12 +26,14 @@ public class SslConfigurationTest {
                 "certificates/server.p12",
                 "secret123",
                 "BKS",
+                "custom-alias",
                 "TLSv1.2,TLSv1.3"
         );
 
         assertTrue(config.isEnabled());
         assertEquals("certificates/server.p12", config.getKeyStorePath());
         assertEquals("BKS", config.getKeyStoreType());
+        assertEquals("custom-alias", config.getKeyAlias());
         assertNotNull(config.getProtocols());
         assertEquals(2, config.getProtocols().length);
         assertEquals("TLSv1.2", config.getProtocols()[0]);
