@@ -287,21 +287,21 @@ public CompletableFuture&lt;ResponseEntity&lt;?&gt;&gt; imprimir(
         <p>Para entender a razão de ser do Nano-Spring, é importante compreender as limitações de arquitetura de baixo nível impostas pelo ecossistema Android:</p>
 
         <div class="callout callout-warning">
-          <span>⚠️</span>
+          <span>� ️</span>
           <div>
             <strong>1. O Formato de Bytecode:</strong> A JVM executa arquivos <code>.class</code> dentro de pacotes <code>.jar</code>. O Android compila tudo em arquivos compactados <code>classes.dex</code> através do compilador D8/R8. As rotinas de reflexão e carregamento dinâmico de classes do Spring Boot tentam ler arquivos JAR como arquivos locais, quebrando de imediato dentro do APK.
           </div>
         </div>
 
         <div class="callout callout-warning">
-          <span>⚠️</span>
+          <span>� ️</span>
           <div>
             <strong>2. O Mecanismo LMK (Low Memory Killer):</strong> Servidores desktop assumem centenas de megabytes ou gigabytes de RAM disponíveis. No Android, o sistema operacional monitora constantemente o consumo por processo. Um processo que salta de 0 para 400 MB na inicialização é sumariamente morto pelo kernel Linux do Android para priorizar a interface de usuário.
           </div>
         </div>
 
         <div class="callout callout-warning">
-          <span>⚠️</span>
+          <span>� ️</span>
           <div>
             <strong>3. Servlets vs NanoHTTPD:</strong> O Spring Boot baseia-se em contêineres de Servlet pesados (Apache Tomcat, Eclipse Jetty ou Undertow). Eles trazem centenas de threads de pool, pipelines de filtros complexos e dependências <code>javax.servlet / jakarta.servlet</code> que não foram feitas para o ciclo de suspensão e economia de bateria de dispositivos móveis.
           </div>
@@ -335,7 +335,7 @@ public CompletableFuture&lt;ResponseEntity&lt;?&gt;&gt; imprimir(
             <span class="hint">Anterior</span>
             <span class="title">← Instalação & Setup</span>
           </a>
-          <a href="features/v1-10-0.html" class="page-nav-link next">
+          <a href="features/v2-0-0.html" class="page-nav-link next">
             <span class="hint">Próximo</span>
             <span class="title">Novidades da v2.0.0 →</span>
           </a>
