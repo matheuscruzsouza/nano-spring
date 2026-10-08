@@ -70,9 +70,15 @@ public class ThreadPoolAsyncRunner implements NanoHTTPD.AsyncRunner {
     }
 
     public static ThreadPoolAsyncRunner fromEnvironment() {
-        int core = parsePositiveInt(Environment.getProperty("nano.server.threads.core", String.valueOf(DEFAULT_CORE_POOL_SIZE)), DEFAULT_CORE_POOL_SIZE);
-        int max = parsePositiveInt(Environment.getProperty("nano.server.threads.max", String.valueOf(DEFAULT_MAX_POOL_SIZE)), DEFAULT_MAX_POOL_SIZE);
-        int queue = parsePositiveInt(Environment.getProperty("nano.server.threads.queue-capacity", String.valueOf(DEFAULT_QUEUE_CAPACITY)), DEFAULT_QUEUE_CAPACITY);
+        boolean isLowMemory = Environment.hasActiveProfile("low-memory");
+        
+        int defCore = isLowMemory ? 2 : DEFAULT_CORE_POOL_SIZE;
+        int defMax = isLowMemory ? 4 : DEFAULT_MAX_POOL_SIZE;
+        int defQueue = isLowMemory ? 50 : DEFAULT_QUEUE_CAPACITY;
+        
+        int core = parsePositiveInt(Environment.getProperty("nano.server.threads.core", String.valueOf(defCore)), defCore);
+        int max = parsePositiveInt(Environment.getProperty("nano.server.threads.max", String.valueOf(defMax)), defMax);
+        int queue = parsePositiveInt(Environment.getProperty("nano.server.threads.queue-capacity", String.valueOf(defQueue)), defQueue);
         long keepAlive = parsePositiveLong(Environment.getProperty("nano.server.threads.keep-alive", String.valueOf(DEFAULT_KEEP_ALIVE_SECONDS)), DEFAULT_KEEP_ALIVE_SECONDS);
 
         if (max < core) {
@@ -81,7 +87,6 @@ public class ThreadPoolAsyncRunner implements NanoHTTPD.AsyncRunner {
 
         return new ThreadPoolAsyncRunner(core, max, queue, keepAlive);
     }
-
     private static int parsePositiveInt(String value, int fallback) {
         try {
             int parsed = Integer.parseInt(value);

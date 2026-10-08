@@ -1,6 +1,8 @@
 package com.github.matheuscruzsouza.nanospring.server;
 
 import android.content.Context;
+import android.content.ComponentCallbacks2;
+import android.content.res.Configuration;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
@@ -90,6 +92,26 @@ public class Server extends RouterNanoHTTPD {
     public Server(Context context, int port, String basePackage) {
         super(Integer.parseInt(Environment.getProperty("server.port", String.valueOf(port))));
         Environment.init(context);
+
+        if (context != null) {
+            context.getApplicationContext().registerComponentCallbacks(new ComponentCallbacks2() {
+                @Override
+                public void onTrimMemory(int level) {
+                    if (level >= ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
+                        Log.w("SERVER_MEMORY", "Android requested to trim memory (level " + level + "). Clearing caches and suggesting GC.");
+                        System.gc();
+                    }
+                }
+                @Override
+                public void onConfigurationChanged(Configuration newConfig) {}
+                @Override
+                public void onLowMemory() {
+                    Log.w("SERVER_MEMORY", "Android signaled LOW MEMORY! Suggesting GC.");
+                    System.gc();
+                }
+            });
+        }
+
         this.threadPoolAsyncRunner = ThreadPoolAsyncRunner.fromEnvironment();
         setAsyncRunner(this.threadPoolAsyncRunner);
         setNotFoundHandler(fi.iki.elonen.router.RouterNanoHTTPD.Error404UriHandler.class);
@@ -190,7 +212,7 @@ public class Server extends RouterNanoHTTPD {
             }
         }
 
-        boolean actuatorEnabled = Boolean.parseBoolean(Environment.getProperty("nano.actuator.enabled", "true"));
+        boolean actuatorEnabled = Boolean.parseBoolean(Environment.getProperty("nano.actuator.enabled", Environment.hasActiveProfile("low-memory") ? "false" : "true"));
         if (actuatorEnabled) {
             if ("/actuator/health".equals(uri)) {
                 return ActuatorHealthHandler.handleHealth(this, this.context);
@@ -203,7 +225,7 @@ public class Server extends RouterNanoHTTPD {
             }
         }
 
-        boolean swaggerEnabled = Boolean.parseBoolean(Environment.getProperty("nano.swagger.enabled", "true"));
+        boolean swaggerEnabled = Boolean.parseBoolean(Environment.getProperty("nano.swagger.enabled", Environment.hasActiveProfile("low-memory") ? "false" : "true"));
         if (swaggerEnabled) {
             if ("/v3/api-docs".equals(uri)) {
                 return SwaggerUiHandler.handleApiDocs();

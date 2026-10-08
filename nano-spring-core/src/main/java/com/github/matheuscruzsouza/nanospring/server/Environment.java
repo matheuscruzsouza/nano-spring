@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import android.app.ActivityManager;
+import android.util.Log;
 
 /**
  * Global application environment configuration.
@@ -34,6 +36,7 @@ public class Environment {
 
         // 2. Discover and resolve active profiles
         resolveActiveProfiles(context);
+        detectHardwareCapabilities(context);
 
         initialized = true;
     }
@@ -116,6 +119,37 @@ public class Environment {
 
     public static String[] getActiveProfiles() {
         return Arrays.copyOf(activeProfiles, activeProfiles.length);
+    }
+
+    
+    public static void addActiveProfile(String profile) {
+        if (!hasActiveProfile(profile)) {
+            String[] newProfiles = new String[activeProfiles.length + 1];
+            System.arraycopy(activeProfiles, 0, newProfiles, 0, activeProfiles.length);
+            newProfiles[activeProfiles.length] = profile;
+            activeProfiles = newProfiles;
+        }
+    }
+
+    private static void detectHardwareCapabilities(Context context) {
+        if (context == null) return;
+        try {
+            ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) {
+                ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
+                am.getMemoryInfo(memInfo);
+                
+                // Hardware is considered low memory if total RAM is <= 2GB, or if Android OS flags it as low-memory
+                boolean isLowMemoryDevice = memInfo.lowMemory || memInfo.totalMem <= (2L * 1024 * 1024 * 1024);
+                
+                if (isLowMemoryDevice) {
+                    addActiveProfile("low-memory");
+                    Log.i("Environment", "Detected low-memory device. Enabled 'low-memory' profile.");
+                }
+            }
+        } catch (Exception e) {
+            Log.w("Environment", "Could not detect hardware capabilities.", e);
+        }
     }
 
     public static void setActiveProfiles(String... profiles) {
