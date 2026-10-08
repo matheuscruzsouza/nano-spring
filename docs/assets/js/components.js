@@ -1,55 +1,44 @@
 const SIDEBAR_HTML = `
-      <div class="sidebar-header">
-        <h2>Documentação</h2>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Começando</div>
+        <ul class="sidebar-menu">
+          <li><a href="/index.html">Visão Geral</a></li>
+          <li><a href="/getting-started.html">Instalação & Setup</a></li>
+          <li><a href="/spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
+          <li><a href="/features/v2-0-0.html">✨ Novidades da v2.0.0</a></li>
+        </ul>
       </div>
-      <nav class="sidebar-menu">
-        <div class="menu-group">
-          <h3>Começando</h3>
-          <ul>
-            <li><a href="/index.html">Visão Geral</a></li>
-            <li><a href="/getting-started.html">Instalação e Setup</a></li>
-            <li><a href="/spring-boot-vs-nano-spring.html">Spring Boot vs Nano Spring</a></li>
-          </ul>
-        </div>
 
-        <div class="menu-group">
-          <h3>Core</h3>
-          <ul>
-            <li><a href="/features/dependency-injection.html">Injeção de Dependência (DI)</a></li>
-            <li><a href="/features/rest-api.html">Controllers e REST API</a></li>
-            <li><a href="/features/security-validation.html">Validação e Rate Limiting</a></li>
-            <li><a href="/features/interceptors-errors.html">Interceptors e Erros</a></li>
-            <li><a href="/features/cors.html">CORS e Headers</a></li>
-          </ul>
-        </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Core Web</div>
+        <ul class="sidebar-menu">
+          <li><a href="/features/rest-api.html">APIs RESTful</a></li>
+          <li><a href="/features/swagger-openapi.html">📑 Swagger & OpenAPI 3.0</a></li>
+          <li><a href="/features/dependency-injection.html">Injeção de Dependências</a></li>
+          <li><a href="/features/sse.html">Server-Sent Events (SSE)</a></li>
+          <li><a href="/features/files.html">Upload & Download</a></li>
+          <li><a href="/features/interceptors-errors.html">Interceptadores & Erros</a></li>
+        </ul>
+      </div>
 
-        <div class="menu-group">
-          <h3>Integrações e Dados</h3>
-          <ul>
-            <li><a href="/features/sqlite-migrations.html">SQLite e Migrations</a></li>
-            <li><a href="/features/files.html">Servidor Estático (Assets/Storage)</a></li>
-            <li><a href="/features/templates-static.html">Templates (Mustache)</a></li>
-          </ul>
-        </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Enterprise & Hardening</div>
+        <ul class="sidebar-menu">
+          <li><a href="/features/logging-diagnostics.html">📜 Diagnósticos & Perfis</a></li>
+          <li><a href="/features/security-validation.html">🔒 Segurança & Validação</a></li>
+          <li><a href="/features/enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
+        </ul>
+      </div>
 
-        <div class="menu-group">
-          <h3>Avançado</h3>
-          <ul>
-            <li><a href="/features/mdns-discovery.html">mDNS (Service Discovery)</a></li>
-            <li><a href="/features/sse.html">Server-Sent Events (SSE)</a></li>
-            <li><a href="/features/swagger-openapi.html">Swagger UI e OpenAPI</a></li>
-            <li><a href="/features/enterprise-hardening.html">HTTPS e Certificados (TLS)</a></li>
-            <li><a href="/features/logging-diagnostics.html">Logging e Actuator</a></li>
-          </ul>
-        </div>
-
-        <div class="menu-group">
-          <h3>Releases</h3>
-          <ul>
-            <li><a href="/features/v2-0-0.html">v2.0.0 (Modularização e Perfis)</a></li>
-          </ul>
-        </div>
-      </nav>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Infraestrutura Local</div>
+        <ul class="sidebar-menu">
+          <li><a href="/features/sqlite-migrations.html">SQLite & Migrações</a></li>
+          <li><a href="/features/mdns-discovery.html">Descoberta mDNS (.local)</a></li>
+          <li><a href="/features/cors.html">CORS Nativo</a></li>
+          <li><a href="/features/templates-static.html">Templates & Estáticos</a></li>
+        </ul>
+      </div>
 `;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -66,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (href.startsWith('/features/')) {
                     link.setAttribute('href', href.replace('/features/', ''));
                 } else if (href.startsWith('/')) {
-                    link.setAttribute('href', '.' + href);
+                    link.setAttribute('href', '../' + href.substring(1));
                 }
             });
         } else {
