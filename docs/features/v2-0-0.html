@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Versão 2.0.0 | Nano-Spring</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
+      <span class="logo-icon">🌱</span>
+      <span>Nano-Spring</span>
+      <span class="badge">v2.0.0</span>
+    </div>
+    <div class="topbar-center">
+      <button class="search-btn" aria-label="Buscar na documentação">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <span>Buscar...</span>
+      </button>
+    </div>
+    <nav class="nav-links">
+      <a href="../getting-started.html">Documentação</a>
+      <a href="../spring-boot-vs-nano-spring.html">Comparativo ⚖️</a>
+      <a href="https://github.com/matheuscruzsouza/nano-spring" target="_blank" rel="noopener" class="github-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span>GitHub</span>
+      </a>
+    </nav>
+  </header>
+
+  <div class="docs-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+    </aside>
+
+    <main class="main-content">
+      <div class="content">
+        <div class="hero-pill">🚀 Nano-Spring 2.0.0 - Modular, Enxuto e Focado em Hardware Legado</div>
+        <h1>Nova Versão 2.0.0 (Modularização e Profiles)</h1>
+        
+        <p class="lead">A versão 2.0.0 marca o maior avanço arquitetural do framework. Agora o Nano-Spring é fragmentado em múltiplos módulos (Core, Web, Data, Discovery) para reduzir ainda mais o tamanho das dependências, e introduz perfis dinâmicos focados em otimizar o uso da CPU e RAM em dispositivos de baixíssimo desempenho (Low Memory).</p>
+
+        <h2 id="modularizacao">🧩 Arquitetura Modularizada</h2>
+        <p>O framework não é mais um "monólito". Você importa apenas o que usar:</p>
+        <ul>
+          <li><code>nano-spring-core</code>: Injeção de dependência nativa e Logging (Base).</li>
+          <li><code>nano-spring-web</code>: Servidor HTTP (NanoHTTPD), Controllers, Cors, OpenAPI.</li>
+          <li><code>nano-spring-data</code>: Migrations e gerenciamento SQLite.</li>
+          <li><code>nano-spring-discovery</code>: Busca e Anúncio na rede (mDNS / NSD).</li>
+        </ul>
+
+        <h2 id="low-memory">⚡ Perfis Low Memory Dinâmicos</h2>
+        <p>O Nano-Spring 2.0 consulta ativamente o <code>ActivityManager</code> do Android. Se um dispositivo tiver 2GB ou menos de RAM, ou disparar a flag de baixo recurso, o perfil <code>low-memory</code> é habilitado automaticamente!</p>
+        <p>Isso causa:</p>
+        <ul>
+          <li>Agressiva redução de threads da piscina HTTP (evitando <i>context switching</i> na CPU).</li>
+          <li>Desligamento de serviços secundários gulosos como Swagger/Actuator por padrão.</li>
+          <li>Adoção silenciosa de callbacks nativos do sistema operacional como <code>onTrimMemory</code> para expurgar caches e forçar o Garbage Collector quando necessário.</li>
+        </ul>
+
+      </div>
+    </main>
+
+    <aside class="toc-sidebar">
+      <div class="toc-title">Nesta Página</div>
+      <ul class="toc-list">
+        <li><a href="#modularizacao">Arquitetura Modularizada</a></li>
+        <li><a href="#low-memory">Perfis Low Memory Dinâmicos</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

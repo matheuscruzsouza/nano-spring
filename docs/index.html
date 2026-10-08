@@ -15,7 +15,7 @@
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
       <span class="logo-icon">🌱</span>
       <span>Nano-Spring</span>
-      <span class="badge">v1.11.1</span>
+      <span class="badge">v2.0.0</span>
     </div>
 
     <div class="topbar-center">
@@ -39,53 +39,13 @@
   <div class="docs-layout">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-title">Começando</div>
-        <ul class="sidebar-menu">
-          <li><a href="index.html" class="active">Visão Geral</a></li>
-          <li><a href="getting-started.html">Instalação & Setup</a></li>
-          <li><a href="spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-          <li><a href="features/v1-10-0.html">✨ Novidades da v1.10.0</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Core Web</div>
-        <ul class="sidebar-menu">
-          <li><a href="features/rest-api.html">APIs RESTful</a></li>
-          <li><a href="features/swagger-openapi.html">📑 Swagger & OpenAPI 3.0</a></li>
-          <li><a href="features/dependency-injection.html">Injeção de Dependências</a></li>
-          <li><a href="features/sse.html">Server-Sent Events (SSE)</a></li>
-          <li><a href="features/files.html">Upload & Download</a></li>
-          <li><a href="features/interceptors-errors.html">Interceptadores & Erros</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="features/logging-diagnostics.html">📜 Diagnósticos & Perfis</a></li>
-          <li><a href="features/security-validation.html">🔒 Segurança & Validação</a></li>
-          <li><a href="features/enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Infraestrutura Local</div>
-        <ul class="sidebar-menu">
-          <li><a href="features/sqlite-migrations.html">SQLite & Migrações</a></li>
-          <li><a href="features/mdns-discovery.html">Descoberta mDNS (.local)</a></li>
-          <li><a href="features/cors.html">CORS Nativo</a></li>
-          <li><a href="features/templates-static.html">Templates & Estáticos</a></li>
-        </ul>
-      </div>
-    </aside>
+</aside>
 
     <!-- Main Content -->
     <main class="main-content">
       <!-- Hero -->
       <section class="hero">
-        <div class="hero-pill">✨ Versão 1.10.0 com Swagger & OpenAPI 3.0 Embutido, Diagnósticos & Async Controllers</div>
+        <div class="hero-pill">✨ Versão 2.0.0 com Modularização, Perfis de Execução (Low Memory) e Suporte a Hardware Legado</div>
         <h1>O poder do Spring Boot dentro do seu Android</h1>
         <p>Transforme qualquer celular, tablet, TV-Box ou POS Android em um servidor web de alta performance. APIs REST, injeção de dependências, banco SQLite versionado e mDNS consumindo entre 15 e 40 MB de RAM.</p>
         
@@ -113,7 +73,7 @@
             <button class="copy-btn">Copiar</button>
           </div>
           <pre><code class="language-groovy">dependencies {
-    implementation 'com.github.matheuscruzsouza:nano-spring:1.10.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring-web:2.0.0'
 }</code></pre>
         </div>
 
@@ -295,6 +255,7 @@ public class HelloController {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-groovy.min.js"></script>
+  <script src="assets/js/components.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>

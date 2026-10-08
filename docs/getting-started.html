@@ -15,7 +15,7 @@
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
       <span class="logo-icon">🌱</span>
       <span>Nano-Spring</span>
-      <span class="badge">v1.11.1</span>
+      <span class="badge">v2.0.0</span>
     </div>
 
     <div class="topbar-center">
@@ -39,47 +39,7 @@
   <div class="docs-layout">
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-title">Começando</div>
-        <ul class="sidebar-menu">
-          <li><a href="index.html">Visão Geral</a></li>
-          <li><a href="getting-started.html" class="active">Instalação & Setup</a></li>
-          <li><a href="spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-          <li><a href="features/v1-10-0.html">✨ Novidades da v1.10.0</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Core Web</div>
-        <ul class="sidebar-menu">
-          <li><a href="features/rest-api.html">APIs RESTful</a></li>
-          <li><a href="features/swagger-openapi.html">📑 Swagger & OpenAPI 3.0</a></li>
-          <li><a href="features/dependency-injection.html">Injeção de Dependências</a></li>
-          <li><a href="features/sse.html">Server-Sent Events (SSE)</a></li>
-          <li><a href="features/files.html">Upload & Download</a></li>
-          <li><a href="features/interceptors-errors.html">Interceptadores & Erros</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Enterprise & Hardening</div>
-        <ul class="sidebar-menu">
-          <li><a href="features/logging-diagnostics.html">📜 Diagnósticos & Perfis</a></li>
-          <li><a href="features/security-validation.html">🔒 Segurança & Validação</a></li>
-          <li><a href="features/enterprise-hardening.html">🛡️ Enterprise & Resiliência</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-title">Infraestrutura Local</div>
-        <ul class="sidebar-menu">
-          <li><a href="features/sqlite-migrations.html">SQLite & Migrações</a></li>
-          <li><a href="features/mdns-discovery.html">Descoberta mDNS (.local)</a></li>
-          <li><a href="features/cors.html">CORS Nativo</a></li>
-          <li><a href="features/templates-static.html">Templates & Estáticos</a></li>
-        </ul>
-      </div>
-    </aside>
+</aside>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -231,7 +191,7 @@ gpr.key=SEU_PERSONAL_ACCESS_TOKEN</code></pre>
                       <button class="copy-btn">Copiar</button>
                     </div>
                     <pre><code class="language-groovy">dependencies {
-    implementation 'com.github.matheuscruzsouza:nano-spring:1.10.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring-web:2.0.0'
 }</code></pre>
                   </div>
                 </div>
@@ -400,7 +360,10 @@ project(':nano-spring').projectDir = new File(rootDir, '../nano-spring')</code><
                 <button class="copy-btn">Copiar</button>
               </div>
               <pre><code class="language-groovy">dependencies {
-    implementation project(':nano-spring')
+        implementation project(':nano-spring-core')
+    implementation project(':nano-spring-web')
+    implementation project(':nano-spring-data')
+    implementation project(':nano-spring-discovery')
 }</code></pre>
             </div>
           </div>
@@ -446,6 +409,7 @@ project(':nano-spring').projectDir = new File(rootDir, '../nano-spring')</code><
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-groovy.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-properties.min.js"></script>
+  <script src="assets/js/components.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>

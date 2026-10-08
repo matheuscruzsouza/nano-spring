@@ -432,7 +432,10 @@ Then:
 
 ```gradle
 dependencies {
-    implementation project(':nano-spring')
+    implementation project(':nano-spring-core')      // Core DI and Environment
+    implementation project(':nano-spring-web')       // HTTP Server, Routers, OpenAPI
+    implementation project(':nano-spring-data')      // SQLite and Migrations (Optional)
+    implementation project(':nano-spring-discovery') // mDNS Discovery (Optional)
 }
 ```
 
@@ -489,7 +492,8 @@ Then add the dependency:
 
 ```gradle
 dependencies {
-    implementation 'com.github.matheuscruzsouza:nano-spring:1.11.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring-web:2.0.0'
+    // Note: Em versões 2.x o framework é modularizado (core, web, data, discovery)
 }
 ```
 
