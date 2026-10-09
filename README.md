@@ -446,11 +446,12 @@ This is the simplest option when developing Nano-Spring itself or experimenting 
 
 ## Option 2 — GitHub Packages
 
-The current published artifact is:
+The framework has evolved in its packaging structure:
 
-```text
-com.github.matheuscruzsouza:nano-spring:1.11.0
-```
+* **Versions 1.x:** Provided as a single aggregate artifact (`nano-spring`).
+* **Versions 2.x and later:** Modularized into specific components (`nano-spring-core`, `nano-spring-web`, `nano-spring-data`, `nano-spring-discovery`).
+
+The current published version for the 2.x series is `2.0.0`.
 
 Nano-Spring is published through GitHub Packages.
 
@@ -465,9 +466,10 @@ gpr.key=YOUR_GITHUB_PERSONAL_ACCESS_TOKEN
 
 The token requires package read access.
 
-Then add the GitHub Packages repository to your application's `settings.gradle`:
+Then add the GitHub Packages repository to your application's settings:
 
-```gradle
+**Groovy DSL (`settings.gradle`)**
+```groovy
 dependencyResolutionManagement {
     repositories {
         google()
@@ -489,14 +491,54 @@ dependencyResolutionManagement {
 }
 ```
 
-Then add the dependency:
+**Kotlin DSL (`settings.gradle.kts`)**
+```kotlin
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
 
-```gradle
-dependencies {
-    implementation 'com.github.matheuscruzsouza:nano-spring-web:2.0.0'
-    // Note: Em versões 2.x o framework é modularizado (core, web, data, discovery)
+        maven {
+            url = uri("https://maven.pkg.github.com/matheuscruzsouza/nano-spring")
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull
+                        ?: System.getenv("GITHUB_ACTOR")
+                        ?: ""
+
+                password = providers.gradleProperty("gpr.key").orNull
+                        ?: System.getenv("GITHUB_TOKEN")
+                        ?: ""
+            }
+        }
+    }
 }
 ```
+
+Then add the dependency for the modules you need (recommended for 2.x+):
+
+**Groovy DSL (`build.gradle`)**
+```groovy
+dependencies {
+    implementation 'com.github.matheuscruzsouza:nano-spring-core:2.0.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring-web:2.0.0'
+    // Optional modules:
+    // implementation 'com.github.matheuscruzsouza:nano-spring-data:2.0.0'
+    // implementation 'com.github.matheuscruzsouza:nano-spring-discovery:2.0.0'
+}
+```
+
+**Kotlin DSL (`build.gradle.kts`)**
+```kotlin
+dependencies {
+    implementation("com.github.matheuscruzsouza:nano-spring-core:2.0.0")
+    implementation("com.github.matheuscruzsouza:nano-spring-web:2.0.0")
+    // Optional modules:
+    // implementation("com.github.matheuscruzsouza:nano-spring-data:2.0.0")
+    // implementation("com.github.matheuscruzsouza:nano-spring-discovery:2.0.0")
+}
+```
+
+*(If you are maintaining a legacy 1.x project, the dependency would be `implementation 'com.github.matheuscruzsouza:nano-spring:1.11.0'` instead).*
 
 ---
 

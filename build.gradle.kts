@@ -27,7 +27,7 @@ subprojects {
         toolVersion = "10.12.5"
         configFile = rootProject.file("checkstyle.xml")
         isShowViolations = true
-        isIgnoreFailures = true
+        isIgnoreFailures = false
     }
 
     tasks.register<org.gradle.api.plugins.quality.Checkstyle>("checkstyle") {
