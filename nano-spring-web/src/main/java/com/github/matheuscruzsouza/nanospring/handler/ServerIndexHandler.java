@@ -110,6 +110,14 @@ public class ServerIndexHandler {
     }
 
     private static NanoHTTPD.Response executeMethod(Object instance, Method method, NanoHTTPD.Method httpMethod, NanoHTTPD.IHTTPSession session, Map<String, String> pathVariables) {
+        if (method.isAnnotationPresent(com.github.matheuscruzsouza.nanospring.annotation.Authenticated.class) || instance.getClass().isAnnotationPresent(com.github.matheuscruzsouza.nanospring.annotation.Authenticated.class)) {
+            if (!com.github.matheuscruzsouza.nanospring.security.SecurityUtils.checkBasicAuth(session)) {
+                NanoHTTPD.Response r = newFixedLengthResponse(Status.UNAUTHORIZED, "application/json", "{\"status\": 401, \"error\": \"Unauthorized\", \"message\": \"Authentication required\"}");
+                r.addHeader("WWW-Authenticate", "Basic realm=\"Nano-Spring Realm\"");
+                return r;
+            }
+        }
+        
         Gson gson = new Gson();
         try {
             String mimeType = DEFAULT_MIMETYPE;

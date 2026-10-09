@@ -878,8 +878,54 @@ Running a server on a local network does not automatically make it secure.
 
 Nano-Spring provides several building blocks for securing applications.
 
-## TLS
+## Endpoint Authentication (`@Authenticated`)
 
+By default, all endpoints are public unless marked with `@Authenticated`. You can apply it to a specific method or to a whole controller class.
+
+```java
+@RestController("/api/admin")
+@Authenticated
+public class AdminController {
+
+    @GetMethod("/dashboard")
+    public String dashboard() {
+        return "Confidential Data";
+    }
+}
+```
+
+When an endpoint is `@Authenticated`, the server requires HTTP **Basic Auth** using the configured credentials. You can set them in `application.properties`:
+
+```properties
+nano.security.username=admin
+nano.security.password=secret
+```
+
+> **Note:** Actuator endpoints (`/actuator/*`) are protected by `@Authenticated` by default.
+
+## Custom Security Interceptors
+
+While Basic Auth is provided out of the box, it is **highly recommended** to implement a robust `HandlerInterceptor` for production environments, such as one validating JWT tokens or custom API keys, especially for sensitive operations.
+
+```java
+@Interceptor
+@Order(1)
+public class JwtSecurityInterceptor implements HandlerInterceptor {
+
+    @Override
+    public boolean preHandle(
+            NanoHTTPD.IHTTPSession session,
+            String path) {
+
+        // Validar token JWT e retornar false se for inválido
+
+        return true;
+    }
+}
+```
+
+## TLS
+ 
 HTTPS can be enabled using a Java/Android keystore:
 
 ```properties
@@ -907,28 +953,6 @@ public ResponseEntity<?> checkout(
 ```
 
 Requests exceeding the configured limit receive HTTP `429`.
-
-## Interceptors
-
-Custom `HandlerInterceptor` implementations can inspect and reject requests before they reach controllers.
-
-```java
-@Interceptor
-@Order(1)
-public class SecurityInterceptor
-        implements HandlerInterceptor {
-
-    @Override
-    public boolean preHandle(
-            NanoHTTPD.IHTTPSession session,
-            String path) {
-
-        // Authentication / authorization logic
-
-        return true;
-    }
-}
-```
 
 ## Global exception handling
 

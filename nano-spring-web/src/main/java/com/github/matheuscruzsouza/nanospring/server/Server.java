@@ -214,14 +214,23 @@ public class Server extends RouterNanoHTTPD {
 
         boolean actuatorEnabled = Boolean.parseBoolean(Environment.getProperty("nano.actuator.enabled", Environment.hasActiveProfile("low-memory") ? "false" : "true"));
         if (actuatorEnabled) {
-            if ("/actuator/health".equals(uri)) {
-                return ActuatorHealthHandler.handleHealth(this, this.context);
-            }
-            if ("/actuator/info".equals(uri)) {
-                return ActuatorHealthHandler.handleInfo(this.context);
-            }
-            if ("/actuator/logfile".equals(uri)) {
-                return ActuatorHealthHandler.handleLogfile(session);
+            boolean actuatorSecure = Boolean.parseBoolean(Environment.getProperty("nano.actuator.secure", "true"));
+            if (uri.startsWith("/actuator/")) {
+                if (actuatorSecure && !com.github.matheuscruzsouza.nanospring.security.SecurityUtils.checkBasicAuth(session)) {
+                    NanoHTTPD.Response r = NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.UNAUTHORIZED, "application/json", "{\"status\": 401, \"error\": \"Unauthorized\", \"message\": \"Actuator endpoints are secured by default\"}");
+                    r.addHeader("WWW-Authenticate", "Basic realm=\"Nano-Spring Actuator\"");
+                    return r;
+                }
+                
+                if ("/actuator/health".equals(uri)) {
+                    return ActuatorHealthHandler.handleHealth(this, this.context);
+                }
+                if ("/actuator/info".equals(uri)) {
+                    return ActuatorHealthHandler.handleInfo(this.context);
+                }
+                if ("/actuator/logfile".equals(uri)) {
+                    return ActuatorHealthHandler.handleLogfile(session);
+                }
             }
         }
 
