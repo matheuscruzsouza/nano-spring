@@ -449,7 +449,7 @@ This is the simplest option when developing Nano-Spring itself or experimenting 
 The current published artifact is:
 
 ```text
-com.github.matheuscruzsouza:nano-spring:1.11.0
+com.github.matheuscruzsouza:nano-spring:2.0.0
 ```
 
 Nano-Spring is published through GitHub Packages.
