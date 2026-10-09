@@ -288,6 +288,7 @@ Declarative validation using annotations such as:
 * Configurable asynchronous timeouts
 * OpenAPI 3.0 generation
 * Built-in Swagger UI
+* Native AI Assistant support (Javadocs and AGENTS.md)
 
 ---
 
@@ -1126,6 +1127,17 @@ nano.swagger.title=My Local API
 nano.swagger.version=1.0.0
 nano.swagger.description=Local application API
 ```
+
+---
+
+# Developing with AI
+
+Nano-Spring has native support for AI code assistants (such as Copilot, Cursor, Windsurf, etc.). 
+Since Nano-Spring does NOT use the standard Spring Boot packages (`org.springframework.*`), it provides context natively to prevent AI hallucinations.
+
+When importing the package, all primary annotations (`@RestController`, `@Service`, `@Repository`, etc.) include **Defensive AI Javadocs**. Modern IDEs will automatically read these Javadocs and instruct the AI to use the correct Nano-Spring packages.
+
+To further improve AI generation in your project, copy the [AGENTS.md](AGENTS.md) file and the `docs/ai/` directory from this repository into your own project's root. The AI will then automatically know how to structure Nano-Spring specific controllers, services, and SQLite repositories.
 
 ---
 
