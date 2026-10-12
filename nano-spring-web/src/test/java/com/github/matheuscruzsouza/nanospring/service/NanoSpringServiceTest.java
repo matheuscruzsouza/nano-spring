@@ -3,6 +3,7 @@ package com.github.matheuscruzsouza.nanospring.service;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -27,6 +28,9 @@ public class NanoSpringServiceTest {
         assertEquals("Servidor rodando na porta 8080", service.getNotificationText());
         assertTrue(service.isWakeLockEnabled());
         assertTrue(service.isMulticastLockEnabled());
+        assertFalse(service.isBatteryMonitorEnabled());
+        assertEquals(15, service.getLowBatteryThreshold());
+        assertTrue(service.isLowBatteryNotificationEnabled());
         assertNull(service.onBind(null));
         assertNull(service.getServer());
     }

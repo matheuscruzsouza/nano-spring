@@ -65,9 +65,7 @@ public class RuntimeIntegrationTest {
         
         // Manual registration for test since classpath scan might not work in unit test without dex
         server.registerSingleton(HelloService.class, new HelloService());
-        server.createInstance(TestController.class);
-
-        server.start(5000, false);
+        server.registerController(TestController.class);
     }
 
     @After
@@ -86,7 +84,7 @@ public class RuntimeIntegrationTest {
         assertEquals(200, conn.getResponseCode());
         BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         String response = in.readLine();
-        assertEquals("Hello DI!", response);
+        assertEquals("\"Hello DI!\"", response);
     }
 
     @Test
@@ -118,7 +116,7 @@ public class RuntimeIntegrationTest {
         assertEquals(200, conn.getResponseCode());
         BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         String response = in.readLine();
-        assertEquals("Secret Data", response);
+        assertEquals("\"Secret Data\"", response);
     }
 
     @Test

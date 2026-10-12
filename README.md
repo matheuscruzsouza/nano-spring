@@ -278,6 +278,8 @@ Declarative validation using annotations such as:
 * Rotating file logs
 * Configurable log retention
 * Runtime diagnostics
+* Device battery monitoring and health metrics
+* Automatic low-battery user notifications
 
 ## Developer experience
 
@@ -451,7 +453,7 @@ The framework has evolved in its packaging structure:
 * **Versions 1.x:** Provided as a single aggregate artifact (`nano-spring`).
 * **Versions 2.x and later:** Modularized into specific components (`nano-spring-core`, `nano-spring-web`, `nano-spring-data`, `nano-spring-discovery`).
 
-The current published version for the 2.x series is `2.0.0`.
+The current published version for the 2.x series is `2.1.0`.
 
 Nano-Spring is published through GitHub Packages.
 
@@ -519,22 +521,22 @@ Then add the dependency for the modules you need (recommended for 2.x+):
 **Groovy DSL (`build.gradle`)**
 ```groovy
 dependencies {
-    implementation 'com.github.matheuscruzsouza:nano-spring-core:2.0.0'
-    implementation 'com.github.matheuscruzsouza:nano-spring-web:2.0.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring-core:2.1.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring-web:2.1.0'
     // Optional modules:
-    // implementation 'com.github.matheuscruzsouza:nano-spring-data:2.0.0'
-    // implementation 'com.github.matheuscruzsouza:nano-spring-discovery:2.0.0'
+    // implementation 'com.github.matheuscruzsouza:nano-spring-data:2.1.0'
+    // implementation 'com.github.matheuscruzsouza:nano-spring-discovery:2.1.0'
 }
 ```
 
 **Kotlin DSL (`build.gradle.kts`)**
 ```kotlin
 dependencies {
-    implementation("com.github.matheuscruzsouza:nano-spring-core:2.0.0")
-    implementation("com.github.matheuscruzsouza:nano-spring-web:2.0.0")
+    implementation("com.github.matheuscruzsouza:nano-spring-core:2.1.0")
+    implementation("com.github.matheuscruzsouza:nano-spring-web:2.1.0")
     // Optional modules:
-    // implementation("com.github.matheuscruzsouza:nano-spring-data:2.0.0")
-    // implementation("com.github.matheuscruzsouza:nano-spring-discovery:2.0.0")
+    // implementation("com.github.matheuscruzsouza:nano-spring-data:2.1.0")
+    // implementation("com.github.matheuscruzsouza:nano-spring-discovery:2.1.0")
 }
 ```
 
@@ -1192,6 +1194,83 @@ nano.swagger.enabled=true
 nano.swagger.title=My Local API
 nano.swagger.version=1.0.0
 nano.swagger.description=Local application API
+```
+
+---
+
+# Battery Management & Notifications
+
+Running persistent services on battery-powered Android hardware requires monitoring energy consumption and alerting users before device power is exhausted.
+
+Nano-Spring provides native battery metrics, low-battery detection, and Android notification dispatching.
+
+### 1. Dependency Injection (`BatteryService`)
+Inject `BatteryService` into controllers or services using `@Autowired`:
+
+```java
+@RestController("/api/device")
+public class DeviceBatteryController {
+
+    @Autowired
+    private BatteryService batteryService;
+
+    @GetMethod("/battery")
+    public BatteryStatus getBattery() {
+        return batteryService.getCurrentStatus();
+    }
+
+    @GetMethod("/battery/notify")
+    public boolean notifyIfLow() {
+        return batteryService.notifyUserIfBatteryLow();
+    }
+}
+```
+
+### 2. Programmatic Queries & Notifications
+Query device metrics or dispatch notifications on demand:
+
+```java
+// Query snapshot
+BatteryStatus status = BatteryHelper.getBatteryStatus(context);
+boolean isLow = BatteryHelper.isBatteryLow(context, 15); // threshold 15%
+
+// Dispatch default high-priority notification to the user
+BatteryNotificationHelper.sendLowBatteryNotification(context, status);
+
+// Cancel notification when charging resumes
+BatteryNotificationHelper.cancelLowBatteryNotification(context);
+```
+
+### 3. Automated Monitoring in `NanoSpringService`
+Enable continuous battery monitoring in your foreground service:
+
+```properties
+# application.properties
+nano.battery.monitor.enabled=true
+nano.battery.threshold=15
+```
+
+Or customize foreground service hooks:
+
+```java
+public class MyServerService extends NanoSpringService {
+
+    @Override
+    protected boolean isBatteryMonitorEnabled() {
+        return true;
+    }
+
+    @Override
+    protected int getLowBatteryThreshold() {
+        return 20; // Alert at 20%
+    }
+
+    @Override
+    protected void onLowBattery(BatteryStatus status) {
+        super.onLowBattery(status); // dispatches high-priority Android notification
+        // Execute graceful degradation (e.g. save state, pause heavy background jobs)
+    }
+}
 ```
 
 ---

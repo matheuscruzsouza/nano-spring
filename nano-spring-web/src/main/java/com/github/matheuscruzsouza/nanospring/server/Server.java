@@ -16,6 +16,7 @@ import com.github.matheuscruzsouza.nanospring.annotation.RestController;
 import com.github.matheuscruzsouza.nanospring.annotation.Service;
 import com.github.matheuscruzsouza.nanospring.annotation.Interceptor;
 import com.github.matheuscruzsouza.nanospring.actuator.ActuatorHealthHandler;
+import com.github.matheuscruzsouza.nanospring.battery.BatteryService;
 import com.github.matheuscruzsouza.nanospring.cors.CorsConfiguration;
 import com.github.matheuscruzsouza.nanospring.handler.ServerIndexHandler;
 import com.github.matheuscruzsouza.nanospring.openapi.SwaggerUiHandler;
@@ -93,7 +94,7 @@ public class Server extends RouterNanoHTTPD {
         super(Integer.parseInt(Environment.getProperty("server.port", String.valueOf(port))));
         Environment.init(context);
 
-        if (context != null) {
+        if (context != null && context.getApplicationContext() != null) {
             context.getApplicationContext().registerComponentCallbacks(new ComponentCallbacks2() {
                 @Override
                 public void onTrimMemory(int level) {
@@ -119,6 +120,7 @@ public class Server extends RouterNanoHTTPD {
         staticContext = context;
         this.corsConfig = new CorsConfiguration(Environment.getProperties());
         this.services.put(CorsConfiguration.class, this.corsConfig);
+        this.services.put(BatteryService.class, new BatteryService(context));
         if (context != null) {
             this.services.put(Context.class, context);
         }
@@ -288,7 +290,7 @@ public class Server extends RouterNanoHTTPD {
         if (context == null) return annotatedClasses;
         try {
             DexFile df = new DexFile(context.getPackageCodePath());
-            for (Enumeration<String> iter = df.entries(); iter.hasMoreElements();) {
+            for (Enumeration<String> iter = df.entries(); iter != null && iter.hasMoreElements();) {
                 String className = iter.nextElement();
 
                 if (className.startsWith(packageName)) {
@@ -555,35 +557,39 @@ public class Server extends RouterNanoHTTPD {
         List<Class<?>> classes = getAnnotatedClasses(this.context, packageName, RestController.class);
 
         for (Class<?> klass : classes) {
-            if (klass.isAnnotationPresent(RestController.class)) {
-                String path = klass.getAnnotationsByType(RestController.class)[0].value();
+            registerController(klass);
+        }
+    }
 
-                try {
-                    Object instance = createInstance(klass);
-                    if (instance == null) {
-                        instance = klass.getConstructor().newInstance();
-                    }
-                    
-                    injectDependencies(instance);
+    public void registerController(Class<?> klass) {
+        if (klass.isAnnotationPresent(RestController.class)) {
+            String path = klass.getAnnotationsByType(RestController.class)[0].value();
 
-                    for (java.lang.reflect.Method m : klass.getMethods()) {
-                        if (m.isAnnotationPresent(GetMethod.class)) {
-                            String methodPath = m.getDeclaredAnnotationsByType(GetMethod.class)[0].value();
-                            ServerIndexHandler.register(NanoHTTPD.Method.GET, path + methodPath, instance, m);
-                        } else if (m.isAnnotationPresent(PostMethod.class)) {
-                            String methodPath = m.getDeclaredAnnotationsByType(PostMethod.class)[0].value();
-                            ServerIndexHandler.register(NanoHTTPD.Method.POST, path + methodPath, instance, m);
-                        } else if (m.isAnnotationPresent(PutMethod.class)) {
-                            String methodPath = m.getDeclaredAnnotationsByType(PutMethod.class)[0].value();
-                            ServerIndexHandler.register(NanoHTTPD.Method.PUT, path + methodPath, instance, m);
-                        } else if (m.isAnnotationPresent(DeleteMethod.class)) {
-                            String methodPath = m.getDeclaredAnnotationsByType(DeleteMethod.class)[0].value();
-                            ServerIndexHandler.register(NanoHTTPD.Method.DELETE, path + methodPath, instance, m);
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+            try {
+                Object instance = createInstance(klass);
+                if (instance == null) {
+                    instance = klass.getConstructor().newInstance();
                 }
+
+                injectDependencies(instance);
+
+                for (java.lang.reflect.Method m : klass.getMethods()) {
+                    if (m.isAnnotationPresent(GetMethod.class)) {
+                        String methodPath = m.getDeclaredAnnotationsByType(GetMethod.class)[0].value();
+                        ServerIndexHandler.register(NanoHTTPD.Method.GET, path + methodPath, instance, m);
+                    } else if (m.isAnnotationPresent(PostMethod.class)) {
+                        String methodPath = m.getDeclaredAnnotationsByType(PostMethod.class)[0].value();
+                        ServerIndexHandler.register(NanoHTTPD.Method.POST, path + methodPath, instance, m);
+                    } else if (m.isAnnotationPresent(PutMethod.class)) {
+                        String methodPath = m.getDeclaredAnnotationsByType(PutMethod.class)[0].value();
+                        ServerIndexHandler.register(NanoHTTPD.Method.PUT, path + methodPath, instance, m);
+                    } else if (m.isAnnotationPresent(DeleteMethod.class)) {
+                        String methodPath = m.getDeclaredAnnotationsByType(DeleteMethod.class)[0].value();
+                        ServerIndexHandler.register(NanoHTTPD.Method.DELETE, path + methodPath, instance, m);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }

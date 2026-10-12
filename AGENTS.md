@@ -21,6 +21,7 @@ Consulte a documentação dedicada para AIs na pasta:
 - `docs/ai/03-data-sqlite.md`: Banco de dados (`@Repository`, SQLite).
 - `docs/ai/04-validation.md`: Validação de DTOs (`@Valid`, `@NotNull`).
 - `docs/ai/05-async-sse.md`: Concorrência e eventos (`SseEmitter`).
+- `docs/ai/06-battery-notifications.md`: Bateria e notificações (`BatteryService`, `BatteryHelper`).
 
 Sempre leia esses arquivos pequenos antes de gerar o código final.
 

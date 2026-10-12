@@ -4,14 +4,19 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
 
+import com.github.matheuscruzsouza.nanospring.battery.BatteryHelper;
+import com.github.matheuscruzsouza.nanospring.battery.BatteryNotificationHelper;
+import com.github.matheuscruzsouza.nanospring.battery.BatteryStatus;
 import com.github.matheuscruzsouza.nanospring.server.Environment;
 import com.github.matheuscruzsouza.nanospring.server.Server;
 
@@ -30,6 +35,8 @@ public abstract class NanoSpringService extends Service {
     private Server server;
     private PowerManager.WakeLock wakeLock;
     private WifiManager.MulticastLock multicastLock;
+    private BroadcastReceiver batteryReceiver;
+    private boolean lowBatteryNotified = false;
 
     /**
      * Package to scan for controllers, services, repositories and interceptors.
@@ -76,6 +83,52 @@ public abstract class NanoSpringService extends Service {
     }
 
     /**
+     * Determines whether the service should monitor battery state changes and low battery alerts.
+     */
+    protected boolean isBatteryMonitorEnabled() {
+        return Boolean.parseBoolean(Environment.getProperty("nano.battery.monitor.enabled", "false"));
+    }
+
+    /**
+     * Threshold percentage below which battery is considered low.
+     */
+    protected int getLowBatteryThreshold() {
+        return Integer.parseInt(Environment.getProperty("nano.battery.threshold",
+                String.valueOf(BatteryHelper.DEFAULT_LOW_BATTERY_THRESHOLD)));
+    }
+
+    /**
+     * Determines whether a user notification should be dispatched automatically upon low battery.
+     */
+    protected boolean isLowBatteryNotificationEnabled() {
+        return true;
+    }
+
+    /**
+     * Hook method invoked when battery drops below the threshold and is not charging.
+     *
+     * @param status Snapshot of the low battery status.
+     */
+    protected void onLowBattery(BatteryStatus status) {
+        Log.w(TAG, "Low battery warning: " + status.getPercentage() + "%");
+        if (isLowBatteryNotificationEnabled()) {
+            BatteryNotificationHelper.sendLowBatteryNotification(this, status);
+        }
+    }
+
+    /**
+     * Hook method invoked when battery recovers (starts charging or rises above threshold).
+     *
+     * @param status Snapshot of the battery status.
+     */
+    protected void onBatteryRecovered(BatteryStatus status) {
+        Log.i(TAG, "Battery level recovered or charging: " + status.getPercentage() + "%");
+        if (isLowBatteryNotificationEnabled()) {
+            BatteryNotificationHelper.cancelLowBatteryNotification(this);
+        }
+    }
+
+    /**
      * Foreground service type flag for Android 10+ (API 29+), e.g. {@code ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC}
      * or {@code ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE}.
      * Return 0 to use standard startForeground(id, notification).
@@ -105,6 +158,9 @@ public abstract class NanoSpringService extends Service {
             startInForeground();
             acquireLocks();
             checkBatteryOptimizations();
+            if (isBatteryMonitorEnabled()) {
+                registerBatteryReceiver();
+            }
             initializeServer();
         } catch (Exception e) {
             Log.e(TAG, "Error during NanoSpringService startup", e);
@@ -221,6 +277,54 @@ public abstract class NanoSpringService extends Service {
         Log.i(TAG, "Nano-Spring server initialized on port " + getPort());
     }
 
+    protected void registerBatteryReceiver() {
+        if (batteryReceiver != null) {
+            return;
+        }
+
+        batteryReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent == null) {
+                    return;
+                }
+                BatteryStatus status = BatteryHelper.fromIntent(intent, getLowBatteryThreshold());
+                if (status.isLow()) {
+                    if (!lowBatteryNotified) {
+                        lowBatteryNotified = true;
+                        onLowBattery(status);
+                    }
+                } else if (lowBatteryNotified && (status.isCharging() || status.getPercentage() > getLowBatteryThreshold())) {
+                    lowBatteryNotified = false;
+                    onBatteryRecovered(status);
+                }
+            }
+        };
+
+        try {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Intent.ACTION_BATTERY_CHANGED);
+            filter.addAction(Intent.ACTION_BATTERY_LOW);
+            filter.addAction(Intent.ACTION_BATTERY_OKAY);
+            registerReceiver(batteryReceiver, filter);
+            Log.d(TAG, "Battery broadcast receiver registered.");
+        } catch (Exception e) {
+            Log.w(TAG, "Could not register battery receiver: " + e.getMessage());
+        }
+    }
+
+    protected void unregisterBatteryReceiver() {
+        if (batteryReceiver != null) {
+            try {
+                unregisterReceiver(batteryReceiver);
+                Log.d(TAG, "Battery broadcast receiver unregistered.");
+            } catch (Exception ignored) {
+            } finally {
+                batteryReceiver = null;
+            }
+        }
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         return START_STICKY;
@@ -240,6 +344,7 @@ public abstract class NanoSpringService extends Service {
             }
         }
 
+        unregisterBatteryReceiver();
         releaseLocks();
         super.onDestroy();
     }

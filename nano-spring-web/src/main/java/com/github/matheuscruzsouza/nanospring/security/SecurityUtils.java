@@ -29,7 +29,11 @@ public class SecurityUtils {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     credDecoded = java.util.Base64.getDecoder().decode(base64Credentials);
                 } else {
-                    credDecoded = android.util.Base64.decode(base64Credentials, android.util.Base64.DEFAULT);
+                    try {
+                        credDecoded = java.util.Base64.getDecoder().decode(base64Credentials);
+                    } catch (Throwable t) {
+                        credDecoded = android.util.Base64.decode(base64Credentials, android.util.Base64.DEFAULT);
+                    }
                 }
                 String credentials = new String(credDecoded, "UTF-8");
                 final String[] values = credentials.split(":", 2);

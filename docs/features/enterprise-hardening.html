@@ -15,7 +15,7 @@
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
       <span class="logo-icon">🌱</span>
       <span>Nano-Spring</span>
-      <span class="badge">v2.0.0</span>
+      <span class="badge">v2.1.0</span>
     </div>
 
     <div class="topbar-center">
@@ -277,6 +277,59 @@ if (!BatteryOptimizationHelper.isIgnoringBatteryOptimizations(this)) {
 }</code></pre>
         </div>
 
+        <h2 id="battery-monitoring">6. Monitoramento de Bateria & Alertas ao Usuário</h2>
+        <p>Ao rodar serviços locais ininterruptos em dispositivos móveis, a bateria pode se esgotar caso a alimentação falhe. O Nano-Spring oferece métricas nativas da bateria, detecção de carga crítica e emissão de alertas via notificações do Android:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">assets/application.properties</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-properties"># Habilita monitoramento automático de bateria no Foreground Service
+nano.battery.monitor.enabled=true
+
+# Limite percentual de alerta de bateria fraca (padrão: 15)
+nano.battery.threshold=15</code></pre>
+        </div>
+
+        <p>Você também pode injetar o <code>BatteryService</code> em qualquer controller para expor o status via API REST:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="code-title">DeviceBatteryController.java</span>
+            <button class="copy-btn">Copiar</button>
+          </div>
+          <pre><code class="language-java">package com.minhaempresa.pdv;
+
+import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.RestController;
+import com.github.matheuscruzsouza.nanospring.battery.BatteryService;
+import com.github.matheuscruzsouza.nanospring.battery.BatteryStatus;
+
+@RestController("/api/device")
+public class DeviceBatteryController {
+
+    @Autowired
+    private BatteryService batteryService;
+
+    @GetMethod("/battery")
+    public BatteryStatus getBattery() {
+        return batteryService.getCurrentStatus();
+    }
+}</code></pre>
+        </div>
+
         <div class="page-nav">
           <a href="security-validation.html" class="page-nav-link prev">
             <span class="hint">Anterior</span>
@@ -299,6 +352,7 @@ if (!BatteryOptimizationHelper.isIgnoringBatteryOptimizations(this)) {
         <li><a href="#network-watcher">Monitoramento de Rede</a></li>
         <li><a href="#foreground-service">Foreground Service</a></li>
         <li><a href="#actuator-endpoints">Endpoints Actuator</a></li>
+        <li><a href="#battery-monitoring">Monitoramento de Bateria</a></li>
       </ul>
     </aside>
   </div>

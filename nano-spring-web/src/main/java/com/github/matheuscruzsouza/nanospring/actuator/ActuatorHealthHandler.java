@@ -1,11 +1,11 @@
 package com.github.matheuscruzsouza.nanospring.actuator;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.BatteryManager;
 import android.os.Build;
+
+import com.github.matheuscruzsouza.nanospring.battery.BatteryHelper;
+import com.github.matheuscruzsouza.nanospring.battery.BatteryStatus;
 
 import com.github.matheuscruzsouza.nanospring.util.internal.NetworkUtils;
 import com.github.matheuscruzsouza.nanospring.server.Server;
@@ -106,24 +106,16 @@ public class ActuatorHealthHandler {
         // 5. Battery (Android OS)
         if (context != null) {
             try {
-                Intent batteryStatus = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-                if (batteryStatus != null) {
-                    int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-                    int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-                    float pct = (level >= 0 && scale > 0) ? ((float) level / (float) scale) * 100.0f : -1.0f;
-                    int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                    boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                            status == BatteryManager.BATTERY_STATUS_FULL;
-                    int chargePlug = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-                    int temperature = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-
+                BatteryStatus batteryStatus = BatteryHelper.getBatteryStatus(context);
+                if (batteryStatus.getLevel() >= 0) {
                     Map<String, Object> batteryDetails = new LinkedHashMap<>();
-                    batteryDetails.put("level", level);
-                    batteryDetails.put("percentage", Math.round(pct));
-                    batteryDetails.put("charging", isCharging);
-                    batteryDetails.put("pluggedAc", chargePlug == BatteryManager.BATTERY_PLUGGED_AC);
-                    batteryDetails.put("pluggedUsb", chargePlug == BatteryManager.BATTERY_PLUGGED_USB);
-                    batteryDetails.put("temperatureCelsius", temperature > 0 ? temperature / 10.0 : -1);
+                    batteryDetails.put("level", batteryStatus.getLevel());
+                    batteryDetails.put("percentage", batteryStatus.getPercentage());
+                    batteryDetails.put("charging", batteryStatus.isCharging());
+                    batteryDetails.put("pluggedAc", batteryStatus.isPluggedAc());
+                    batteryDetails.put("pluggedUsb", batteryStatus.isPluggedUsb());
+                    batteryDetails.put("temperatureCelsius", batteryStatus.getTemperatureCelsius());
+                    batteryDetails.put("low", batteryStatus.isLow());
 
                     Map<String, Object> batComp = new LinkedHashMap<>();
                     batComp.put("status", "UP");
@@ -143,7 +135,7 @@ public class ActuatorHealthHandler {
         Map<String, Object> response = new LinkedHashMap<>();
         Map<String, Object> app = new LinkedHashMap<>();
         app.put("name", "nano-spring");
-        app.put("version", "1.11.1");
+        app.put("version", "2.1.0");
         app.put("androidApi", Build.VERSION.SDK_INT);
         app.put("javaVersion", System.getProperty("java.version"));
         app.put("activeProfiles", com.github.matheuscruzsouza.nanospring.server.Environment.getActiveProfiles());
