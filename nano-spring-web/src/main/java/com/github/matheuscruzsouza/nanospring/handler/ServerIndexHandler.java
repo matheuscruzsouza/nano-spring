@@ -21,8 +21,11 @@ import com.github.matheuscruzsouza.nanospring.validation.ValidationResult;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -168,8 +171,12 @@ public class ServerIndexHandler {
                         } else if (ann instanceof RequestParam) {
                             RequestParam rp = (RequestParam) ann;
                             Map<String, String> queryParams = session.getParms();
-                            String value = queryParams.get(rp.value());
-                            convertedArgs[i] = convertStringToType(value, targetType);
+                            if ((rp.value() == null || rp.value().trim().isEmpty()) && Map.class.isAssignableFrom(targetType)) {
+                                convertedArgs[i] = queryParams != null ? new HashMap<>(queryParams) : new HashMap<>();
+                            } else {
+                                String value = queryParams != null ? queryParams.get(rp.value()) : null;
+                                convertedArgs[i] = convertStringToType(value, targetType);
+                            }
                             matched = true;
                             break;
                         } else if (ann instanceof com.github.matheuscruzsouza.nanospring.annotation.UploadedFile) {
@@ -190,6 +197,25 @@ public class ServerIndexHandler {
                             String postData = files.get("postData");
                             if (postData != null) {
                                 convertedArgs[i] = gson.fromJson(postData, targetType);
+                            } else if (session.getParms() != null && !session.getParms().isEmpty()) {
+                                Map<String, String> parms = session.getParms();
+                                if (targetType == String.class) {
+                                    StringBuilder sb = new StringBuilder();
+                                    for (Map.Entry<String, String> entry : parms.entrySet()) {
+                                        if (sb.length() > 0) sb.append("&");
+                                        try {
+                                            sb.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8.name()))
+                                              .append("=")
+                                              .append(URLEncoder.encode(entry.getValue() != null ? entry.getValue() : "", StandardCharsets.UTF_8.name()));
+                                        } catch (UnsupportedEncodingException ignored) {
+                                        }
+                                    }
+                                    convertedArgs[i] = sb.toString();
+                                } else if (Map.class.isAssignableFrom(targetType)) {
+                                    convertedArgs[i] = new HashMap<>(parms);
+                                } else {
+                                    convertedArgs[i] = gson.fromJson(gson.toJsonTree(parms), targetType);
+                                }
                             } else {
                                 convertedArgs[i] = null;
                             }

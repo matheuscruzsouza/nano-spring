@@ -8,9 +8,9 @@ Importe SEMPRE de `com.github.matheuscruzsouza.nanospring.annotation.*`.
 - `@RestController("caminho-base")`: Define o controller e sua rota base.
 - `@GetMethod("caminho")`, `@PostMethod`, `@PutMethod`, `@DeleteMethod`: Define os endpoints.
 - `@PathVariable("nome")`: Captura variáveis na rota (`/recurso/:id`). Note a sintaxe `:id`.
-- `@RequestBody`: Converte o corpo da requisição de JSON para o objeto.
+- `@RequestBody`: Converte o corpo da requisição (JSON ou `application/x-www-form-urlencoded`) para DTO, `Map<String, String>` ou `String`.
 - `@RequestHeader("Nome")`: Obtém um cabeçalho HTTP.
-- `@RequestParam("nome")`: Obtém parâmetros de query string.
+- `@RequestParam("nome")`: Obtém parâmetros de query string ou form-data. Se usado como `@RequestParam Map<String, String>` sem nome, injeta todos os parâmetros.
 
 ## Respostas HTTP
 O Nano-Spring possui a classe `ResponseEntity` (não use a do Spring) no pacote `com.github.matheuscruzsouza.nanospring.server.ResponseEntity` (ou similar). 

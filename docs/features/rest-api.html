@@ -99,7 +99,7 @@
               <tr>
                 <td><code>@RequestParam(name)</code></td>
                 <td>Parâmetro</td>
-                <td>Extrai parâmetros de Query String (ex: <code>?pagina=1</code>)</td>
+                <td>Extrai parâmetros de Query String ou formulário (se omitido o nome em um <code>Map</code>, injeta todos os parâmetros)</td>
               </tr>
               <tr>
                 <td><code>@RequestHeader(name)</code></td>
@@ -109,7 +109,7 @@
               <tr>
                 <td><code>@RequestBody</code></td>
                 <td>Parâmetro</td>
-                <td>Desserializa o corpo JSON da requisição em um POJO Java via Gson</td>
+                <td>Desserializa o corpo da requisição (JSON ou <code>application/x-www-form-urlencoded</code>) em POJO/DTO, <code>Map</code> ou <code>String</code></td>
               </tr>
             </tbody>
           </table>
