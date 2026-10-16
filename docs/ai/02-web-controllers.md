@@ -11,6 +11,7 @@ Importe SEMPRE de `com.github.matheuscruzsouza.nanospring.annotation.*`.
 - `@RequestBody`: Converte o corpo da requisição (JSON ou `application/x-www-form-urlencoded`) para DTO, `Map<String, String>` ou `String`.
 - `@RequestHeader("Nome")`: Obtém um cabeçalho HTTP.
 - `@RequestParam("nome")`: Obtém parâmetros de query string ou form-data. Se usado como `@RequestParam Map<String, String>` sem nome, injeta todos os parâmetros.
+- `@RateLimit(requests = 10, durationSeconds = 1)`: Limita a taxa de requisições por IP na rota ou controller (importar de `com.github.matheuscruzsouza.nanospring.security.RateLimit`).
 
 ## Respostas HTTP
 O Nano-Spring possui a classe `ResponseEntity` (não use a do Spring) no pacote `com.github.matheuscruzsouza.nanospring.server.ResponseEntity` (ou similar). 
