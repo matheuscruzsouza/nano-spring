@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Radial Glow -->
+    <radialGradient id="bgGlow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#162c3d" />
+      <stop offset="60%" stop-color="#0e1726" />
+      <stop offset="100%" stop-color="#070a12" />
+    </radialGradient>
+
+    <!-- Emerald Leaf Linear Gradient -->
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6ee7b7" />
+      <stop offset="45%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+
+    <!-- Spring Sky / Tech Gradient -->
+    <linearGradient id="skyGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+
+    <!-- Android Body Gradient -->
+    <linearGradient id="androidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <!-- Accent Border Gradient -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.1" />
+    </linearGradient>
+
+    <!-- Circuit Trace Gradient -->
+    <linearGradient id="circuitGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.2" />
+      <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.9" />
+    </linearGradient>
+
+    <!-- Soft Drop Shadow -->
+    <filter id="shadow" x="-10%" y="-10%" width="125%" height="125%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
+
+    <!-- Leaf Glow Filter -->
+    <filter id="leafGlow" x="-20%" y="-20%" width="140%" height="140%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#10b981" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- Squircle / Rounded App Icon Base -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bgGlow)" />
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="none" stroke="url(#borderGrad)" stroke-width="3" />
+
+  <!-- Background Tech / Circuit Grid Elements (IoT / Server Concept) -->
+  <g opacity="0.45" stroke="url(#circuitGrad)" stroke-linecap="round">
+    <!-- Server Waves / Pulses -->
+    <path d="M 120 160 C 120 100, 392 100, 392 160" fill="none" stroke-width="2.5" stroke-dasharray="4 8" />
+    <path d="M 80 180 C 80 70, 432 70, 432 180" fill="none" stroke-width="2" stroke-opacity="0.4" stroke-dasharray="2 6" />
+    
+    <!-- Circuit Lines & Nodes -->
+    <line x1="88" y1="400" x2="160" y2="400" stroke-width="2.5" />
+    <circle cx="88" cy="400" r="4" fill="#38bdf8" />
+
+    <line x1="424" y1="400" x2="352" y2="400" stroke-width="2.5" />
+    <circle cx="424" cy="400" r="4" fill="#10b981" />
+
+    <path d="M 160 400 L 190 430 L 322 430 L 352 400" fill="none" stroke-width="2.5" />
+    <circle cx="256" cy="430" r="4.5" fill="#34d399" />
+  </g>
+
+  <!-- Central Symbol: Android Base Silhouette merging with Spring Sprout -->
+  <g filter="url(#shadow)">
+    <!-- Android Robot Dome / Head -->
+    <g id="android-head">
+      <!-- Antenna Left -->
+      <line x1="200" y1="316" x2="168" y2="276" stroke="#34d399" stroke-width="8" stroke-linecap="round" />
+      <!-- Antenna Right -->
+      <line x1="312" y1="316" x2="344" y2="276" stroke="#34d399" stroke-width="8" stroke-linecap="round" />
+
+      <!-- Head Dome Base -->
+      <path d="M 172 376 A 84 84 0 0 1 340 376 Z" fill="url(#androidGrad)" />
+
+      <!-- Eyes (Server / IoT Active Indicator) -->
+      <circle cx="214" cy="344" r="7.5" fill="#0b0f19" />
+      <circle cx="298" cy="344" r="7.5" fill="#0b0f19" />
+      
+      <!-- Eye Tech Pupils (Cyan glow) -->
+      <circle cx="215" cy="343" r="2.5" fill="#38bdf8" />
+      <circle cx="299" cy="343" r="2.5" fill="#38bdf8" />
+    </g>
+
+    <!-- Spring Sprout / Foliage emerging vigorously from the Android device -->
+    <g id="sprout" filter="url(#leafGlow)">
+      <!-- Main Stem -->
+      <path d="M 256 320 Q 256 220 256 128" fill="none" stroke="#6ee7b7" stroke-width="7" stroke-linecap="round" />
+
+      <!-- Left Spring Primary Leaf -->
+      <path d="M 256 270 C 220 260 148 240 148 174 C 148 126 216 148 254 218 Z" fill="url(#emeraldGrad)" />
+
+      <!-- Left Leaf Inner Accent Vein -->
+      <path d="M 254 218 C 224 195 190 178 168 170" fill="none" stroke="#a7f3d0" stroke-width="2.5" stroke-linecap="round" opacity="0.75" />
+
+      <!-- Right Spring Sprout Leaf (Growing upwards & modern) -->
+      <path d="M 256 226 C 286 214 364 190 364 122 C 364 74 290 100 256 182 Z" fill="url(#skyGrad)" />
+
+      <!-- Right Leaf Inner Accent Vein -->
+      <path d="M 256 182 C 284 152 320 134 344 124" fill="none" stroke="#e0f2fe" stroke-width="2.5" stroke-linecap="round" opacity="0.75" />
+
+      <!-- Top Emerging Bud Leaf -->
+      <path d="M 256 142 C 248 116 250 86 256 72 C 262 86 264 116 256 142 Z" fill="#6ee7b7" />
+    </g>
+
+    <!-- Connection / Packet Orbiting Dots (Restful / Server vibe) -->
+    <circle cx="256" cy="70" r="5" fill="#38bdf8" />
+    <circle cx="376" cy="118" r="4" fill="#34d399" />
+    <circle cx="136" cy="170" r="4" fill="#6ee7b7" />
+  </g>
+</svg>

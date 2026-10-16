@@ -28,6 +28,12 @@ jobs:
         with:
           gradle-version: '8.6'
 
+      - name: Dar permissão de execução ao Gradle Wrapper
+        run: chmod +x gradlew
+
+      - name: Executar testes unitários antes de publicar
+        run: ./gradlew test --stacktrace
+
       - name: Publicar biblioteca no GitHub Packages
         run: gradle publish
         env:
