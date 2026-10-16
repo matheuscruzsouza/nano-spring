@@ -91,7 +91,7 @@ public class ServerIndexHandler {
                 }
 
                 Optional<Map.Entry<Object, Method>> entry = pathMap.entrySet().stream().findFirst();
-                if (entry.isEmpty()) return null;
+                if (!entry.isPresent()) return null;
 
                 Object instance = entry.get().getKey();
                 Method method = entry.get().getValue();

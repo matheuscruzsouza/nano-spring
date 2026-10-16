@@ -31,8 +31,8 @@ jobs:
       - name: Dar permissão de execução ao Gradle Wrapper
         run: chmod +x gradlew
 
-      - name: Executar testes unitários antes de publicar
-        run: ./gradlew test --stacktrace
+      - name: Executar verificações e testes antes de publicar
+        run: ./gradlew check --stacktrace
 
       - name: Publicar biblioteca no GitHub Packages
         run: gradle publish

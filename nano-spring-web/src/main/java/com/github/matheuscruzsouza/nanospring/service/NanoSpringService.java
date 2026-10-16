@@ -177,6 +177,7 @@ public abstract class NanoSpringService extends Service {
         }
     }
 
+    @android.annotation.SuppressLint("WrongConstant")
     protected void startInForeground() {
         Notification.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

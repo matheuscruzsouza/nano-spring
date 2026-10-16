@@ -12,6 +12,7 @@ public class SecurityUtils {
      * Verifies Basic Auth using `nano.security.username` and `nano.security.password`.
      * If these properties are not set, defaults to "admin" / "admin".
      */
+    @android.annotation.SuppressLint("NewApi")
     public static boolean checkBasicAuth(NanoHTTPD.IHTTPSession session) {
         String expectedUser = Environment.getProperty("nano.security.username", "admin");
         String expectedPass = Environment.getProperty("nano.security.password", "admin");
