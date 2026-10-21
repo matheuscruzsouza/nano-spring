@@ -50,6 +50,16 @@ public class RuntimeIntegrationTest {
         public String secure() {
             return "Secret Data";
         }
+
+        @GetMethod("/stream")
+        public java.io.File streamAudio() throws Exception {
+            java.io.File tmp = java.io.File.createTempFile("stream-test-", ".mp3");
+            tmp.deleteOnExit();
+            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tmp)) {
+                fos.write("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes());
+            }
+            return tmp;
+        }
     }
 
     @Before
@@ -126,5 +136,22 @@ public class RuntimeIntegrationTest {
         conn.setRequestMethod("GET");
 
         assertEquals(401, conn.getResponseCode());
+    }
+
+    @Test
+    public void testByteRangeRequestOnStreamEndpoint() throws Exception {
+        URL url = new URL("http://localhost:8089/api/stream");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Range", "bytes=0-9");
+
+        assertEquals(206, conn.getResponseCode());
+        assertEquals("bytes", conn.getHeaderField("Accept-Ranges"));
+        assertEquals("10", conn.getHeaderField("Content-Length"));
+        assertEquals("bytes 0-9/36", conn.getHeaderField("Content-Range"));
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        String response = in.readLine();
+        assertEquals("0123456789", response);
     }
 }

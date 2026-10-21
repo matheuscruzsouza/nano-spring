@@ -58,7 +58,7 @@ public class ActuatorHealthHandlerTest {
         assertTrue(json.has("app"));
         JsonObject app = json.getAsJsonObject("app");
         assertEquals("nano-spring", app.get("name").getAsString());
-        assertEquals("2.1.1", app.get("version").getAsString());
+        assertEquals("2.2.0", app.get("version").getAsString());
         assertTrue(app.has("activeProfiles"));
     }
 
