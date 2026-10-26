@@ -87,6 +87,14 @@ public class Server extends RouterNanoHTTPD {
         return rateLimiter;
     }
 
+    public void setAuthenticationProvider(com.github.matheuscruzsouza.nanospring.security.AuthenticationProvider provider) {
+        ServerIndexHandler.setAuthenticationProvider(provider);
+    }
+
+    public com.github.matheuscruzsouza.nanospring.security.AuthenticationProvider getAuthenticationProvider() {
+        return ServerIndexHandler.getAuthenticationProvider();
+    }
+
 
 
 
@@ -321,6 +329,9 @@ public class Server extends RouterNanoHTTPD {
 
         for (Object serviceInstance : services.values()) {
             injectDependencies(serviceInstance);
+            if (serviceInstance instanceof com.github.matheuscruzsouza.nanospring.security.AuthenticationProvider) {
+                setAuthenticationProvider((com.github.matheuscruzsouza.nanospring.security.AuthenticationProvider) serviceInstance);
+            }
         }
     }
 

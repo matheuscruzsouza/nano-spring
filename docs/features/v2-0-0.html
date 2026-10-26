@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Versão 2.2.0 | Notas de Versão | Nano-Spring 🌱</title>
+  <title>Versão 2.3.0 | Notas de Versão | Nano-Spring 🌱</title>
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
 </head>
@@ -14,7 +14,7 @@
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
       <span class="logo-icon">🌱</span>
       <span>Nano-Spring</span>
-      <span class="badge">v2.2.0</span>
+      <span class="badge">v2.3.0</span>
     </div>
     <div class="topbar-center">
       <button class="search-btn" aria-label="Buscar na documentação">
@@ -39,23 +39,36 @@
 
     <main class="main-content">
       <div class="content">
-        <div class="hero-pill">📦 Versão 2.2.0 - Byte Range Requests (RFC 7233) & Streaming</div>
-        <h1>Notas de Versão 2.2.0 (Minor Release)</h1>
+        <div class="hero-pill">🚀 Versão 2.3.0 - Autenticação Extensível (JWT / Token) e DI de Provedores</div>
+        <h1>Notas de Versão 2.3.0 (Minor Release)</h1>
         
-        <p class="lead">A versão <strong>2.2.0</strong> adiciona suporte nativo a <strong>Byte Range Requests (HTTP 206 Partial Content)</strong> conforme a <strong>RFC 7233</strong>, com streaming de arquivos locais e recursos arbitrários sem overhead de memória heap (Zero Buffering).</p>
+        <p class="lead">A versão <strong>2.3.0</strong> adiciona a interface <code>AuthenticationProvider</code>, permitindo que a anotação <code>@Authenticated</code> seja utilizada com qualquer estratégia de autenticação (JWT Bearer Token, API Key ou OAuth) de maneira declarativa e desacoplada, preservando a retrocompatibilidade com Basic Auth.</p>
 
-        <h2 id="feature-range-requests">🎧 Suporte a Byte Range Requests (HTTP 206 Partial Content)</h2>
-        <p>Endpoints de controllers que retornam <code>File</code> ou <code>ResourceRegion</code> agora atendem automaticamente ao cabeçalho <code>Range</code>:</p>
-        <ul>
-          <li><strong>Zero Memory Buffering</strong>: Seek direto via <code>FileChannel</code> sem alocar arrays de bytes desnecessários no heap do Android.</li>
-          <li><strong>BoundedInputStream</strong>: Transmite apenas o intervalo solicitado e fecha arquivos de forma determinística.</li>
-          <li><strong>Respostas RFC 7233</strong>: Suporte a <code>bytes=start-end</code>, <code>bytes=start-</code>, suffix ranges (<code>bytes=-length</code>) e status <code>416 Range Not Satisfiable</code> com <code>Content-Range</code>.</li>
-        </ul>
+        <h2 id="feature-auth-provider">🔐 Interface <code>AuthenticationProvider</code> e Suporte a JWT</h2>
+        <p>Qualquer componente <code>@Service</code> que implemente <code>AuthenticationProvider</code> passa a ser automaticamente detectado e registrado pelo container de injeção de dependência do Nano-Spring:</p>
 
-        <h2 id="patch-requestbody">🛠️ Histórico: Correção em Formulários URL-Encoded (v2.1.1)</h2>
-        <p>Em versões anteriores (2.1.0 e anteriores), requisições HTTP com <code>Content-Type: application/x-www-form-urlencoded</code> resultavam em parâmetro <code>@RequestBody</code> resolvido silenciosamente como <code>null</code>. Isso ocorria porque o servidor NanoHTTPD popula diretamente o mapa de parâmetros da sessão (<code>session.getParms()</code>) e deixa o mapa de arquivos em disco vazio (<code>postData == null</code>).</p>
-        
-        <p>Na versão <strong>2.1.1</strong>, o <code>ServerIndexHandler</code> agora resolve automaticamente formulários URL-encoded quando <code>postData</code> não estiver presente:</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">Exemplo: Implementando validação de JWT no @Authenticated</span>
+          </div>
+          <pre><code class="language-java">@Service
+public class JwtAuthenticationProvider implements AuthenticationProvider {
+
+    @Override
+    public boolean authenticate(NanoHTTPD.IHTTPSession session) {
+        String authHeader = session.getHeaders().get("authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return false;
+        }
+
+        String token = authHeader.substring(7);
+        return JwtValidator.validate(token);
+    }
+}</code></pre>
+        </div>
+
+        <h2 id="historico-211">📦 Histórico: Novidades da v2.1.1</h2>
+        <p>A versão <strong>2.1.1</strong> foi uma atualização de manutenção e correção crítica focada em formulários HTML e binding de parâmetros:</p>
         <ul>
           <li><strong>Parâmetros <code>String</code></strong>: Constrói a query string URL-encoded correspondente (ex: <code>campo=valor&outro=123</code>).</li>
           <li><strong>Parâmetros <code>Map&lt;String, String&gt;</code></strong>: Injeta uma cópia direta dos parâmetros recebidos via formulário.</li>
@@ -107,9 +120,11 @@ public ResponseEntity&lt;Map&lt;String, String&gt;&gt; processar(@RequestParam M
     <aside class="toc-sidebar">
       <div class="toc-title">Nesta Página</div>
       <ul class="toc-list">
+        <li><a href="#feature-auth-provider">AuthenticationProvider (JWT)</a></li>
         <li><a href="#feature-range-requests">Range Requests (v2.2.0)</a></li>
         <li><a href="#patch-requestbody">Correção @RequestBody</a></li>
         <li><a href="#patch-requestparam">@RequestParam Map</a></li>
+        <li><a href="#historico-211">Histórico v2.1.1</a></li>
         <li><a href="#historico-210">Histórico v2.1.0</a></li>
         <li><a href="#historico-200">Histórico v2.0.0</a></li>
       </ul>

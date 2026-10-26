@@ -57,6 +57,15 @@ public class ServerIndexHandler {
     }
 
     private static java.util.List<HandlerInterceptor> interceptors = new java.util.ArrayList<>();
+    private static com.github.matheuscruzsouza.nanospring.security.AuthenticationProvider authenticationProvider;
+
+    public static void setAuthenticationProvider(com.github.matheuscruzsouza.nanospring.security.AuthenticationProvider provider) {
+        authenticationProvider = provider;
+    }
+
+    public static com.github.matheuscruzsouza.nanospring.security.AuthenticationProvider getAuthenticationProvider() {
+        return authenticationProvider;
+    }
 
     public static void setInterceptors(java.util.List<HandlerInterceptor> list) {
         interceptors = list;
@@ -114,9 +123,18 @@ public class ServerIndexHandler {
 
     private static NanoHTTPD.Response executeMethod(Object instance, Method method, NanoHTTPD.Method httpMethod, NanoHTTPD.IHTTPSession session, Map<String, String> pathVariables) {
         if (method.isAnnotationPresent(com.github.matheuscruzsouza.nanospring.annotation.Authenticated.class) || instance.getClass().isAnnotationPresent(com.github.matheuscruzsouza.nanospring.annotation.Authenticated.class)) {
-            if (!com.github.matheuscruzsouza.nanospring.security.SecurityUtils.checkBasicAuth(session)) {
+            boolean authenticated;
+            if (authenticationProvider != null) {
+                authenticated = authenticationProvider.authenticate(session);
+            } else {
+                authenticated = com.github.matheuscruzsouza.nanospring.security.SecurityUtils.checkBasicAuth(session);
+            }
+
+            if (!authenticated) {
                 NanoHTTPD.Response r = newFixedLengthResponse(Status.UNAUTHORIZED, "application/json", "{\"status\": 401, \"error\": \"Unauthorized\", \"message\": \"Authentication required\"}");
-                r.addHeader("WWW-Authenticate", "Basic realm=\"Nano-Spring Realm\"");
+                if (authenticationProvider == null) {
+                    r.addHeader("WWW-Authenticate", "Basic realm=\"Nano-Spring Realm\"");
+                }
                 return r;
             }
         }

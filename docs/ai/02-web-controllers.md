@@ -11,6 +11,7 @@ Importe SEMPRE de `com.github.matheuscruzsouza.nanospring.annotation.*`.
 - `@RequestBody`: Converte o corpo da requisição (JSON ou `application/x-www-form-urlencoded`) para DTO, `Map<String, String>` ou `String`.
 - `@RequestHeader("Nome")`: Obtém um cabeçalho HTTP.
 - `@RequestParam("nome")`: Obtém parâmetros de query string ou form-data. Se usado como `@RequestParam Map<String, String>` sem nome, injeta todos os parâmetros.
+- `@Authenticated`: Exige autenticação na rota ou em todas as rotas do controller. Suporta Basic Auth ou provedores customizados via `AuthenticationProvider` (ex: Bearer JWT).
 - `@RateLimit(requests = 10, durationSeconds = 1)`: Limita a taxa de requisições por IP na rota ou controller (importar de `com.github.matheuscruzsouza.nanospring.security.RateLimit`).
 
 ## Respostas HTTP

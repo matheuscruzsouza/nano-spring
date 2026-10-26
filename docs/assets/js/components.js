@@ -5,7 +5,7 @@ const SIDEBAR_HTML = `
           <li><a href="/index.html">Visão Geral</a></li>
           <li><a href="/getting-started.html">Instalação & Setup</a></li>
           <li><a href="/spring-boot-vs-nano-spring.html">⚖️ Spring Boot vs Nano-Spring</a></li>
-          <li><a href="/features/v2-0-0.html">✨ Versão & Notas de Release (v2.2.0)</a></li>
+          <li><a href="/features/v2-0-0.html">✨ Versão & Notas de Release (v2.3.0)</a></li>
         </ul>
       </div>
 

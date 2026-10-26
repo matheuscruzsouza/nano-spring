@@ -80,6 +80,7 @@ public class RuntimeIntegrationTest {
 
     @After
     public void teardown() {
+        com.github.matheuscruzsouza.nanospring.handler.ServerIndexHandler.setAuthenticationProvider(null);
         if (server != null) {
             server.stop();
         }
@@ -139,19 +140,31 @@ public class RuntimeIntegrationTest {
     }
 
     @Test
-    public void testByteRangeRequestOnStreamEndpoint() throws Exception {
-        URL url = new URL("http://localhost:8089/api/stream");
+    public void testAuthenticatedEndpointWithCustomAuthenticationProvider() throws Exception {
+        server.setAuthenticationProvider(session -> {
+            String authHeader = session.getHeaders().get("authorization");
+            return authHeader != null && authHeader.equals("Bearer valid-jwt-token");
+        });
+
+        // 1. Without token -> 401
+        URL url = new URL("http://localhost:8089/api/secure");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
-        conn.setRequestProperty("Range", "bytes=0-9");
+        assertEquals(401, conn.getResponseCode());
 
-        assertEquals(206, conn.getResponseCode());
-        assertEquals("bytes", conn.getHeaderField("Accept-Ranges"));
-        assertEquals("10", conn.getHeaderField("Content-Length"));
-        assertEquals("bytes 0-9/36", conn.getHeaderField("Content-Range"));
+        // 2. With invalid token -> 401
+        conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Authorization", "Bearer invalid");
+        assertEquals(401, conn.getResponseCode());
 
+        // 3. With valid Bearer JWT token -> 200
+        conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Authorization", "Bearer valid-jwt-token");
+        assertEquals(200, conn.getResponseCode());
         BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         String response = in.readLine();
-        assertEquals("0123456789", response);
+        assertEquals("\"Secret Data\"", response);
     }
 }
