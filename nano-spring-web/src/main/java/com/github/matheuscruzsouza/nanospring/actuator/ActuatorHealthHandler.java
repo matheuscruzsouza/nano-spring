@@ -135,7 +135,7 @@ public class ActuatorHealthHandler {
         Map<String, Object> response = new LinkedHashMap<>();
         Map<String, Object> app = new LinkedHashMap<>();
         app.put("name", "nano-spring");
-        app.put("version", "2.1.1");
+        app.put("version", "2.3.0");
         app.put("androidApi", Build.VERSION.SDK_INT);
         app.put("javaVersion", System.getProperty("java.version"));
         app.put("activeProfiles", com.github.matheuscruzsouza.nanospring.server.Environment.getActiveProfiles());

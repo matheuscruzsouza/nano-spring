@@ -248,6 +248,51 @@ public class ClienteController {
 }</code></pre>
         </div>
 
+        <h2 id="authentication-provider">4. Autenticação Declarativa com <code>@Authenticated</code> e <code>AuthenticationProvider</code> (JWT / Token)</h2>
+        <p>A anotação <code>@Authenticated</code> protege rotas individuais ou controllers inteiros. Por padrão, valida Basic Auth, mas permite plugar facilmente provedores customizados como <strong>JWT Bearer</strong> implementando <code>AuthenticationProvider</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">JwtAuthenticationProvider.java</span>
+          </div>
+          <pre><code class="language-java">package com.minhaempresa.security;
+
+import com.github.matheuscruzsouza.nanospring.annotation.Service;
+import com.github.matheuscruzsouza.nanospring.security.AuthenticationProvider;
+import fi.iki.elonen.NanoHTTPD;
+
+@Service
+public class JwtAuthenticationProvider implements AuthenticationProvider {
+
+    @Override
+    public boolean authenticate(NanoHTTPD.IHTTPSession session) {
+        String auth = session.getHeaders().get("authorization");
+        if (auth == null || !auth.startsWith("Bearer ")) {
+            return false;
+        }
+        String token = auth.substring(7);
+        return JwtValidator.isValid(token);
+    }
+}</code></pre>
+        </div>
+
+        <p>No Controller, basta anotar com <code>@Authenticated</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">UserController.java</span>
+          </div>
+          <pre><code class="language-java">@RestController("/api/users")
+public class UserController {
+
+    @Authenticated
+    @GetMethod("/me")
+    public User perfil() {
+        return userService.getCurrentUser();
+    }
+}</code></pre>
+        </div>
+
         <div class="page-nav">
           <a href="logging-diagnostics.html" class="page-nav-link prev">
             <span class="hint">Anterior</span>
@@ -268,6 +313,7 @@ public class ClienteController {
         <li><a href="#https-tls">HTTPS / TLS Keystore</a></li>
         <li><a href="#rate-limiting">Proteção Anti-DoS</a></li>
         <li><a href="#bean-validation">Bean Validation Declarativo</a></li>
+        <li><a href="#authentication-provider">@Authenticated & JWT</a></li>
       </ul>
     </aside>
   </div>

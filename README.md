@@ -2,7 +2,7 @@
 
 **Turn Android devices into lightweight, local infrastructure.**
 
-[![Release](https://img.shields.io/badge/version-2.1.1-green.svg)](https://github.com/matheuscruzsouza/nano-spring)
+[![Release](https://img.shields.io/badge/version-2.3.0-green.svg)](https://github.com/matheuscruzsouza/nano-spring)
 [![Platform](https://img.shields.io/badge/platform-Android%20API%2025+-blue.svg)](https://developer.android.com)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
 
@@ -44,7 +44,7 @@ Nano-Spring lets you repurpose devices into:
 * **Android**: `minSdk 25` (Android 7.1.1+), `targetSdk 36`, `compileSdk 36`
 * **Java**: 11+
 
-### 2. Installation (v2.1.1)
+### 2. Installation (v2.3.0)
 
 Add the GitHub Packages repository to your `settings.gradle`:
 
@@ -68,12 +68,12 @@ Add dependencies to your `app/build.gradle`:
 
 ```groovy
 dependencies {
-    implementation 'com.github.matheuscruzsouza:nano-spring-core:2.1.1'
-    implementation 'com.github.matheuscruzsouza:nano-spring-web:2.1.1'
+    implementation 'com.github.matheuscruzsouza:nano-spring-core:2.3.0'
+    implementation 'com.github.matheuscruzsouza:nano-spring-web:2.3.0'
     
     // Optional modules:
-    // implementation 'com.github.matheuscruzsouza:nano-spring-data:2.1.1'
-    // implementation 'com.github.matheuscruzsouza:nano-spring-discovery:2.1.1'
+    // implementation 'com.github.matheuscruzsouza:nano-spring-data:2.3.0'
+    // implementation 'com.github.matheuscruzsouza:nano-spring-discovery:2.3.0'
 }
 ```
 

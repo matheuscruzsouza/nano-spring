@@ -70,6 +70,7 @@ public class RuntimeIntegrationTest {
 
     @After
     public void teardown() {
+        com.github.matheuscruzsouza.nanospring.handler.ServerIndexHandler.setAuthenticationProvider(null);
         if (server != null) {
             server.stop();
         }
@@ -126,5 +127,34 @@ public class RuntimeIntegrationTest {
         conn.setRequestMethod("GET");
 
         assertEquals(401, conn.getResponseCode());
+    }
+
+    @Test
+    public void testAuthenticatedEndpointWithCustomAuthenticationProvider() throws Exception {
+        server.setAuthenticationProvider(session -> {
+            String authHeader = session.getHeaders().get("authorization");
+            return authHeader != null && authHeader.equals("Bearer valid-jwt-token");
+        });
+
+        // 1. Without token -> 401
+        URL url = new URL("http://localhost:8089/api/secure");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        assertEquals(401, conn.getResponseCode());
+
+        // 2. With invalid token -> 401
+        conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Authorization", "Bearer invalid");
+        assertEquals(401, conn.getResponseCode());
+
+        // 3. With valid Bearer JWT token -> 200
+        conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Authorization", "Bearer valid-jwt-token");
+        assertEquals(200, conn.getResponseCode());
+        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        String response = in.readLine();
+        assertEquals("\"Secret Data\"", response);
     }
 }
