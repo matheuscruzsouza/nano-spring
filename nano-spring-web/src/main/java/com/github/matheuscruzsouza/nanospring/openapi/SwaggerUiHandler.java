@@ -1,5 +1,16 @@
 package com.github.matheuscruzsouza.nanospring.openapi;
 
+import android.content.Context;
+
+import com.github.matheuscruzsouza.nanospring.server.Environment;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoHTTPD.Response.Status;
 
@@ -25,6 +36,11 @@ public class SwaggerUiHandler {
     }
 
     private static String getSwaggerHtml() {
+        String cssContent = loadCustomCss();
+        if (cssContent == null) {
+            cssContent = getDefaultCss();
+        }
+
         return "<!DOCTYPE html>\n" +
                 "<html lang=\"pt-BR\" class=\"dark\">\n" +
                 "<head>\n" +
@@ -32,84 +48,7 @@ public class SwaggerUiHandler {
                 "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
                 "  <title>Nano-Spring Swagger UI</title>\n" +
                 "  <style>\n" +
-                "    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }\n" +
-                "    body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #e2e8f0; line-height: 1.5; }\n" +
-                "    header { background-color: #111827; border-bottom: 1px solid #1f2937; padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }\n" +
-                "    .brand { display: flex; align-items: center; gap: 0.75rem; }\n" +
-                "    .brand svg { width: 28px; height: 28px; color: #10b981; }\n" +
-                "    .brand h1 { font-size: 1.25rem; font-weight: 700; color: #f9fafb; letter-spacing: -0.025em; }\n" +
-                "    .badge-openapi { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 9999px; text-transform: uppercase; }\n" +
-                "    .search-box { flex: 1; max-width: 400px; position: relative; }\n" +
-                "    .search-box input { width: 100%; background: #1f2937; border: 1px solid #374151; color: #f9fafb; padding: 0.45rem 0.85rem; border-radius: 0.5rem; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }\n" +
-                "    .search-box input:focus { border-color: #10b981; }\n" +
-                "    .actions { display: flex; align-items: center; gap: 0.75rem; }\n" +
-                "    .btn-auth { background: #1f2937; color: #f59e0b; border: 1px solid #d97706; padding: 0.45rem 0.85rem; border-radius: 0.5rem; font-size: 0.825rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }\n" +
-                "    .btn-auth:hover { background: #78350f; color: #fef3c7; border-color: #f59e0b; }\n" +
-                "    .btn-auth.active { background: #064e3b; color: #6ee7b7; border-color: #059669; }\n" +
-                "    .btn-auth.active:hover { background: #047857; color: #ffffff; }\n" +
-                "    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(3px); }\n" +
-                "    .modal-backdrop.open { display: flex; }\n" +
-                "    .modal-dialog { background: #111827; border: 1px solid #374151; border-radius: 0.75rem; width: 100%; max-width: 480px; padding: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); }\n" +
-                "    .modal-title { font-size: 1.15rem; font-weight: 700; color: #f9fafb; display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }\n" +
-                "    .modal-close { background: none; border: none; color: #9ca3af; font-size: 1.25rem; cursor: pointer; line-height: 1; padding: 0.2rem; }\n" +
-                "    .modal-close:hover { color: #f9fafb; }\n" +
-                "    .form-group { margin-bottom: 1rem; }\n" +
-                "    .form-label { display: block; font-size: 0.8rem; font-weight: 600; color: #9ca3af; margin-bottom: 0.35rem; }\n" +
-                "    .form-input { width: 100%; background: #1f2937; border: 1px solid #374151; color: #f9fafb; padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-family: ui-monospace, monospace; outline: none; transition: border-color 0.2s; }\n" +
-                "    .form-input:focus { border-color: #10b981; }\n" +
-                "    .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }\n" +
-                "    .btn-save { background: #10b981; color: #ffffff; border: none; padding: 0.5rem 1.25rem; border-radius: 0.375rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }\n" +
-                "    .btn-save:hover { background: #059669; }\n" +
-                "    .btn-clear { background: #374151; color: #fca5a5; border: 1px solid #4b5563; padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }\n" +
-                "    .btn-clear:hover { background: #4b5563; color: #fee2e2; }\n" +
-                "    .auth-lock { color: #6b7280; font-size: 0.85rem; margin-left: 0.5rem; }\n" +
-                "    .auth-lock.active { color: #10b981; }\n" +
-                "    .btn-link { background: #1f2937; color: #9ca3af; border: 1px solid #374151; padding: 0.45rem 0.85rem; border-radius: 0.5rem; font-size: 0.825rem; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }\n" +
-                "    .btn-link:hover { color: #f9fafb; border-color: #4b5563; background: #374151; }\n" +
-                "    main { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }\n" +
-                "    .api-info { background: #111827; border: 1px solid #1f2937; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem; }\n" +
-                "    .api-info h2 { font-size: 1.5rem; font-weight: 700; color: #f9fafb; margin-bottom: 0.5rem; }\n" +
-                "    .api-info p { color: #9ca3af; font-size: 0.95rem; margin-bottom: 1rem; }\n" +
-                "    .api-meta { display: flex; gap: 1rem; font-size: 0.8rem; color: #6b7280; font-family: ui-monospace, monospace; }\n" +
-                "    .tag-section { margin-bottom: 2rem; }\n" +
-                "    .tag-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1f2937; padding-bottom: 0.75rem; margin-bottom: 1rem; }\n" +
-                "    .tag-title { font-size: 1.25rem; font-weight: 700; color: #f3f4f6; display: flex; align-items: center; gap: 0.5rem; }\n" +
-                "    .endpoint-card { background: #111827; border: 1px solid #1f2937; border-radius: 0.5rem; margin-bottom: 0.75rem; overflow: hidden; transition: border-color 0.2s; }\n" +
-                "    .endpoint-header { padding: 0.75rem 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; user-select: none; }\n" +
-                "    .endpoint-header:hover { background: #162032; }\n" +
-                "    .method { font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 0.375rem; min-width: 65px; text-align: center; text-transform: uppercase; font-family: ui-monospace, monospace; }\n" +
-                "    .method.get { background: #1e3a8a; color: #93c5fd; border: 1px solid #2563eb; }\n" +
-                "    .method.post { background: #064e3b; color: #6ee7b7; border: 1px solid #059669; }\n" +
-                "    .method.put { background: #78350f; color: #fcd34d; border: 1px solid #d97706; }\n" +
-                "    .method.delete { background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; }\n" +
-                "    .route-path { font-family: ui-monospace, monospace; font-size: 0.95rem; font-weight: 600; color: #f9fafb; flex: 1; }\n" +
-                "    .route-path .param { color: #38bdf8; font-weight: 700; }\n" +
-                "    .route-summary { color: #9ca3af; font-size: 0.875rem; }\n" +
-                "    .chevron { transition: transform 0.2s; color: #6b7280; }\n" +
-                "    .endpoint-card.open .chevron { transform: rotate(180deg); }\n" +
-                "    .endpoint-body { display: none; padding: 1.25rem; border-top: 1px solid #1f2937; background: #0d131f; }\n" +
-                "    .endpoint-card.open .endpoint-body { display: block; }\n" +
-                "    .section-subtitle { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 0.75rem; }\n" +
-                "    .param-group { margin-bottom: 1.25rem; }\n" +
-                "    .param-row { display: grid; grid-template-columns: 180px 100px 1fr; gap: 1rem; align-items: center; margin-bottom: 0.5rem; }\n" +
-                "    .param-name { font-family: ui-monospace, monospace; font-size: 0.85rem; color: #f3f4f6; font-weight: 600; }\n" +
-                "    .param-name .req { color: #ef4444; margin-left: 2px; }\n" +
-                "    .param-in { font-size: 0.75rem; color: #6b7280; font-family: ui-monospace, monospace; }\n" +
-                "    .param-input { background: #1f2937; border: 1px solid #374151; color: #f9fafb; padding: 0.4rem 0.65rem; border-radius: 0.375rem; font-size: 0.85rem; font-family: ui-monospace, monospace; outline: none; }\n" +
-                "    .param-input:focus { border-color: #10b981; }\n" +
-                "    .body-textarea { width: 100%; min-height: 120px; background: #1f2937; border: 1px solid #374151; color: #f9fafb; padding: 0.75rem; border-radius: 0.375rem; font-size: 0.85rem; font-family: ui-monospace, monospace; outline: none; resize: vertical; margin-bottom: 1rem; }\n" +
-                "    .body-textarea:focus { border-color: #10b981; }\n" +
-                "    .btn-exec { background: #10b981; color: #ffffff; border: none; padding: 0.5rem 1.25rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }\n" +
-                "    .btn-exec:hover { background: #059669; }\n" +
-                "    .btn-exec:disabled { opacity: 0.5; cursor: not-allowed; }\n" +
-                "    .response-box { margin-top: 1.25rem; border-top: 1px dashed #374151; padding-top: 1rem; }\n" +
-                "    .res-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; font-size: 0.8rem; }\n" +
-                "    .status-badge { font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-family: ui-monospace, monospace; }\n" +
-                "    .status-2xx { background: #064e3b; color: #6ee7b7; }\n" +
-                "    .status-4xx { background: #78350f; color: #fcd34d; }\n" +
-                "    .status-5xx { background: #7f1d1d; color: #fca5a5; }\n" +
-                "    .res-body { background: #020617; border: 1px solid #1e293b; border-radius: 0.375rem; padding: 0.75rem; font-family: ui-monospace, monospace; font-size: 0.8rem; color: #38bdf8; overflow-x: auto; white-space: pre-wrap; word-break: break-all; max-height: 350px; }\n" +
-                "    .empty-placeholder { color: #6b7280; font-style: italic; font-size: 0.85rem; }\n" +
+                cssContent + "\n" +
                 "  </style>\n" +
                 "</head>\n" +
                 "<body>\n" +
@@ -487,5 +426,135 @@ public class SwaggerUiHandler {
                 "  </script>\n" +
                 "</body>\n" +
                 "</html>";
+    }
+
+    private static String loadCustomCss() {
+        String cssPath = Environment.getProperty("nano.swagger.css-path");
+        if (cssPath == null || cssPath.trim().isEmpty()) {
+            return null;
+        }
+
+        cssPath = cssPath.trim();
+
+        // 1. Try reading from Android assets
+        Context context = Environment.getContext();
+        if (context != null) {
+            try (InputStream is = context.getAssets().open(cssPath)) {
+                return readInputStream(is);
+            } catch (Exception ignored) {
+            }
+        }
+
+        // 2. Try reading from ClassLoader (classpath)
+        try (InputStream is = SwaggerUiHandler.class.getClassLoader().getResourceAsStream(cssPath)) {
+            if (is != null) {
+                return readInputStream(is);
+            }
+        } catch (Exception ignored) {
+        }
+
+        // 3. Try reading as an absolute or relative File on filesystem
+        try {
+            File file = new File(cssPath);
+            if (file.exists() && file.isFile()) {
+                try (InputStream is = new FileInputStream(file)) {
+                    return readInputStream(is);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        return null;
+    }
+
+    private static String readInputStream(InputStream is) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            sb.append(line).append("\n");
+        }
+        return sb.toString();
+    }
+
+    private static String getDefaultCss() {
+        return "    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }\n" +
+                "    body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #e2e8f0; line-height: 1.5; }\n" +
+                "    header { background-color: #111827; border-bottom: 1px solid #1f2937; padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }\n" +
+                "    .brand { display: flex; align-items: center; gap: 0.75rem; }\n" +
+                "    .brand svg { width: 28px; height: 28px; color: #10b981; }\n" +
+                "    .brand h1 { font-size: 1.25rem; font-weight: 700; color: #f9fafb; letter-spacing: -0.025em; }\n" +
+                "    .badge-openapi { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 9999px; text-transform: uppercase; }\n" +
+                "    .search-box { flex: 1; max-width: 400px; position: relative; }\n" +
+                "    .search-box input { width: 100%; background: #1f2937; border: 1px solid #374151; color: #f9fafb; padding: 0.45rem 0.85rem; border-radius: 0.5rem; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }\n" +
+                "    .search-box input:focus { border-color: #10b981; }\n" +
+                "    .actions { display: flex; align-items: center; gap: 0.75rem; }\n" +
+                "    .btn-auth { background: #1f2937; color: #f59e0b; border: 1px solid #d97706; padding: 0.45rem 0.85rem; border-radius: 0.5rem; font-size: 0.825rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }\n" +
+                "    .btn-auth:hover { background: #78350f; color: #fef3c7; border-color: #f59e0b; }\n" +
+                "    .btn-auth.active { background: #064e3b; color: #6ee7b7; border-color: #059669; }\n" +
+                "    .btn-auth.active:hover { background: #047857; color: #ffffff; }\n" +
+                "    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(3px); }\n" +
+                "    .modal-backdrop.open { display: flex; }\n" +
+                "    .modal-dialog { background: #111827; border: 1px solid #374151; border-radius: 0.75rem; width: 100%; max-width: 480px; padding: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); }\n" +
+                "    .modal-title { font-size: 1.15rem; font-weight: 700; color: #f9fafb; display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }\n" +
+                "    .modal-close { background: none; border: none; color: #9ca3af; font-size: 1.25rem; cursor: pointer; line-height: 1; padding: 0.2rem; }\n" +
+                "    .modal-close:hover { color: #f9fafb; }\n" +
+                "    .form-group { margin-bottom: 1rem; }\n" +
+                "    .form-label { display: block; font-size: 0.8rem; font-weight: 600; color: #9ca3af; margin-bottom: 0.35rem; }\n" +
+                "    .form-input { width: 100%; background: #1f2937; border: 1px solid #374151; color: #f9fafb; padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-family: ui-monospace, monospace; outline: none; transition: border-color 0.2s; }\n" +
+                "    .form-input:focus { border-color: #10b981; }\n" +
+                "    .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }\n" +
+                "    .btn-save { background: #10b981; color: #ffffff; border: none; padding: 0.5rem 1.25rem; border-radius: 0.375rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }\n" +
+                "    .btn-save:hover { background: #059669; }\n" +
+                "    .btn-clear { background: #374151; color: #fca5a5; border: 1px solid #4b5563; padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }\n" +
+                "    .btn-clear:hover { background: #4b5563; color: #fee2e2; }\n" +
+                "    .auth-lock { color: #6b7280; font-size: 0.85rem; margin-left: 0.5rem; }\n" +
+                "    .auth-lock.active { color: #10b981; }\n" +
+                "    .btn-link { background: #1f2937; color: #9ca3af; border: 1px solid #374151; padding: 0.45rem 0.85rem; border-radius: 0.5rem; font-size: 0.825rem; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }\n" +
+                "    .btn-link:hover { color: #f9fafb; border-color: #4b5563; background: #374151; }\n" +
+                "    main { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }\n" +
+                "    .api-info { background: #111827; border: 1px solid #1f2937; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem; }\n" +
+                "    .api-info h2 { font-size: 1.5rem; font-weight: 700; color: #f9fafb; margin-bottom: 0.5rem; }\n" +
+                "    .api-info p { color: #9ca3af; font-size: 0.95rem; margin-bottom: 1rem; }\n" +
+                "    .api-meta { display: flex; gap: 1rem; font-size: 0.8rem; color: #6b7280; font-family: ui-monospace, monospace; }\n" +
+                "    .tag-section { margin-bottom: 2rem; }\n" +
+                "    .tag-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1f2937; padding-bottom: 0.75rem; margin-bottom: 1rem; }\n" +
+                "    .tag-title { font-size: 1.25rem; font-weight: 700; color: #f3f4f6; display: flex; align-items: center; gap: 0.5rem; }\n" +
+                "    .endpoint-card { background: #111827; border: 1px solid #1f2937; border-radius: 0.5rem; margin-bottom: 0.75rem; overflow: hidden; transition: border-color 0.2s; }\n" +
+                "    .endpoint-header { padding: 0.75rem 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; user-select: none; }\n" +
+                "    .endpoint-header:hover { background: #162032; }\n" +
+                "    .method { font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 0.375rem; min-width: 65px; text-align: center; text-transform: uppercase; font-family: ui-monospace, monospace; }\n" +
+                "    .method.get { background: #1e3a8a; color: #93c5fd; border: 1px solid #2563eb; }\n" +
+                "    .method.post { background: #064e3b; color: #6ee7b7; border: 1px solid #059669; }\n" +
+                "    .method.put { background: #78350f; color: #fcd34d; border: 1px solid #d97706; }\n" +
+                "    .method.delete { background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; }\n" +
+                "    .route-path { font-family: ui-monospace, monospace; font-size: 0.95rem; font-weight: 600; color: #f9fafb; flex: 1; }\n" +
+                "    .route-path .param { color: #38bdf8; font-weight: 700; }\n" +
+                "    .route-summary { color: #9ca3af; font-size: 0.875rem; }\n" +
+                "    .chevron { transition: transform 0.2s; color: #6b7280; }\n" +
+                "    .endpoint-card.open .chevron { transform: rotate(180deg); }\n" +
+                "    .endpoint-body { display: none; padding: 1.25rem; border-top: 1px solid #1f2937; background: #0d131f; }\n" +
+                "    .endpoint-card.open .endpoint-body { display: block; }\n" +
+                "    .section-subtitle { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 0.75rem; }\n" +
+                "    .param-group { margin-bottom: 1.25rem; }\n" +
+                "    .param-row { display: grid; grid-template-columns: 180px 100px 1fr; gap: 1rem; align-items: center; margin-bottom: 0.5rem; }\n" +
+                "    .param-name { font-family: ui-monospace, monospace; font-size: 0.85rem; color: #f3f4f6; font-weight: 600; }\n" +
+                "    .param-name .req { color: #ef4444; margin-left: 2px; }\n" +
+                "    .param-in { font-size: 0.75rem; color: #6b7280; font-family: ui-monospace, monospace; }\n" +
+                "    .param-input { background: #1f2937; border: 1px solid #374151; color: #f9fafb; padding: 0.4rem 0.65rem; border-radius: 0.375rem; font-size: 0.85rem; font-family: ui-monospace, monospace; outline: none; }\n" +
+                "    .param-input:focus { border-color: #10b981; }\n" +
+                "    .body-textarea { width: 100%; min-height: 120px; background: #1f2937; border: 1px solid #374151; color: #f9fafb; padding: 0.75rem; border-radius: 0.375rem; font-size: 0.85rem; font-family: ui-monospace, monospace; outline: none; resize: vertical; margin-bottom: 1rem; }\n" +
+                "    .body-textarea:focus { border-color: #10b981; }\n" +
+                "    .btn-exec { background: #10b981; color: #ffffff; border: none; padding: 0.5rem 1.25rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }\n" +
+                "    .btn-exec:hover { background: #059669; }\n" +
+                "    .btn-exec:disabled { opacity: 0.5; cursor: not-allowed; }\n" +
+                "    .response-box { margin-top: 1.25rem; border-top: 1px dashed #374151; padding-top: 1rem; }\n" +
+                "    .res-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; font-size: 0.8rem; }\n" +
+                "    .status-badge { font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-family: ui-monospace, monospace; }\n" +
+                "    .status-2xx { background: #064e3b; color: #6ee7b7; }\n" +
+                "    .status-4xx { background: #78350f; color: #fcd34d; }\n" +
+                "    .status-5xx { background: #7f1d1d; color: #fca5a5; }\n" +
+                "    .res-body { background: #020617; border: 1px solid #1e293b; border-radius: 0.375rem; padding: 0.75rem; font-family: ui-monospace, monospace; font-size: 0.8rem; color: #38bdf8; overflow-x: auto; white-space: pre-wrap; word-break: break-all; max-height: 350px; }\n" +
+                "    .empty-placeholder { color: #6b7280; font-style: italic; font-size: 0.85rem; }\n";
     }
 }

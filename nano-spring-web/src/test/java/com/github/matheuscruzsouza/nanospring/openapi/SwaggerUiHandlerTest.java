@@ -1,12 +1,23 @@
 package com.github.matheuscruzsouza.nanospring.openapi;
 
 import org.junit.Test;
+import org.junit.After;
+
+import java.io.File;
+import java.io.FileOutputStream;
+
+import com.github.matheuscruzsouza.nanospring.server.Environment;
 
 import fi.iki.elonen.NanoHTTPD;
 
 import static org.junit.Assert.*;
 
 public class SwaggerUiHandlerTest {
+
+    @After
+    public void tearDown() {
+        Environment.reset();
+    }
 
     @Test
     public void testHandleApiDocsResponse() throws Exception {
@@ -35,6 +46,25 @@ public class SwaggerUiHandlerTest {
         assertTrue(output.contains("/v3/api-docs"));
         assertTrue(output.contains("executeRequest"));
         assertTrue(output.contains("Try it out"));
+        assertTrue(output.contains("background-color: #0b0f19"));
+    }
+
+    @Test
+    public void testCustomCssInjection() throws Exception {
+        File tempCss = File.createTempFile("custom-swagger", ".css");
+        tempCss.deleteOnExit();
+        try (FileOutputStream fos = new FileOutputStream(tempCss)) {
+            fos.write("body { background-color: #ff00ff; } /* custom-theme-applied */".getBytes("UTF-8"));
+        }
+
+        Environment.setProperty("nano.swagger.css-path", tempCss.getAbsolutePath());
+
+        NanoHTTPD.Response response = SwaggerUiHandler.handleUi();
+        String output = readResponseString(response);
+
+        assertTrue(output.contains("custom-theme-applied"));
+        assertTrue(output.contains("#ff00ff"));
+        assertFalse(output.contains("background-color: #0b0f19"));
     }
 
     private String readResponseString(NanoHTTPD.Response response) throws java.io.IOException {
