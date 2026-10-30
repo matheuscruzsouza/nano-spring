@@ -28,7 +28,7 @@ jobs:
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.6'
+          gradle-version: '8.10.2'
 
       - name: Dar permissão de execução ao Gradle Wrapper
         run: chmod +x gradlew

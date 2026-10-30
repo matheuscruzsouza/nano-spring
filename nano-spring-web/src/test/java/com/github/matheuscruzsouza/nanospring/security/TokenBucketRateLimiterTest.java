@@ -53,4 +53,44 @@ public class TokenBucketRateLimiterTest {
             assertTrue("Disabled global rate limiter should allow all requests", limiter.checkGlobal(ip));
         }
     }
+
+    @Test
+    public void testPartiallyConsumedBucketIsStaleAfterInactivity() {
+        TokenBucketRateLimiter limiter = new TokenBucketRateLimiter(true, 50, 100);
+        limiter.checkGlobal("192.168.1.1");
+
+        TokenBucketRateLimiter.Bucket bucket = limiter.getBuckets().get("GLOBAL:192.168.1.1");
+        assertFalse("Bucket should not be stale immediately after use", bucket.isStale());
+
+        // Simulate inactivity beyond 60s
+        bucket.setLastAccessTimeForTest(System.currentTimeMillis() - 61000);
+        assertTrue("Bucket should be stale after 60s of inactivity even if partially consumed", bucket.isStale());
+    }
+
+    @Test
+    public void testCleanupRemovesStaleBucketsWhenThresholdExceeded() {
+        TokenBucketRateLimiter limiter = new TokenBucketRateLimiter(true, 50, 100);
+
+        for (int i = 0; i < 501; i++) {
+            limiter.checkGlobal("10.0.0." + i);
+        }
+
+        // Set the first 100 buckets as inactive/stale
+        long staleTime = System.currentTimeMillis() - 65000;
+        for (int i = 0; i < 100; i++) {
+            TokenBucketRateLimiter.Bucket b = limiter.getBuckets().get("GLOBAL:10.0.0." + i);
+            if (b != null) {
+                b.setLastAccessTimeForTest(staleTime);
+            }
+        }
+
+        limiter.cleanupIfNeeded();
+
+        // Stale buckets must be removed
+        for (int i = 0; i < 100; i++) {
+            assertFalse("Stale bucket should have been cleaned up", limiter.getBuckets().containsKey("GLOBAL:10.0.0." + i));
+        }
+        // Active buckets must remain
+        assertTrue("Active bucket should be retained", limiter.getBuckets().containsKey("GLOBAL:10.0.0.500"));
+    }
 }
