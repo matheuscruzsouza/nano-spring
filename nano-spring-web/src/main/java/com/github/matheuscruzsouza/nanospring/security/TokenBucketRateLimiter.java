@@ -11,20 +11,24 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TokenBucketRateLimiter {
 
-    private static class Bucket {
+    public static class Bucket {
         private final double capacity;
         private final double refillTokensPerSecond;
         private double availableTokens;
         private long lastRefillTime;
+        private long lastAccessTime;
 
         public Bucket(double capacity, double refillTokensPerSecond) {
             this.capacity = capacity;
             this.refillTokensPerSecond = refillTokensPerSecond;
             this.availableTokens = capacity;
-            this.lastRefillTime = System.currentTimeMillis();
+            long now = System.currentTimeMillis();
+            this.lastRefillTime = now;
+            this.lastAccessTime = now;
         }
 
         public synchronized boolean tryConsume() {
+            lastAccessTime = System.currentTimeMillis();
             refill();
             if (availableTokens >= 1.0) {
                 availableTokens -= 1.0;
@@ -44,7 +48,11 @@ public class TokenBucketRateLimiter {
         }
 
         public synchronized boolean isStale() {
-            return (System.currentTimeMillis() - lastRefillTime) > 60000 && availableTokens >= capacity;
+            return (System.currentTimeMillis() - lastAccessTime) > 60000;
+        }
+
+        public synchronized void setLastAccessTimeForTest(long lastAccessTime) {
+            this.lastAccessTime = lastAccessTime;
         }
     }
 
@@ -90,7 +98,15 @@ public class TokenBucketRateLimiter {
         return clientIp != null && !clientIp.trim().isEmpty() ? clientIp.trim() : "unknown";
     }
 
-    private void cleanupIfNeeded() {
+    public void clear() {
+        buckets.clear();
+    }
+
+    Map<String, Bucket> getBuckets() {
+        return buckets;
+    }
+
+    void cleanupIfNeeded() {
         if (buckets.size() > 500) {
             for (Map.Entry<String, Bucket> entry : buckets.entrySet()) {
                 if (entry.getValue().isStale()) {
@@ -98,9 +114,5 @@ public class TokenBucketRateLimiter {
                 }
             }
         }
-    }
-
-    public void clear() {
-        buckets.clear();
     }
 }
