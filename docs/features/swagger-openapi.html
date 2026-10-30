@@ -15,7 +15,7 @@
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
       <span class="logo-icon">🌱</span>
       <span>Nano-Spring</span>
-      <span class="badge">v2.0.0</span>
+      <span class="badge">v2.4.0</span>
     </div>
 
     <div class="topbar-center">
@@ -92,7 +92,11 @@ nano.swagger.server-url=/
 nano.swagger.security.enabled=true
 nano.swagger.security.type=bearer          # bearer, apiKey ou basic
 nano.swagger.security.name=Authorization   # Nome do header (ex: Authorization ou X-Api-Key)
-nano.swagger.security.bearer-format=JWT    # Formato do token (ex: JWT)</code></pre>
+nano.swagger.security.bearer-format=JWT    # Formato do token (ex: JWT)
+
+# Customização do Layout / Estilo CSS (Opcional - substitui o CSS padrão)
+# Caminho para arquivo CSS em assets/ (ex: swagger.css) ou caminho absoluto
+nano.swagger.css-path=swagger.css</code></pre>
         </div>
 
         <h2 id="anotacoes">🏷️ Anotações Disponíveis</h2>
@@ -127,6 +131,11 @@ nano.swagger.security.bearer-format=JWT    # Formato do token (ex: JWT)</code></
                 <td><code>@ApiResponse(responseCode, description, responseClass)</code></td>
                 <td>Método (Repetível)</td>
                 <td>Documenta múltiplos códigos HTTP de retorno e schemas</td>
+              </tr>
+              <tr>
+                <td><code>@Hidden</code></td>
+                <td>Classe ou Método</td>
+                <td>Oculta completamente o endpoint ou o controller da documentação Swagger / OpenAPI</td>
               </tr>
             </tbody>
           </table>

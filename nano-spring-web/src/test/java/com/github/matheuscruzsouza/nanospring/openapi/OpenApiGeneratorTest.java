@@ -12,6 +12,7 @@ import com.github.matheuscruzsouza.nanospring.handler.ServerIndexHandler;
 import com.github.matheuscruzsouza.nanospring.http.HttpStatus;
 import com.github.matheuscruzsouza.nanospring.http.ResponseEntity;
 import com.github.matheuscruzsouza.nanospring.openapi.annotation.ApiResponse;
+import com.github.matheuscruzsouza.nanospring.openapi.annotation.Hidden;
 import com.github.matheuscruzsouza.nanospring.openapi.annotation.Operation;
 import com.github.matheuscruzsouza.nanospring.openapi.annotation.Parameter;
 import com.github.matheuscruzsouza.nanospring.openapi.annotation.Tag;
@@ -318,5 +319,50 @@ public class OpenApiGeneratorTest {
         assertNotNull(security);
         assertEquals(1, security.size());
         assertTrue(security.get(0).containsKey("apiKeyAuth"));
+    }
+
+    @Test
+    public void testHiddenEndpointAndController() throws Exception {
+        class SecretEndpoints {
+            @Hidden
+            public ResponseEntity<String> hiddenMethod() {
+                return ResponseEntity.ok("secret");
+            }
+
+            public ResponseEntity<String> visibleMethod() {
+                return ResponseEntity.ok("visible");
+            }
+        }
+
+        @Hidden
+        class EntirelySecretController {
+            public ResponseEntity<String> secretMethod() {
+                return ResponseEntity.ok("top-secret");
+            }
+        }
+
+        SecretEndpoints partialController = new SecretEndpoints();
+        Method hiddenMethod = SecretEndpoints.class.getMethod("hiddenMethod");
+        Method visibleMethod = SecretEndpoints.class.getMethod("visibleMethod");
+        ServerIndexHandler.register(NanoHTTPD.Method.GET, "/api/secret/hidden", partialController, hiddenMethod);
+        ServerIndexHandler.register(NanoHTTPD.Method.GET, "/api/secret/visible", partialController, visibleMethod);
+
+        EntirelySecretController secretController = new EntirelySecretController();
+        Method topSecretMethod = EntirelySecretController.class.getMethod("secretMethod");
+        ServerIndexHandler.register(NanoHTTPD.Method.GET, "/api/top-secret", secretController, topSecretMethod);
+
+        Map<String, Object> spec = OpenApiGenerator.generateSpec();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> paths = (Map<String, Object>) spec.get("paths");
+        assertNotNull(paths);
+
+        // Visible route should be present
+        assertTrue(paths.containsKey("/api/secret/visible"));
+
+        // Hidden method should not be present
+        assertFalse(paths.containsKey("/api/secret/hidden"));
+
+        // Hidden controller should not be present
+        assertFalse(paths.containsKey("/api/top-secret"));
     }
 }

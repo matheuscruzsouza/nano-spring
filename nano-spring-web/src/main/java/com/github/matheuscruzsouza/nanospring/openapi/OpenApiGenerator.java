@@ -8,6 +8,7 @@ import com.github.matheuscruzsouza.nanospring.annotation.ResponseStatus;
 import com.github.matheuscruzsouza.nanospring.handler.ServerIndexHandler;
 import com.github.matheuscruzsouza.nanospring.openapi.annotation.ApiResponse;
 import com.github.matheuscruzsouza.nanospring.openapi.annotation.ApiResponses;
+import com.github.matheuscruzsouza.nanospring.openapi.annotation.Hidden;
 import com.github.matheuscruzsouza.nanospring.openapi.annotation.Operation;
 import com.github.matheuscruzsouza.nanospring.openapi.annotation.Parameter;
 import com.github.matheuscruzsouza.nanospring.openapi.annotation.Tag;
@@ -138,6 +139,11 @@ public class OpenApiGenerator {
                 Map.Entry<Object, Method> entry = controllerMap.entrySet().iterator().next();
                 Object controller = entry.getKey();
                 Method method = entry.getValue();
+
+                if ((controller != null && controller.getClass().isAnnotationPresent(Hidden.class))
+                        || method.isAnnotationPresent(Hidden.class)) {
+                    continue;
+                }
 
                 Map<String, Object> operation = new LinkedHashMap<>();
 
@@ -274,6 +280,10 @@ public class OpenApiGenerator {
                 operation.put("responses", responses);
 
                 pathItem.put(methodLower, operation);
+            }
+
+            if (pathItem.isEmpty()) {
+                paths.remove(openApiPath);
             }
         }
 
