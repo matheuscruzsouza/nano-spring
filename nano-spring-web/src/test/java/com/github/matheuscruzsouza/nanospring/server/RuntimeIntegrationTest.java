@@ -50,6 +50,16 @@ public class RuntimeIntegrationTest {
         public String secure() {
             return "Secret Data";
         }
+
+        @GetMethod("/stream")
+        public java.io.File streamAudio() throws Exception {
+            java.io.File tmp = java.io.File.createTempFile("stream-test-", ".mp3");
+            tmp.deleteOnExit();
+            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tmp)) {
+                fos.write("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes());
+            }
+            return tmp;
+        }
     }
 
     @Before

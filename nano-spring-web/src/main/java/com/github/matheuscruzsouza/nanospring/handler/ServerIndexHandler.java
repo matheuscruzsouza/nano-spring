@@ -419,11 +419,16 @@ public class ServerIndexHandler {
 
             if (result instanceof java.io.File) {
                 java.io.File f = (java.io.File) result;
-                try {
-                    finalResponse = NanoHTTPD.newChunkedResponse(responseStatus, effectiveMimeType, new java.io.FileInputStream(f));
-                    finalResponse.addHeader("Content-Disposition", "attachment; filename=\"" + f.getName() + "\"");
-                } catch (Exception e) {
-                    return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Erro lendo arquivo: " + e.getMessage());
+                finalResponse = com.github.matheuscruzsouza.nanospring.storage.ByteRangeHandler.serveFile(session, f, effectiveMimeType);
+                if (finalResponse.getStatus() == NanoHTTPD.Response.Status.OK) {
+                    finalResponse.setStatus(responseStatus);
+                }
+                finalResponse.addHeader("Content-Disposition", "attachment; filename=\"" + f.getName() + "\"");
+            } else if (result instanceof com.github.matheuscruzsouza.nanospring.storage.ResourceRegion) {
+                com.github.matheuscruzsouza.nanospring.storage.ResourceRegion rr = (com.github.matheuscruzsouza.nanospring.storage.ResourceRegion) result;
+                finalResponse = com.github.matheuscruzsouza.nanospring.storage.ByteRangeHandler.serveResource(session, rr);
+                if (finalResponse.getStatus() == NanoHTTPD.Response.Status.OK) {
+                    finalResponse.setStatus(responseStatus);
                 }
             } else if (result instanceof com.github.matheuscruzsouza.nanospring.sse.SseEmitter) {
                 final com.github.matheuscruzsouza.nanospring.sse.SseEmitter emitter = (com.github.matheuscruzsouza.nanospring.sse.SseEmitter) result;

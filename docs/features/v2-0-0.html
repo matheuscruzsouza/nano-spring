@@ -85,7 +85,34 @@ nano.swagger.css-path=swagger-theme.css</code></pre>
         </div>
 
         <h2 id="historico-230">🔐 Histórico: Novidades da v2.3.0</h2>
-        <p>A versão <strong>2.3.0</strong> adicionou a interface <code>AuthenticationProvider</code> para suporte a autenticação customizada (JWT Bearer Token, API Key) no <code>@Authenticated</code>.</p>
+        <p>A versão <strong>2.3.0</strong> adicionou a interface <code>AuthenticationProvider</code> para suporte a autenticação customizada (JWT Bearer Token, API Key) no <code>@Authenticated</code>:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">Exemplo: Implementando validação de JWT no @Authenticated</span>
+          </div>
+          <pre><code class="language-java">@Service
+public class JwtAuthenticationProvider implements AuthenticationProvider {
+
+    @Override
+    public boolean authenticate(NanoHTTPD.IHTTPSession session) {
+        String authHeader = session.getHeaders().get("authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return false;
+        }
+
+        String token = authHeader.substring(7);
+        return JwtValidator.validate(token);
+    }
+}</code></pre>
+        </div>
+
+        <h2 id="historico-220">🎧 Histórico: Novidades da v2.2.0</h2>
+        <p>A versão <strong>2.2.0</strong> adicionou suporte nativo a <strong>Byte Range Requests (HTTP 206 Partial Content)</strong> conforme a <strong>RFC 7233</strong>:</p>
+        <ul>
+          <li><strong>Zero Memory Buffering</strong>: Seek direto via <code>FileChannel</code> sem alocar buffers no heap do Android.</li>
+          <li><strong>ResourceRegion & BoundedInputStream</strong>: Streaming de áudio/vídeo e arquivos locais com encerramento determinístico.</li>
+        </ul>
 
         <h2 id="historico-211">📦 Histórico: Novidades da v2.1.1</h2>
         <p>A versão <strong>2.1.1</strong> foi uma atualização de manutenção e correção crítica focada em formulários HTML e binding de parâmetros:</p>
@@ -143,7 +170,9 @@ public ResponseEntity&lt;Map&lt;String, String&gt;&gt; processar(@RequestParam M
         <li><a href="#feature-hidden">Anotação @Hidden</a></li>
         <li><a href="#feature-swagger-css">Customização Swagger CSS</a></li>
         <li><a href="#historico-230">Histórico v2.3.0</a></li>
+        <li><a href="#historico-220">Histórico v2.2.0</a></li>
         <li><a href="#historico-211">Histórico v2.1.1</a></li>
+        <li><a href="#patch-requestparam">@RequestParam Map</a></li>
         <li><a href="#historico-210">Histórico v2.1.0</a></li>
         <li><a href="#historico-200">Histórico v2.0.0</a></li>
       </ul>
