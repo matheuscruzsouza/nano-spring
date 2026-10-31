@@ -1,5 +1,6 @@
 package com.github.matheuscruzsouza.nanospring.storage;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -8,9 +9,12 @@ import java.nio.channels.FileChannel;
 
 public class FileResourceRegion implements ResourceRegion {
 
+    private static final int DEFAULT_BUFFER_SIZE = 64 * 1024;
+
     private final File file;
     private final String contentType;
     private FileInputStream currentInputStream;
+    private InputStream bufferedStream;
 
     public FileResourceRegion(File file) {
         this(file, null);
@@ -44,24 +48,29 @@ public class FileResourceRegion implements ResourceRegion {
         currentInputStream = new FileInputStream(file);
         FileChannel channel = currentInputStream.getChannel();
         channel.position(position);
+        bufferedStream = new BufferedInputStream(currentInputStream, DEFAULT_BUFFER_SIZE);
     }
 
     @Override
     public InputStream openStream() throws IOException {
         if (currentInputStream == null) {
             currentInputStream = new FileInputStream(file);
+            bufferedStream = new BufferedInputStream(currentInputStream, DEFAULT_BUFFER_SIZE);
         }
-        return currentInputStream;
+        return bufferedStream;
     }
 
     @Override
     public void close() throws IOException {
-        if (currentInputStream != null) {
-            try {
+        try {
+            if (bufferedStream != null) {
+                bufferedStream.close();
+            } else if (currentInputStream != null) {
                 currentInputStream.close();
-            } finally {
-                currentInputStream = null;
             }
+        } finally {
+            bufferedStream = null;
+            currentInputStream = null;
         }
     }
 }

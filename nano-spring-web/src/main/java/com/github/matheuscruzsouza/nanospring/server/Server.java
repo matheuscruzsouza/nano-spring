@@ -269,6 +269,28 @@ public class Server extends RouterNanoHTTPD {
         return super.serve(session);
     }
 
+    @Override
+    protected boolean useGzipWhenAccepted(NanoHTTPD.Response r) {
+        if (r == null) return false;
+        String mime = r.getMimeType();
+        if (mime != null) {
+            String lower = mime.toLowerCase();
+            if (lower.startsWith("video/")
+                    || lower.startsWith("audio/")
+                    || lower.startsWith("image/")
+                    || lower.equals("application/octet-stream")
+                    || lower.equals("application/zip")
+                    || lower.equals("application/pdf")
+                    || lower.equals("text/event-stream")) {
+                return false;
+            }
+        }
+        if (r.getHeader("Accept-Ranges") != null || r.getHeader("Content-Range") != null) {
+            return false;
+        }
+        return super.useGzipWhenAccepted(r);
+    }
+
     public void applyCorsHeaders(NanoHTTPD.Response response) {
         if (response == null || corsConfig == null || !corsConfig.isEnabled()) return;
         response.addHeader("Access-Control-Allow-Origin", corsConfig.getAllowedOrigins());

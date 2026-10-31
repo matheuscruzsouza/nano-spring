@@ -16,6 +16,9 @@ import java.net.UnknownHostException;
  */
 public class FastSocketWrapper extends Socket {
 
+    private static final int DEFAULT_SOCKET_SEND_BUFFER = 256 * 1024;
+    private static final int DEFAULT_SOCKET_RECV_BUFFER = 128 * 1024;
+
     private final Socket delegate;
     private final InetAddress fastInetAddress;
 
@@ -23,6 +26,8 @@ public class FastSocketWrapper extends Socket {
         this.delegate = delegate;
         try {
             this.delegate.setTcpNoDelay(true);
+            this.delegate.setSendBufferSize(DEFAULT_SOCKET_SEND_BUFFER);
+            this.delegate.setReceiveBufferSize(DEFAULT_SOCKET_RECV_BUFFER);
         } catch (SocketException ignored) {
         }
         this.fastInetAddress = buildPreResolvedAddress(delegate.getInetAddress());
