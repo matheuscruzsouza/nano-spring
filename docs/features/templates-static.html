@@ -165,7 +165,7 @@ public String fragmentoStatus() {
         └── android.png</code></pre>
         </div>
 
-        <p>Qualquer arquivo aí dentro é servido imediatamente com o MIME-type adequado em <code>http://&lt;servidor&gt;:porta/static/...</code>:</p>
+        <p>Qualquer arquivo aí dentro é servido imediatamente com o MIME-type adequado e cabeçalho de cache HTTP (<code>Cache-Control: public, max-age=3600</code>) em <code>http://&lt;servidor&gt;:porta/static/...</code>:</p>
 
         <div class="code-wrapper">
           <div class="code-header">

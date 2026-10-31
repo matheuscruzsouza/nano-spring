@@ -64,7 +64,7 @@ server.ssl.protocols=TLSv1.2,TLSv1.3
 Nano-Spring provides an in-memory **Token Bucket** rate limiter (`TokenBucketRateLimiter`) to protect resource-constrained Android devices from high-volume DoS bursts.
 
 #### How It Works
-- **Algorithm**: In-Memory Token Bucket. Each incoming request consumes 1 token. Tokens refill continuously over time up to the configured burst capacity. When a bucket has fewer than 1 token available, requests are rejected immediately. Stale client buckets (idle for over 60 seconds at full capacity) are automatically pruned when the cache exceeds 500 entries to prevent memory leaks on Android.
+- **Algorithm**: In-Memory Token Bucket. Each incoming request consumes 1 token. Tokens refill continuously over time up to the configured burst capacity. When a bucket has fewer than 1 token available, requests are rejected immediately. Stale client buckets (idle for over 60 seconds based on last request activity) are automatically pruned when the cache exceeds 500 entries to prevent memory leaks on Android.
 - **Client Identification**: Clients are identified per remote IP address (`session.getRemoteIpAddress()`). Bucket keys are isolated by IP for global checks (`GLOBAL:<ip>`) and by endpoint + IP for route checks (`ROUTE:<Class>#<method>:<ip>`).
 - **HTTP 429 Response**: When limits are exceeded, the server immediately returns `429 Too Many Requests` (`application/json`) with a `Retry-After` response header:
   ```json
@@ -175,7 +175,7 @@ nano.nsd.type=_http._tcp
 
 ## 6. HTML & Mustache Templates
 
-Render static files from `assets/static/` or dynamic views from `assets/templates/` with `ModelAndView`:
+Render static files from `assets/static/` (automatically served with `Cache-Control: public, max-age=3600`) or dynamic views from `assets/templates/` with `ModelAndView`:
 
 ```java
 @GetMethod("/dashboard")
