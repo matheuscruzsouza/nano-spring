@@ -17,7 +17,34 @@ public final class ByteRangeHandler {
         if (file == null || !file.exists()) {
             return NanoHTTPD.newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "File not found");
         }
-        return serveResource(session, new FileResourceRegion(file, mimeType));
+        String resolvedMime = (mimeType == null || mimeType.trim().isEmpty() || "application/json".equalsIgnoreCase(mimeType))
+                ? detectMediaMimeType(file.getName())
+                : mimeType;
+        return serveResource(session, new FileResourceRegion(file, resolvedMime));
+    }
+
+    public static String detectMediaMimeType(String filename) {
+        if (filename == null) return "application/octet-stream";
+        String lower = filename.toLowerCase();
+        if (lower.endsWith(".mp4") || lower.endsWith(".m4v")) return "video/mp4";
+        if (lower.endsWith(".mkv")) return "video/x-matroska";
+        if (lower.endsWith(".webm")) return "video/webm";
+        if (lower.endsWith(".avi")) return "video/x-msvideo";
+        if (lower.endsWith(".mov")) return "video/quicktime";
+        if (lower.endsWith(".ts")) return "video/mp2t";
+        if (lower.endsWith(".mp3")) return "audio/mpeg";
+        if (lower.endsWith(".m4a") || lower.endsWith(".aac")) return "audio/mp4";
+        if (lower.endsWith(".wav")) return "audio/wav";
+        if (lower.endsWith(".ogg") || lower.endsWith(".oga")) return "audio/ogg";
+        if (lower.endsWith(".flac")) return "audio/flac";
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+        if (lower.endsWith(".png")) return "image/png";
+        if (lower.endsWith(".gif")) return "image/gif";
+        if (lower.endsWith(".webp")) return "image/webp";
+        if (lower.endsWith(".svg")) return "image/svg+xml";
+        if (lower.endsWith(".pdf")) return "application/pdf";
+        if (lower.endsWith(".zip")) return "application/zip";
+        return "application/octet-stream";
     }
 
     public static Response serveResource(IHTTPSession session, ResourceRegion resource) {
@@ -40,6 +67,7 @@ public final class ByteRangeHandler {
                         in,
                         totalLength
                 );
+                response.setGzipEncoding(false);
                 response.addHeader("Accept-Ranges", "bytes");
                 response.addHeader("Content-Length", String.valueOf(totalLength));
                 return response;
@@ -112,6 +140,7 @@ public final class ByteRangeHandler {
                     chunkLength
             );
 
+            response.setGzipEncoding(false);
             response.addHeader("Accept-Ranges", "bytes");
             response.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + totalLength);
             response.addHeader("Content-Length", String.valueOf(chunkLength));

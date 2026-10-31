@@ -419,7 +419,10 @@ public class ServerIndexHandler {
 
             if (result instanceof java.io.File) {
                 java.io.File f = (java.io.File) result;
-                finalResponse = com.github.matheuscruzsouza.nanospring.storage.ByteRangeHandler.serveFile(session, f, effectiveMimeType);
+                String fileMime = DEFAULT_MIMETYPE.equals(effectiveMimeType)
+                        ? com.github.matheuscruzsouza.nanospring.storage.ByteRangeHandler.detectMediaMimeType(f.getName())
+                        : effectiveMimeType;
+                finalResponse = com.github.matheuscruzsouza.nanospring.storage.ByteRangeHandler.serveFile(session, f, fileMime);
                 if (finalResponse.getStatus() == NanoHTTPD.Response.Status.OK) {
                     finalResponse.setStatus(responseStatus);
                 }

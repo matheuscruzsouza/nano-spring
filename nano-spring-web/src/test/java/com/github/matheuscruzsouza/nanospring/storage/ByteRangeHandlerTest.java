@@ -148,4 +148,21 @@ public class ByteRangeHandlerTest {
         assertEquals(HttpStatus.RANGE_NOT_SATISFIABLE, response.getStatus());
         assertEquals("bytes */" + content.length(), response.getHeader("Content-Range"));
     }
+
+    @Test
+    public void testAutoDetectMediaMimeTypeWhenDefaultJsonIsPassed() throws IOException {
+        File mp4File = File.createTempFile("video-test-", ".mp4");
+        try {
+            try (FileOutputStream fos = new FileOutputStream(mp4File)) {
+                fos.write(content.getBytes());
+            }
+            NanoHTTPD.IHTTPSession session = Mockito.mock(NanoHTTPD.IHTTPSession.class);
+            when(session.getHeaders()).thenReturn(new HashMap<>());
+
+            NanoHTTPD.Response response = ByteRangeHandler.serveFile(session, mp4File, "application/json");
+            assertEquals("video/mp4", response.getMimeType());
+        } finally {
+            mp4File.delete();
+        }
+    }
 }

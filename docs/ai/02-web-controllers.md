@@ -15,8 +15,13 @@ Importe SEMPRE de `com.github.matheuscruzsouza.nanospring.annotation.*`.
 - `@RateLimit(requests = 10, durationSeconds = 1)`: Limita a taxa de requisições por IP na rota ou controller (importar de `com.github.matheuscruzsouza.nanospring.security.RateLimit`).
 
 ## Respostas HTTP
-O Nano-Spring possui a classe `ResponseEntity` (não use a do Spring) no pacote `com.github.matheuscruzsouza.nanospring.server.ResponseEntity` (ou similar). 
+O Nano-Spring possui a classe `ResponseEntity` (não use a do Spring) no pacote `com.github.matheuscruzsouza.nanospring.http.ResponseEntity`. 
 No entanto, os controllers podem retornar diretamente o objeto, que será serializado para JSON usando Gson.
+
+### Download de Arquivos e Streaming de Mídia (`File` e `ResourceRegion`)
+Para servir arquivos grandes, vídeos ou áudios com suporte nativo a `Range` (`206 Partial Content`), leitura bufferizada (64 KB) e sem compressão GZIP desnecessária:
+- Retorne `java.io.File` diretamente (o MIME type é detectado automaticamente pela extensão do arquivo e inclui `Content-Disposition: attachment`).
+- Ou retorne `FileResourceRegion` (`com.github.matheuscruzsouza.nanospring.storage.FileResourceRegion`) para streaming inline no player/navegador.
 
 ## Exemplo Completo
 

@@ -112,8 +112,9 @@ public class PaymentController {
 
 ---
 
-## 2. File Uploads & Downloads
+## 2. File Uploads, Downloads & Media Streaming
 
+### File Uploads (`@UploadedFile`)
 Inject uploaded files with `@UploadedFile`:
 
 ```java
@@ -121,6 +122,28 @@ Inject uploaded files with `@UploadedFile`:
 public ResponseEntity<String> handleUpload(@UploadedFile("file") File file) {
     long size = file.length();
     return ResponseEntity.ok("Received file size: " + size);
+}
+```
+
+### High-Performance File Downloads & Media Streaming (`File` / `ResourceRegion`)
+Nano-Spring supports `HTTP Range` requests (`206 Partial Content`, `Accept-Ranges: bytes`) out-of-the-box via `ByteRangeHandler` and `FileResourceRegion`, enabling video/audio seeking and resumable downloads without loading files into the heap:
+
+- **Automatic MIME Detection**: Returning a `java.io.File` directly from a controller method automatically resolves common media MIME types (`.mp4`, `.mkv`, `.webm`, `.mp3`, `.flac`, `.jpg`, `.png`, `.pdf`, `.zip`, etc.) when no explicit `mimeType` is set on `@GetMethod`.
+- **Zero-GZIP Overhead on Media**: Binary and media streams (`video/*`, `audio/*`, `image/*`, `application/octet-stream`, `application/zip`, `application/pdf`, and `Range` responses) explicitly bypass GZIP compression so CPU and battery are not wasted compressing already-compressed media.
+- **Buffered Disk & Socket I/O**: `FileResourceRegion` uses a **64 KB** `BufferedInputStream` over `FileChannel` seeks, paired with enlarged TCP socket buffers (`SO_SNDBUF = 256 KB`, `SO_RCVBUF = 128 KB`) in `FastSocketWrapper` for high-throughput LAN and VPN transfers.
+
+```java
+// Option A: Return File directly (auto-detects MIME type and supports Range headers)
+@GetMethod("/media/video")
+public File downloadVideo() {
+    return new File("/sdcard/Movies/sample.mp4");
+}
+
+// Option B: Return FileResourceRegion for inline media playback
+@GetMethod("/media/stream")
+public ResourceRegion streamVideo() {
+    File video = new File("/sdcard/Movies/sample.mp4");
+    return new FileResourceRegion(video, "video/mp4");
 }
 ```
 
