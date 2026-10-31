@@ -46,7 +46,19 @@ public class ThreadPoolAsyncRunner implements NanoHTTPD.AsyncRunner {
         this.queueCapacity = queueCapacity;
         this.keepAliveSeconds = keepAliveSeconds;
 
-        BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(queueCapacity);
+        BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueCapacity) {
+            @Override
+            public boolean offer(Runnable runnable) {
+                if (executor != null && executor.getPoolSize() < maxPoolSize) {
+                    return false;
+                }
+                return super.offer(runnable);
+            }
+
+            public boolean forceOffer(Runnable runnable) {
+                return super.offer(runnable);
+            }
+        };
         ThreadFactory threadFactory = new ThreadFactory() {
             private final AtomicInteger threadIndex = new AtomicInteger(1);
 
@@ -65,7 +77,21 @@ public class ThreadPoolAsyncRunner implements NanoHTTPD.AsyncRunner {
                 keepAliveSeconds,
                 TimeUnit.SECONDS,
                 queue,
-                threadFactory
+                threadFactory,
+                (r, exec) -> {
+                    if (!exec.isShutdown()) {
+                        try {
+                            boolean accepted = (Boolean) queue.getClass()
+                                    .getMethod("forceOffer", Runnable.class)
+                                    .invoke(queue, r);
+                            if (accepted) {
+                                return;
+                            }
+                        } catch (Exception ignored) {
+                        }
+                    }
+                    throw new RejectedExecutionException("Request pool capacity saturated");
+                }
         );
     }
 

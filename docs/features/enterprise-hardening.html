@@ -15,7 +15,7 @@
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
       <span class="logo-icon">🌱</span>
       <span>Nano-Spring</span>
-      <span class="badge">v2.4.0</span>
+      <span class="badge">v2.4.1</span>
     </div>
 
     <div class="topbar-center">
@@ -62,7 +62,7 @@
 
         <h2 id="thread-pool">1. Pool de Threads Controlado (Anti-OOM)</h2>
         <p>O NanoHTTPD original cria uma nova thread nativa no Linux para cada requisição recebida. Sob picos de tráfego em aparelhos modestos (1 GB de RAM), o sistema operacional encerra a aplicação com <code>OutOfMemoryError: unable to create new native thread</code>.</p>
-        <p>O <code>ThreadPoolAsyncRunner</code> substitui o executor padrão por um pool delimitado com fila de espera:</p>
+        <p>O <code>ThreadPoolAsyncRunner</code> substitui o executor padrão por um pool delimitado com fila de espera e escalonamento imediato (scale-first: cria threads de trabalho até <code>maxPoolSize</code> antes de enfileirar requisições pendentes):</p>
 
         <div class="code-wrapper">
           <div class="code-header">

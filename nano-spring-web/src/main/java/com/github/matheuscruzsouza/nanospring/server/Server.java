@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import com.github.matheuscruzsouza.nanospring.server.internal.FastSocketWrapper;
 import com.github.matheuscruzsouza.nanospring.server.internal.ThreadPoolAsyncRunner;
 
 import dalvik.system.DexFile;
@@ -171,6 +172,11 @@ public class Server extends RouterNanoHTTPD {
     }
 
     @Override
+    protected NanoHTTPD.ClientHandler createClientHandler(final java.net.Socket finalAccept, final java.io.InputStream inputStream) {
+        return super.createClientHandler(new FastSocketWrapper(finalAccept), inputStream);
+    }
+
+    @Override
     public void stop() {
         for (ApplicationInitializer initializer : initializers) {
             initializer.onStop();
@@ -276,7 +282,9 @@ public class Server extends RouterNanoHTTPD {
             String assetPath = uri.substring(1); 
             java.io.InputStream is = context.getAssets().open(assetPath);
             String mimeType = detectMimeType(uri);
-            return NanoHTTPD.newChunkedResponse(NanoHTTPD.Response.Status.OK, mimeType, is);
+            NanoHTTPD.Response res = NanoHTTPD.newChunkedResponse(NanoHTTPD.Response.Status.OK, mimeType, is);
+            res.addHeader("Cache-Control", "public, max-age=3600");
+            return res;
         } catch (java.io.IOException e) {
             return NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.NOT_FOUND, "text/plain", "File Not Found: " + uri);
         }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Versão 2.4.0 | Notas de Versão | Nano-Spring 🌱</title>
+  <title>Versão 2.4.1 | Notas de Versão | Nano-Spring 🌱</title>
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
 </head>
@@ -14,7 +14,7 @@
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
       <span class="logo-icon">🌱</span>
       <span>Nano-Spring</span>
-      <span class="badge">v2.4.0</span>
+      <span class="badge">v2.4.1</span>
     </div>
     <div class="topbar-center">
       <button class="search-btn" aria-label="Buscar na documentação">
@@ -39,12 +39,32 @@
 
     <main class="main-content">
       <div class="content">
-        <div class="hero-pill">🚀 Versão 2.4.0 - Customização e Controle do Swagger OpenAPI</div>
-        <h1>Notas de Versão 2.4.0 (Minor Release)</h1>
+        <div class="hero-pill">🚀 Versão 2.4.1 - Performance de Rede, Concorrência e Suporte ao Android SDK 36</div>
+        <h1>Notas de Versão 2.4.1 (Patch Release)</h1>
         
-        <p class="lead">A versão <strong>2.4.0</strong> introduz a anotação <code>@Hidden</code> para controle granular de visibilidade no OpenAPI e a capacidade de substituição completa do estilo CSS da interface do Swagger UI via arquivo externo configurado em <code>application.properties</code>.</p>
+        <p class="lead">A versão <strong>2.4.1</strong> traz otimizações críticas de latência de socket e escalonamento do pool de threads, expiração baseada em inatividade no Rate Limiter, cache HTTP para assets estáticos e suporte oficial ao Android SDK 36 com AGP 8.7.3 e Gradle 8.10.2.</p>
 
-        <h2 id="feature-hidden">🙈 Anotação <code>@Hidden</code></h2>
+        <h2 id="patch-network-socket">⚡ Otimização de Socket: <code>FastSocketWrapper</code> (Zero Reverse DNS &amp; TCP_NODELAY)</h2>
+        <p>Em redes VPN virtuais (como ZeroTier e Tailscale) ou redes locais sem servidor DNS reverso, chamadas internas a <code>InetAddress.getHostName()</code> podiam bloquear conexões por vários segundos aguardando timeout de registros PTR. O novo <code>FastSocketWrapper</code> resolve isso na camada de transporte:</p>
+        <ul>
+          <li><strong>Zero Reverse DNS Lookup</strong>: Pré-popula o hostname do <code>InetAddress</code> com o próprio endereço IP em 0ms, eliminando bloqueios de DNS reverso.</li>
+          <li><strong><code>TCP_NODELAY</code> Ativo</strong>: Desabilita o algoritmo de Nagle nos sockets aceitos para envio imediato de pacotes HTTP e eventos SSE sem atraso de bufferização.</li>
+        </ul>
+
+        <h2 id="patch-thread-pool">🧵 Escalonamento Rápido no <code>ThreadPoolAsyncRunner</code></h2>
+        <p>O pool de threads do servidor HTTP agora prioriza a criação de threads de trabalho até atingir <code>maxPoolSize</code> antes de enfileirar tarefas na <code>LinkedBlockingQueue</code>. Isso evita que requisições concorrentes aguardem na fila enquanto o pool ainda possui capacidade de processamento ociosa.</p>
+
+        <h2 id="patch-static-cache">📦 Cache HTTP em Arquivos Estáticos e Expiração no Rate Limiter</h2>
+        <ul>
+          <li><strong>Cache-Control em <code>/static/</code></strong>: Respostas de assets estáticos agora incluem o cabeçalho <code>Cache-Control: public, max-age=3600</code>, reduzindo tráfego repetitivo e consumo de CPU/bateria.</li>
+          <li><strong>Limpeza de Buckets no <code>TokenBucketRateLimiter</code></strong>: A remoção de buckets ociosos agora rastreia o timestamp real da última requisição por cliente (expirando após 60s de inatividade), prevenindo vazamento de memória mesmo para clientes com tokens parcialmente consumidos.</li>
+          <li><strong>Build &amp; SDK 36</strong>: Atualização do Android Gradle Plugin para <strong>8.7.3</strong> e Gradle Wrapper para <strong>8.10.2</strong> com suporte nativo ao <code>compileSdk 36</code>.</li>
+        </ul>
+
+        <h2 id="historico-240">🎨 Histórico: Novidades da v2.4.0</h2>
+        <p>A versão <strong>2.4.0</strong> introduziu a anotação <code>@Hidden</code> para controle granular de visibilidade no OpenAPI e a capacidade de substituição completa do estilo CSS da interface do Swagger UI via arquivo externo configurado em <code>application.properties</code>.</p>
+
+        <h3 id="feature-hidden">🙈 Anotação <code>@Hidden</code></h3>
         <p>Permite ocultar completamente rotas ou controllers inteiros da especificação gerada em <code>/v3/api-docs</code> e da interface interativa <code>/swagger-ui</code>:</p>
 
         <div class="code-wrapper">
@@ -73,7 +93,7 @@ public class AdminController {
 }</code></pre>
         </div>
 
-        <h2 id="feature-swagger-css">🎨 Customização de CSS do Swagger UI</h2>
+        <h3 id="feature-swagger-css">🎨 Customização de CSS do Swagger UI</h3>
         <p>Agora é possível injetar seu próprio tema ou layout CSS substituindo o CSS padrão embutido do Swagger:</p>
 
         <div class="code-wrapper">
@@ -167,8 +187,10 @@ public ResponseEntity&lt;Map&lt;String, String&gt;&gt; processar(@RequestParam M
     <aside class="toc-sidebar">
       <div class="toc-title">Nesta Página</div>
       <ul class="toc-list">
-        <li><a href="#feature-hidden">Anotação @Hidden</a></li>
-        <li><a href="#feature-swagger-css">Customização Swagger CSS</a></li>
+        <li><a href="#patch-network-socket">FastSocketWrapper &amp; TCP_NODELAY</a></li>
+        <li><a href="#patch-thread-pool">Escalonamento de Threads</a></li>
+        <li><a href="#patch-static-cache">Cache Estático &amp; Rate Limiter</a></li>
+        <li><a href="#historico-240">Histórico v2.4.0</a></li>
         <li><a href="#historico-230">Histórico v2.3.0</a></li>
         <li><a href="#historico-220">Histórico v2.2.0</a></li>
         <li><a href="#historico-211">Histórico v2.1.1</a></li>
