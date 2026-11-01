@@ -75,35 +75,48 @@ com.example.myapp/
 ## 3. Padrão de Separação de Interfaces: Web vs Android Nativo
 
 > [!IMPORTANT]
-> **A interface Web (HTTP / REST / Dashboard) e a interface nativa do Android (Activity / Compose / XML) devem ser completamente desacopladas.**
+> **A interface Web (HTTP / REST / HTMX) e a interface do aplicativo Android DEVEM ser completamente apartadas.**  
+> - **Interface Android 100% Nativa (Sem WebView para a UI principal):** É expressamente preferível que a interface do usuário do dispositivo Android seja implementada usando componentes nativos da plataforma (Jetpack Compose, XML/Material Components, ViewModels) em vez de incorporar uma `WebView` apontando para o próprio servidor local (`localhost`).
+> - **Finalidade da Interface Web:** A interface web (`controller/`, templates Mustache, HTMX, REST) existe para servir **clientes externos** na rede local (computadores, outros celulares, totens, PDVs, dashboards externos em navegadores), e **não** como substituto da interface nativa do próprio aparelho hospedeiro.
 
-A aplicação atua simultaneamente como um servidor e como um aplicativo móvel local. Para manter a estabilidade e a modularidade:
+A aplicação atua simultaneamente como um servidor de infraestrutura e como um aplicativo móvel local. Para manter a estabilidade, performance e a modularidade:
 
 ### 3.1 Responsabilidades de Cada Interface
 
 | Aspecto | Interface Android Nativa (`ui/`, Activities, Compose) | Interface Web / HTTP (`controller/`, HTML/Assets, REST) |
 | :--- | :--- | :--- |
-| **Público / Consumidor** | O operador segurando o dispositivo físico. | Clientes externos na rede local, navegadores, totens, PDVs ou dashboards web. |
-| **Papel Principal** | Painel de controle, status do servidor (IP, porta, logs, bateria), inicialização e permissões. | Expor regras de negócio, dados, APIs REST, Server-Sent Events (SSE) ou servir assets estáticos/SPAs (`assets/static/`). |
+| **Tecnologia Adotada** | **100% Nativa** (Jetpack Compose ou Layouts XML/ViewBinding). **Evitar WebViews.** | **HTMX + Templates Mustache** via `ModelAndView` ou JSON REST via `ResponseEntity`. |
+| **Público / Consumidor** | O operador segurando o dispositivo físico hospedeiro. | Clientes externos na rede local, navegadores remotos, totens, PDVs ou dashboards web. |
+| **Papel Principal** | Painel de controle, status do servidor (IP, porta, logs, bateria), inicialização e permissões. | Expor regras de negócio, dados, APIs REST, Server-Sent Events (SSE) ou servir páginas administrativas para a rede. |
 | **Dependência de Ciclo de Vida** | Vinculada ao ciclo de vida de UI do Android (`Activity`, `Fragment`, recomposição de telas). Pode ser destruída em rotação ou quando o app vai para background. | Persistente, executada dentro do `NanoSpringService` (Foreground Service), operando independentemente da UI do Android estar visível ou destruída. |
 
-### 3.2 Regras de Ouro de Isolamento
+### 3.2 Por que Evitar WebView na Interface do Android?
 
-1. **A camada Web não depende de Views nativas:**
+1. **Eficiência de Memória & Hardware:** Dispositivos Android embarcados ou mais antigos possuem restrições severas de RAM. Uma instância de `WebView` carrega um processo Chromium completo, consumindo de 80 MB a 150 MB de memória RAM adicional, enquanto uma UI nativa (Compose ou XML) opera dentro do footprint previsível de 15 MB a 40 MB do app.
+2. **Ciclo de Vida Conflitante:** Recarregar a `WebView` durante rotações de tela ou pausá-la ao trocar de aplicativo pode interromper requisições e sockets em andamento.
+3. **Experiência do Usuário (UX):** Telas nativas oferecem fluidez imediata, suporte a gestos do sistema, transições suaves e integração direta com o ciclo de vida do Android sem latência de rendering de DOM.
+
+### 3.3 Regras de Ouro de Isolamento
+
+1. **A UI Android é nativa e independente do servidor:**
+   - A interface do aparelho (`MainActivity`, telas Compose/XML) deve ser desenhada com componentes nativos do Android.
+   - Não crie Activities cujo único propósito seja envelopar uma `WebView` carregando `http://localhost:8080/`.
+
+2. **A camada Web não depende de Views nativas:**
    - Controllers (`@RestController`) e Services (`@Service`) **nunca** devem receber referências a `Activity`, `View`, `Context` com leak de interface ou elementos de UI nativa.
    - O único `Context` compartilhado com o servidor é o `ApplicationContext` (disponível via `NanoSpringService`).
 
-2. **A UI Android é apenas cliente/observadora do Backend:**
-   - A `MainActivity` ou os componentes nativos de tela devem interagir com o backend gerenciando o serviço (`startForegroundService` / `stopService`) ou consumindo o backend via cliente HTTP local (`http://localhost:8080`) / repositórios e serviços compartilhados em background.
+3. **A UI Android comunica-se de forma desacoplada:**
+   - A `MainActivity` ou os componentes nativos de tela devem interagir com o backend gerenciando o serviço (`startForegroundService` / `stopService`) ou consumindo o backend via cliente HTTP local / repositórios e serviços compartilhados em background.
    - Mudanças de estado para a UI devem ser comunicadas de forma desacoplada (via `LiveData`, `StateFlow`, `BroadcastReceiver` ou `EventBus`), nunca chamando métodos diretos de UI a partir do fluxo de execução do servidor HTTP.
 
-3. **Interface Web com HTMX e Templates HTML (Sem HTML Inline):**
+4. **Interface Web com HTMX e Templates HTML (Sem HTML Inline):**
    - **É terminantemente desencorajado e fora de padrão concatenar ou retornar HTML inline (strings com tags HTML hardcoded) dentro dos controllers.**
-   - A renderização dinâmica Server-Side deve adotar **HTMX** em conjunto com a engine de templates Mustache do Nano-Spring via `ModelAndView` (`com.github.matheuscruzsouza.nanospring.ui.ModelAndView`).
+   - A renderização dinâmica Server-Side para os clientes de rede deve adotar **HTMX** em conjunto com a engine de templates Mustache do Nano-Spring via `ModelAndView` (`com.github.matheuscruzsouza.nanospring.ui.ModelAndView`).
    - Todos os arquivos de template HTML devem residir exclusivamente em `app/src/main/assets/templates/` (ex.: `painel.html`, `partials/produto-linha.html`).
    - O HTMX permite interações reativas e trocas parciais de tela (swaps) sob demanda sem a complexidade ou consumo de memória de frameworks SPA pesados no dispositivo Android.
 
-4. **Arquivos Estáticos da Web:**
+5. **Arquivos Estáticos da Web:**
    - Assets estáticos como a biblioteca `htmx.min.js`, scripts JS, CSS e imagens devem residir em `app/src/main/assets/static/` e são servidos automaticamente sob a rota `/static/*` com headers de cache apropriados.
 
 #### Exemplo de Padrão Web: HTMX + ModelAndView
@@ -678,8 +691,9 @@ nano.nsd.host-resolution=true
 ## 9. Checklist para Novos Projetos
 
 - [ ] Uso exclusivo dos recursos e abstrações do **Nano-Spring** antes de tentar implementar ou importar classes diretas do **NanoHTTPD**.
-- [ ] Separação explícita entre a interface Web (`controller/`, assets) e a interface nativa Android (`ui/`).
-- [ ] Uso padronizado de **HTMX** e templates Mustache em `assets/templates/` via `ModelAndView`, **sem HTML inline** nos controllers.
+- [ ] Separação explícita entre a interface Web (`controller/`, assets) e a interface do app Android (`ui/`).
+- [ ] **Interface do dispositivo implementada de forma 100% nativa** (Jetpack Compose ou XML), **evitando o uso de WebView** para a UI principal.
+- [ ] Uso padronizado de **HTMX** e templates Mustache em `assets/templates/` via `ModelAndView`, **sem HTML inline** nos controllers (destinado a clientes web remotos).
 - [ ] Implementação de **Autenticação centralizada** via `@Interceptor` (`HandlerInterceptor`) com `@Order(1)`.
 - [ ] Implementação de **Tratamento Centralizado de Exceções** via `@ControllerAdvice` retornando respostas de erro JSON padronizadas.
 - [ ] Registro e anúncio **mDNS / Zeroconf** (`nano-spring-discovery`) com resolução de host habilitada e permissão `CHANGE_WIFI_MULTICAST_STATE`.
