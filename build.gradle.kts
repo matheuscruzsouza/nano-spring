@@ -16,6 +16,32 @@ subprojects {
                 }
             }
         }
+
+        if (plugins.hasPlugin("maven-publish")) {
+            val refVersion = System.getenv("GITHUB_REF_NAME")?.removePrefix("v")
+                ?.takeIf { it.matches(Regex("^[0-9].*")) }
+            extensions.configure<PublishingExtension>("publishing") {
+                components.matching { it.name == "release" }.all {
+                    val component = this
+                    publications.create<MavenPublication>("release") {
+                        from(component)
+                        groupId = "com.github.matheuscruzsouza"
+                        artifactId = project.name
+                        version = System.getenv("VERSION") ?: refVersion ?: "2.4.1"
+                    }
+                }
+                repositories {
+                    maven {
+                        name = "GitHubPackages"
+                        url = uri("https://maven.pkg.github.com/${System.getenv("GITHUB_REPOSITORY") ?: "matheuscruzsouza/nano-spring"}")
+                        credentials {
+                            username = System.getenv("GITHUB_ACTOR") ?: System.getenv("USERNAME")
+                            password = System.getenv("GITHUB_TOKEN") ?: System.getenv("TOKEN")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
