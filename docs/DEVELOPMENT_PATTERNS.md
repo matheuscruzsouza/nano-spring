@@ -1,289 +1,297 @@
 # Padrões de Desenvolvimento com Nano-Spring 🌱
 
-> **Guia de Arquitetura, Boas Práticas e Padrões de Projeto para Aplicações Android com Nano-Spring**  
-> Destinado a desenvolvedores e agentes de IA para garantir consistência, robustez e alta performance em ambientes locais/offline-first.
+> **Referência Oficial de Arquitetura, Convenções e Diretrizes de Engenharia para Aplicações Nano-Spring**  
+> Destinado a desenvolvedores e agentes de IA para garantir consistência, robustez, segurança e alta performance em ambientes locais e offline-first no Android.
 
 ---
 
-## 1. Regra Fundamental: Nano-Spring vs Spring Boot & NanoHTTPD
+## 1. Princípios de Arquitetura (Architecture Principles)
 
+### 1.1 Regra de Ouro: Nano-Spring vs Spring Boot
 > [!CAUTION]
-> **1. O Nano-Spring NÃO é o Spring Boot:**  
+> **O NANO-SPRING NÃO É O SPRING BOOT!**  
 > - ❌ **Nunca importe pacotes `org.springframework.*`.**  
 > - ✅ **Sempre use pacotes `com.github.matheuscruzsouza.nanospring.*`.**  
-> - O Nano-Spring é um framework concebido nativamente para o Android OS, projetado para transformar dispositivos móveis/embarcados em servidores HTTP e nós de processamento locais.
->
-> **2. Priorize SEMPRE as funcionalidades do Nano-Spring antes do NanoHTTPD:**  
-> - O Nano-Spring já encapsula e abstrai o motor HTTP interno (`NanoHTTPD`).
-> - ❌ **Não instancie nem herde diretamente classes do `fi.iki.elonen.NanoHTTPD`** para criar servidores, roteadores ou endpoints manuais.
-> - ❌ **Não manipule sockets de baixo nível ou crie parsers manuais** quando o framework já possui anotações de alto nível.
-> - ✅ **Sempre utilize os recursos nativos do framework:**
->   - Controllers anotados (`@RestController`, `@GetMethod`, `@PostMethod`, `@PutMethod`, `@DeleteMethod`).
->   - Resolução automática de parâmetros (`@PathVariable`, `@RequestParam`, `@RequestBody`, `@RequestHeader`).
->   - Respostas estruturadas via `ResponseEntity<T>` e `HttpStatus`.
->   - Inversão de controle e injeção de dependências (`@Service`, `@Repository`, `@Autowired`).
->   - Gerenciamento de ciclo de vida e background via `NanoSpringService`.
->   - Renderização web via `ModelAndView` e streaming reativo via `SseEmitter`.
-> - Só utilize classes internas ou APIs de baixo nível se houver uma necessidade estrita de extensibilidade do próprio core que não seja atendida pelo ecossistema do Nano-Spring.
+> - O Nano-Spring é um framework nativo para o Android OS, projetado para operar com baixo overhead de memória e CPU.
+
+### 1.2 Prioridade das Abstrações do Nano-Spring sobre o NanoHTTPD
+- O Nano-Spring encapsula internamente o motor HTTP (`NanoHTTPD`).
+- ❌ **Não herde de `fi.iki.elonen.NanoHTTPD` nem crie roteamento manual com `session.getUri()`.**
+- ✅ **Sempre utilize os recursos nativos do framework:**
+  - Inversão de Controle e Injeção de Dependências (`@Service`, `@Repository`, `@Autowired`).
+  - Roteamento declarativo (`@RestController`, `@GetMethod`, `@PostMethod`, `@PutMethod`, `@DeleteMethod`).
+  - Resolução de parâmetros (`@PathVariable`, `@RequestParam`, `@RequestBody`, `@RequestHeader`).
+  - Respostas tipadas via `ResponseEntity<T>` e enums de status `HttpStatus`.
+  - Tratamento de exceções com `@ControllerAdvice` e `@ExceptionHandler`.
+  - Interceptação com `@Interceptor` (`HandlerInterceptor`).
+  - Ciclo de vida gerenciado por `NanoSpringService`.
+
+### 1.3 Separação Arquitetural: Interface do Android vs Interface Web
+> [!IMPORTANT]
+> **A interface do dispositivo Android e a interface Web para clientes remotos possuem responsabilidades distintas e devem ser desacopladas.**
+
+1. **Interface do Dispositivo Android (`ui/`):**
+   - **Opção Preferencial:** Implementada com componentes nativos do Android (**Jetpack Compose** ou layouts **XML / ViewBinding**).
+   - **Uso de WebView:** Não é proibida, mas deve ser utilizada **apenas quando houver justificativa técnica clara** (por exemplo, reutilização estrita de dashboards complexos legados com avaliação prévia de memória). Uma UI nativa oferece melhor responsividade e integração com o ciclo de vida do dispositivo.
+   - **Papel:** Painel de controle operacional do dispositivo hospedeiro (ligar/desligar servidor, status de IP/porta, métricas locais de bateria, rede e logs).
+
+2. **Interface Web para a Rede Local (`controller/`, `assets/templates/`, `assets/static/`):**
+   - **Público:** Clientes remotos na mesma rede Wi-Fi/Ethernet (computadores de mesa, totens, PDVs, navegadores).
+   - **Padrão de Renderização:** **HTMX** com templates Mustache dinâmicos via `ModelAndView` (`com.github.matheuscruzsouza.nanospring.ui.ModelAndView`).
+   - ❌ **Anti-Pattern:** Nunca retorne strings com HTML inline concatenado dentro dos métodos do controller.
+   - **Estáticos:** Arquivos JS (como `htmx.min.js`), CSS e imagens devem residir em `app/src/main/assets/static/` (servidos em `/static/*`).
 
 ---
 
-## 2. Arquitetura em Camadas Recomendada
+## 2. Convenções de Código & Organização (Coding Conventions)
 
-Para manter a separação de responsabilidades e viabilizar testes unitários e manutenibilidade, utilize uma arquitetura em camadas no pacote base escaneado:
-
+### 2.1 Estrutura de Pacotes Recomendada
 ```text
-com.example.myapp/
+com.example.meuprojeto/
 │
-├── controller/          # Camada Web / HTTP (@RestController)
-│   ├── ProductController.java
-│   └── SystemController.java
+├── controller/          # Endpoints HTTP REST e Controllers Web (@RestController)
+│   ├── api/
+│   │   └── ProductApiController.java
+│   └── web/
+│       └── ProductWebController.java
 │
-├── service/             # Camada de Regras de Negócio e Serviços Android
+├── service/             # Regras de Negócio e Background Services
 │   ├── AppBackendService.java   # Foreground Service (extende NanoSpringService)
-│   ├── ProductService.java      # (@Service) Regras de negócio
-│   └── impl/                    # (Opcional) Implementações de interfaces de serviço
+│   └── ProductService.java      # Anotado com @Service
 │
-├── repository/          # Camada de Persistência (@Repository)
-│   ├── ProductRepository.java
-│   └── DatabaseOpenHelper.java
+├── repository/          # Persistência de Dados (@Repository)
+│   └── ProductRepository.java
 │
-├── dto/                 # Data Transfer Objects (Requisição / Resposta)
+├── dto/                 # Data Transfer Objects (Contratos de Entrada e Saída)
 │   ├── request/
 │   │   └── CreateProductRequest.java
 │   └── response/
+│       ├── ErrorResponse.java
 │       └── ProductResponse.java
 │
-├── model/ ou entity/    # Entidades de Domínio / Banco de Dados
+├── model/               # Entidades de Domínio
 │   └── Product.java
 │
-├── exception/           # Tratamento de Erros e Exceções Customizadas
+├── security/            # Interceptors e Provedores de Autenticação
+│   ├── AuthInterceptor.java
+│   └── TokenService.java
+│
+├── exception/           # Tratamento Global de Erros (@ControllerAdvice)
 │   ├── GlobalExceptionHandler.java
 │   └── ResourceNotFoundException.java
 │
-├── config/              # Configurações de Beans, CORS, Interceptors
-│   └── WebConfig.java
-│
-└── ui/                  # Interface Nativa Android (Separada da Web)
-    ├── MainActivity.java        # Ciclo de Vida da UI / Painel de Controle do Servidor
-    ├── viewmodel/               # ViewModels para telas nativas
-    └── adapter/                 # Adapters de RecyclerView, etc.
+└── ui/                  # Interface do Usuário Android (Nativa)
+    └── MainActivity.java
 ```
+
+### 2.2 Modelagem de Dados e DTOs
+- **Valores Monetários:** Utilize representações exatas (como centavos em `long` ou `BigDecimal`), **evitando `double`/`Double`** para operações financeiras sujeitas a erros de ponto flutuante.
+- **Validação de Entrada:** Utilize as anotações do pacote `com.github.matheuscruzsouza.nanospring.annotation.validation.*` (`@NotNull`, `@Size`, `@NotEmpty`, etc.) acopladas ao `@Valid` nos parâmetros `@RequestBody`.
 
 ---
 
-## 3. Padrão de Separação de Interfaces: Web vs Android Nativo
+## 3. Diretrizes de Segurança (Security Guidelines)
 
-> [!IMPORTANT]
-> **A interface Web (HTTP / REST / HTMX) e a interface do aplicativo Android DEVEM ser completamente apartadas.**  
-> - **Interface Android 100% Nativa (Sem WebView para a UI principal):** É expressamente preferível que a interface do usuário do dispositivo Android seja implementada usando componentes nativos da plataforma (Jetpack Compose, XML/Material Components, ViewModels) em vez de incorporar uma `WebView` apontando para o próprio servidor local (`localhost`).
-> - **Finalidade da Interface Web:** A interface web (`controller/`, templates Mustache, HTMX, REST) existe para servir **clientes externos** na rede local (computadores, outros celulares, totens, PDVs, dashboards externos em navegadores), e **não** como substituto da interface nativa do próprio aparelho hospedeiro.
+### 3.1 Autenticação Robusta via Interceptor (`@Interceptor`)
+O Nano-Spring executa os interceptores antes dos controllers. Se `preHandle(...)` retornar `false`, a requisição é cancelada e o framework retorna `401 Unauthorized`.
 
-A aplicação atua simultaneamente como um servidor de infraestrutura e como um aplicativo móvel local. Para manter a estabilidade, performance e a modularidade:
-
-### 3.1 Responsabilidades de Cada Interface
-
-| Aspecto | Interface Android Nativa (`ui/`, Activities, Compose) | Interface Web / HTTP (`controller/`, HTML/Assets, REST) |
-| :--- | :--- | :--- |
-| **Tecnologia Adotada** | **100% Nativa** (Jetpack Compose ou Layouts XML/ViewBinding). **Evitar WebViews.** | **HTMX + Templates Mustache** via `ModelAndView` ou JSON REST via `ResponseEntity`. |
-| **Público / Consumidor** | O operador segurando o dispositivo físico hospedeiro. | Clientes externos na rede local, navegadores remotos, totens, PDVs ou dashboards web. |
-| **Papel Principal** | Painel de controle, status do servidor (IP, porta, logs, bateria), inicialização e permissões. | Expor regras de negócio, dados, APIs REST, Server-Sent Events (SSE) ou servir páginas administrativas para a rede. |
-| **Dependência de Ciclo de Vida** | Vinculada ao ciclo de vida de UI do Android (`Activity`, `Fragment`, recomposição de telas). Pode ser destruída em rotação ou quando o app vai para background. | Persistente, executada dentro do `NanoSpringService` (Foreground Service), operando independentemente da UI do Android estar visível ou destruída. |
-
-### 3.2 Por que Evitar WebView na Interface do Android?
-
-1. **Eficiência de Memória & Hardware:** Dispositivos Android embarcados ou mais antigos possuem restrições severas de RAM. Uma instância de `WebView` carrega um processo Chromium completo, consumindo de 80 MB a 150 MB de memória RAM adicional, enquanto uma UI nativa (Compose ou XML) opera dentro do footprint previsível de 15 MB a 40 MB do app.
-2. **Ciclo de Vida Conflitante:** Recarregar a `WebView` durante rotações de tela ou pausá-la ao trocar de aplicativo pode interromper requisições e sockets em andamento.
-3. **Experiência do Usuário (UX):** Telas nativas oferecem fluidez imediata, suporte a gestos do sistema, transições suaves e integração direta com o ciclo de vida do Android sem latência de rendering de DOM.
-
-### 3.3 Regras de Ouro de Isolamento
-
-1. **A UI Android é nativa e independente do servidor:**
-   - A interface do aparelho (`MainActivity`, telas Compose/XML) deve ser desenhada com componentes nativos do Android.
-   - Não crie Activities cujo único propósito seja envelopar uma `WebView` carregando `http://localhost:8080/`.
-
-2. **A camada Web não depende de Views nativas:**
-   - Controllers (`@RestController`) e Services (`@Service`) **nunca** devem receber referências a `Activity`, `View`, `Context` com leak de interface ou elementos de UI nativa.
-   - O único `Context` compartilhado com o servidor é o `ApplicationContext` (disponível via `NanoSpringService`).
-
-3. **A UI Android comunica-se de forma desacoplada:**
-   - A `MainActivity` ou os componentes nativos de tela devem interagir com o backend gerenciando o serviço (`startForegroundService` / `stopService`) ou consumindo o backend via cliente HTTP local / repositórios e serviços compartilhados em background.
-   - Mudanças de estado para a UI devem ser comunicadas de forma desacoplada (via `LiveData`, `StateFlow`, `BroadcastReceiver` ou `EventBus`), nunca chamando métodos diretos de UI a partir do fluxo de execução do servidor HTTP.
-
-4. **Interface Web com HTMX e Templates HTML (Sem HTML Inline):**
-   - **É terminantemente desencorajado e fora de padrão concatenar ou retornar HTML inline (strings com tags HTML hardcoded) dentro dos controllers.**
-   - A renderização dinâmica Server-Side para os clientes de rede deve adotar **HTMX** em conjunto com a engine de templates Mustache do Nano-Spring via `ModelAndView` (`com.github.matheuscruzsouza.nanospring.ui.ModelAndView`).
-   - Todos os arquivos de template HTML devem residir exclusivamente em `app/src/main/assets/templates/` (ex.: `painel.html`, `partials/produto-linha.html`).
-   - O HTMX permite interações reativas e trocas parciais de tela (swaps) sob demanda sem a complexidade ou consumo de memória de frameworks SPA pesados no dispositivo Android.
-
-5. **Arquivos Estáticos da Web:**
-   - Assets estáticos como a biblioteca `htmx.min.js`, scripts JS, CSS e imagens devem residir em `app/src/main/assets/static/` e são servidos automaticamente sob a rota `/static/*` com headers de cache apropriados.
-
-#### Exemplo de Padrão Web: HTMX + ModelAndView
-
-**Template (`assets/templates/produtos.html`):**
-```html
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>{{titulo}}</title>
-    <!-- HTMX servido dos assets locais -->
-    <script src="/static/js/htmx.min.js"></script>
-</head>
-<body>
-    <h1>{{titulo}}</h1>
-
-    <!-- Busca reativa via HTMX enviando requisição para o controller -->
-    <input type="text" name="termo" placeholder="Buscar produto..."
-           hx-get="/web/produtos/tabela"
-           hx-trigger="keyup changed delay:300ms"
-           hx-target="#lista-produtos">
-
-    <div id="lista-produtos">
-        <!-- Renderiza a lista inicial via template -->
-        <ul>
-            {{#produtos}}
-            <li>{{nome}} - R$ {{preco}}</li>
-            {{/produtos}}
-        </ul>
-    </div>
-</body>
-</html>
-```
-
-**Controller Web (`WebProductController.java`):**
-```java
-package com.example.myapp.controller;
-
-import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
-import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
-import com.github.matheuscruzsouza.nanospring.annotation.RequestParam;
-import com.github.matheuscruzsouza.nanospring.annotation.RestController;
-import com.github.matheuscruzsouza.nanospring.ui.ModelAndView;
-import com.example.myapp.service.ProductService;
-
-@RestController("/web/produtos")
-public class WebProductController {
-
-    private final ProductService productService;
-
-    @Autowired
-    public WebProductController(ProductService productService) {
-        this.productService = productService;
-    }
-
-    // Retorna a página completa renderizada a partir de assets/templates/produtos.html
-    @GetMethod("")
-    public ModelAndView exibirPagina() {
-        return new ModelAndView("produtos")
-                .addObject("titulo", "Catálogo de Produtos")
-                .addObject("produtos", productService.findAll(null));
-    }
-
-    // Retorna fragmento parcial para swap do HTMX a partir de assets/templates/partials/lista.html
-    @GetMethod("/tabela")
-    public ModelAndView buscarTabela(@RequestParam(value = "termo", required = false) String termo) {
-        return new ModelAndView("partials/lista")
-                .addObject("produtos", productService.findAll(termo));
-    }
-}
-```
-
-> [!WARNING]
-> **Anti-Pattern (Evite):**
-> ```java
-> // NUNCA faça isso: HTML inline no controller polui o código e quebra a separação de responsabilidades
-> @GetMethod("/pagina")
-> public String paginaRuim() {
->     return "<html><body><h1>" + titulo + "</h1></body></html>";
-> }
-> ```
-
----
-
-## 4. Padrões por Camada
-
-### 4.1 Camada Web: Controllers (`@RestController`)
-
-**Responsabilidades:**
-- Declarar endpoints e mapear rotas HTTP.
-- Validar entrada de dados com `@Valid`.
-- Delegar o processamento estritamente para a camada de serviço.
-- Retornar respostas tipadas com `ResponseEntity<T>`.
-
-**Boas Práticas:**
-- Prefira injetar dependências via construtor com `@Autowired`.
-- Evite regras de negócio, cálculos ou acesso direto ao SQLite dentro de métodos de controller.
-- Use a anotação `@RestController("/api/recurso")` para definir o prefixo da rota base.
-- Em parâmetros dinâmicos na URL, utilize a sintaxe de dois pontos (ex.: `/:id`) e resgate com `@PathVariable("id")`.
+#### Regras de Ouro de Segurança:
+1. **Validação Rigorosa de Caminhos (Path Matching):** Nunca use `path.startsWith("/api/public")` sem delimitador de segmento de rota (`/`), pois isso liberaria indevidamente caminhos como `/api/public-admin`.
+2. **Validação Criptográfica ou Estrutural de Tokens:** Nunca valide tokens verificando apenas prefixo ou tamanho de string. Use um serviço dedicado (`TokenService`) que verifique chave secreta, assinatura, integridade e expiração.
+3. **Não libere `/web` indiscriminadamente:** Rotas web administrativas que alteram dados devem ser autenticadas ou protegidas por sessão/token.
 
 ```java
-package com.example.myapp.controller;
+package com.example.meuprojeto.security;
 
 import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
-import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
-import com.github.matheuscruzsouza.nanospring.annotation.PathVariable;
-import com.github.matheuscruzsouza.nanospring.annotation.PostMethod;
-import com.github.matheuscruzsouza.nanospring.annotation.RequestBody;
-import com.github.matheuscruzsouza.nanospring.annotation.RequestParam;
-import com.github.matheuscruzsouza.nanospring.annotation.RestController;
-import com.github.matheuscruzsouza.nanospring.annotation.validation.Valid;
-import com.github.matheuscruzsouza.nanospring.http.HttpStatus;
-import com.github.matheuscruzsouza.nanospring.http.ResponseEntity;
+import com.github.matheuscruzsouza.nanospring.annotation.Interceptor;
+import com.github.matheuscruzsouza.nanospring.annotation.Order;
+import com.github.matheuscruzsouza.nanospring.handler.HandlerInterceptor;
+import fi.iki.elonen.NanoHTTPD;
 
-import com.example.myapp.dto.request.CreateProductRequest;
-import com.example.myapp.dto.response.ProductResponse;
-import com.example.myapp.service.ProductService;
-
+import java.util.Arrays;
 import java.util.List;
 
-@RestController("/api/products")
-public class ProductController {
+@Interceptor
+@Order(1)
+public class AuthInterceptor implements HandlerInterceptor {
 
-    private final ProductService productService;
+    private final TokenService tokenService;
+
+    // Lista explícita de prefixos públicos com delimitação de barra '/'
+    private static final List<String> PUBLIC_PREFIXES = Arrays.asList(
+            "/api/public/",
+            "/static/",
+            "/swagger-ui/"
+    );
 
     @Autowired
-    public ProductController(ProductService productService) {
-        this.productService = productService;
+    public AuthInterceptor(TokenService tokenService) {
+        this.tokenService = tokenService;
     }
 
-    @GetMethod("")
-    public ResponseEntity<List<ProductResponse>> listAll(
-            @RequestParam(value = "category", required = false) String category) {
-        return ResponseEntity.ok(productService.findAll(category));
-    }
+    @Override
+    public boolean preHandle(NanoHTTPD.IHTTPSession session, String path) {
+        // Normaliza o path garantindo formato padrão
+        String normalizedPath = path.endsWith("/") ? path : path + "/";
 
-    @GetMethod("/:id")
-    public ResponseEntity<ProductResponse> getById(@PathVariable("id") String id) {
-        ProductResponse product = productService.findById(id);
-        return ResponseEntity.ok(product);
-    }
+        for (String publicPrefix : PUBLIC_PREFIXES) {
+            if (normalizedPath.startsWith(publicPrefix)) {
+                return true;
+            }
+        }
 
-    @PostMethod("")
-    public ResponseEntity<ProductResponse> create(
-            @Valid @RequestBody CreateProductRequest request) {
-        ProductResponse created = productService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        // Extrai e valida o cabeçalho Authorization
+        String authHeader = session.getHeaders().get("authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return false;
+        }
+
+        String token = authHeader.substring(7).trim();
+        return tokenService.validateToken(token);
     }
 }
 ```
 
 ---
 
-### 4.2 Camada de Domínio & DTOs (Validação)
+## 4. Tratamento Centralizado de Exceções (`@ControllerAdvice`)
 
-**Responsabilidades:**
-- Desacoplar os contratos da API externa das tabelas internas do banco de dados.
-- Proteger a aplicação contra payloads inválidos, nulos ou malformados.
-
-**Boas Práticas:**
-- Sempre crie DTOs dedicados para entrada de dados (`Request`) e saída (`Response`).
-- Tenha construtor sem argumentos (padrão JavaBean) e métodos getters/setters para serialização JSON via Gson.
-- Use anotações de validação do Nano-Spring: `@NotNull`, `@Size`, `@NotEmpty`, etc.
+Para impedir vazamento de detalhes internos, stack traces ou respostas 500 sem corpo JSON explicativo:
 
 ```java
-package com.example.myapp.dto.request;
+package com.example.meuprojeto.exception;
+
+import com.github.matheuscruzsouza.nanospring.annotation.ControllerAdvice;
+import com.github.matheuscruzsouza.nanospring.annotation.ExceptionHandler;
+import com.github.matheuscruzsouza.nanospring.http.HttpStatus;
+import com.github.matheuscruzsouza.nanospring.http.ResponseEntity;
+import com.example.meuprojeto.dto.response.ErrorResponse;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
+        ErrorResponse err = new ErrorResponse(
+                404,
+                "Not Found",
+                ex.getMessage(),
+                System.currentTimeMillis()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(err);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(IllegalArgumentException ex) {
+        ErrorResponse err = new ErrorResponse(
+                400,
+                "Bad Request",
+                ex.getMessage(),
+                System.currentTimeMillis()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
+        ErrorResponse err = new ErrorResponse(
+                500,
+                "Internal Server Error",
+                "Ocorreu um erro interno no processamento do servidor",
+                System.currentTimeMillis()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err);
+    }
+}
+```
+
+---
+
+## 5. Diretrizes do Android Runtime & Ciclo de Vida
+
+O Nano-Spring executa dentro do processo da JVM/ART do Android. O gerenciamento de ciclo de vida deve ser planejado com realismo:
+
+### 5.1 O Papel Real do Foreground Service
+- **O que o Foreground Service garante:**
+  - Eleva a prioridade do processo perante o Android (*OOM score* prioritário), reduzindo consideravelmente a probabilidade de encerramento prematuro durante uso normal ou em segundo plano.
+  - Notificação visível persistente que sinaliza ao usuário que o servidor local está em execução.
+- **O que o Foreground Service NÃO garante:**
+  - **Não é imune ao Low Memory Killer (LMK):** Se o sistema entrar em estresse severo de memória (ex.: usuário abrindo aplicativo 3D pesado ou câmera em alta resolução), o processo **pode** ser encerrado.
+  - **Não substitui tratamento de desconexões de rede:** Mudanças entre Wi-Fi e dados móveis ou suspensões de rede por Doze Mode exigem observação reativa.
+
+### 5.2 Boas Práticas de Resiliência
+1. **Configuração de Reinício Automático (`START_STICKY`):** Configure o Foreground Service para retornar `START_STICKY` no `onStartCommand`, permitindo que o Android reinicie o serviço se os recursos forem restaurados.
+2. **`foregroundServiceType` Adequado:**
+   - Para Android 14+ (`API 34+`), declare tipos condizentes com a atividade da aplicação no `AndroidManifest.xml` (ex.: `dataSync` ou `specialUse` caso justificado).
+3. **Prevenção de Doze Mode e Quedas de Rede:**
+   - Utilize a trava de multicast (`CHANGE_WIFI_MULTICAST_STATE`) e o WakeLock de forma ponderada e gerencie o desligamento gracioso liberando sockets no `onDestroy`.
+
+---
+
+## 6. Descoberta de Rede Local: mDNS / Zeroconf
+
+Em redes locais móveis (onde o roteador atribui IPs dinâmicos via DHCP), o anúncio mDNS é o padrão recomendado para que clientes na rede acessem o servidor sem necessidade de descobrir o IP manualmente.
+
+### 6.1 Dependência no `app/build.gradle` (ou `build.gradle.kts`)
+```kotlin
+dependencies {
+    val nanoSpringVersion = "2.4.1"
+    implementation("com.github.matheuscruzsouza:nano-spring-discovery:$nanoSpringVersion")
+}
+```
+
+### 6.2 Configuração em `assets/application.properties`
+```properties
+# Habilita o anúncio de rede mDNS
+nano.nsd.enabled=true
+
+# Hostname local anunciado (acessível como http://meu-servidor.local:8080)
+nano.nsd.name=meu-servidor
+
+# Tipo do serviço DNS-SD
+nano.nsd.type=_http._tcp.
+
+# Habilita o MdnsHostResponder para navegadores web comuns
+nano.nsd.host-resolution=true
+```
+
+> [!TIP]
+> No `AndroidManifest.xml`, certifique-se de incluir `<uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />` para que o responder consiga escutar na porta UDP 5353.
+
+---
+
+## 7. Implementação de Referência (Integrada e Consistente)
+
+Abaixo está um conjunto completo e semanticamente consistente demonstrando a integração real entre Repository, Service, Controllers e Injeção de Dependências.
+
+### 7.1 Modelo e DTOs (`model/` e `dto/`)
+
+```java
+package com.example.meuprojeto.model;
+
+public class Product {
+    private final String id;
+    private final String name;
+    private final String category;
+    private final long priceInCents; // Preço monetário armazenado em centavos
+
+    public Product(String id, String name, String category, long priceInCents) {
+        this.id = id;
+        this.name = name;
+        this.category = category;
+        this.priceInCents = priceInCents;
+    }
+
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public String getCategory() { return category; }
+    public long getPriceInCents() { return priceInCents; }
+}
+```
+
+```java
+package com.example.meuprojeto.dto.request;
 
 import com.github.matheuscruzsouza.nanospring.annotation.validation.NotNull;
 import com.github.matheuscruzsouza.nanospring.annotation.validation.Size;
@@ -291,47 +299,142 @@ import com.github.matheuscruzsouza.nanospring.annotation.validation.Size;
 public class CreateProductRequest {
 
     @NotNull(message = "O nome é obrigatório")
-    @Size(min = 2, max = 80, message = "O nome deve conter entre 2 e 80 caracteres")
+    @Size(min = 2, max = 80, message = "O nome deve ter entre 2 e 80 caracteres")
     private String name;
 
-    @NotNull(message = "O preço é obrigatório")
-    private Double price;
+    @NotNull(message = "A categoria é obrigatória")
+    private String category;
+
+    @NotNull(message = "O preço em centavos é obrigatório")
+    private Long priceInCents;
 
     public CreateProductRequest() {}
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public Double getPrice() { return price; }
-    public void setPrice(Double price) { this.price = price; }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public Long getPriceInCents() { return priceInCents; }
+    public void setPriceInCents(Long priceInCents) { this.priceInCents = priceInCents; }
 }
 ```
 
----
+```java
+package com.example.meuprojeto.dto.response;
 
-### 4.3 Camada de Negócio: Serviços (`@Service`)
+public class ProductResponse {
+    private final String id;
+    private final String name;
+    private final String category;
+    private final long priceInCents;
 
-**Responsabilidades:**
-- Orquestrar regras de negócio, validações de fluxo e chamadas a repositórios.
-- Isolar a lógica da camada de transporte HTTP (um service nunca deve lidar com `IHTTPSession` ou `ResponseEntity`).
-- Lançar exceções de negócio em casos anômalos.
+    public ProductResponse(String id, String name, String category, long priceInCents) {
+        this.id = id;
+        this.name = name;
+        this.category = category;
+        this.priceInCents = priceInCents;
+    }
 
-**Boas Práticas:**
-- Mantenha classes de serviço anotadas com `@Service`.
-- Evite armazenar estado mutável compartilhado nas instâncias de `@Service` (são singletons no container IoC).
-- Use injeção via construtor para facilitar testes com mocks/stubs.
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public String getCategory() { return category; }
+    public long getPriceInCents() { return priceInCents; }
+}
+```
+
+### 7.2 Camada de Persistência (`repository/`)
+> [!NOTE]
+> Quando o módulo `nano-spring-data` está presente, o `DataInitializer` registra a instância gerenciada do `SQLiteDatabase` no mapa de serviços do container IoC do Nano-Spring, tornando-a disponível para injeção via `@Autowired`.
 
 ```java
-package com.example.myapp.service;
+package com.example.meuprojeto.repository;
+
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+
+import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.Repository;
+import com.example.meuprojeto.model.Product;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Repository
+public class ProductRepository {
+
+    private final SQLiteDatabase database;
+
+    @Autowired
+    public ProductRepository(SQLiteDatabase database) {
+        this.database = database;
+    }
+
+    public Product findById(String id) {
+        String sql = "SELECT id, name, category, price_in_cents FROM products WHERE id = ?";
+        try (Cursor cursor = database.rawQuery(sql, new String[]{id})) {
+            if (cursor.moveToFirst()) {
+                return mapCursor(cursor);
+            }
+        }
+        return null;
+    }
+
+    public List<Product> findAll(String categoryFilter) {
+        List<Product> list = new ArrayList<>();
+        String sql;
+        String[] args;
+
+        if (categoryFilter != null && !categoryFilter.trim().isEmpty()) {
+            sql = "SELECT id, name, category, price_in_cents FROM products WHERE category = ?";
+            args = new String[]{categoryFilter.trim()};
+        } else {
+            sql = "SELECT id, name, category, price_in_cents FROM products";
+            args = null;
+        }
+
+        try (Cursor cursor = database.rawQuery(sql, args)) {
+            while (cursor.moveToNext()) {
+                list.add(mapCursor(cursor));
+            }
+        }
+        return list;
+    }
+
+    public void save(Product product) {
+        ContentValues values = new ContentValues();
+        values.put("id", product.getId());
+        values.put("name", product.getName());
+        values.put("category", product.getCategory());
+        values.put("price_in_cents", product.getPriceInCents());
+        database.insertWithOnConflict("products", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    private Product mapCursor(Cursor cursor) {
+        return new Product(
+                cursor.getString(cursor.getColumnIndexOrThrow("id")),
+                cursor.getString(cursor.getColumnIndexOrThrow("name")),
+                cursor.getString(cursor.getColumnIndexOrThrow("category")),
+                cursor.getLong(cursor.getColumnIndexOrThrow("price_in_cents"))
+        );
+    }
+}
+```
+
+### 7.3 Camada de Negócio (`service/`)
+
+```java
+package com.example.meuprojeto.service;
 
 import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
 import com.github.matheuscruzsouza.nanospring.annotation.Service;
-
-import com.example.myapp.dto.request.CreateProductRequest;
-import com.example.myapp.dto.response.ProductResponse;
-import com.example.myapp.exception.ResourceNotFoundException;
-import com.example.myapp.model.Product;
-import com.example.myapp.repository.ProductRepository;
+import com.example.meuprojeto.dto.request.CreateProductRequest;
+import com.example.meuprojeto.dto.response.ProductResponse;
+import com.example.meuprojeto.exception.ResourceNotFoundException;
+import com.example.meuprojeto.model.Product;
+import com.example.meuprojeto.repository.ProductRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -350,13 +453,13 @@ public class ProductService {
     public ProductResponse findById(String id) {
         Product entity = productRepository.findById(id);
         if (entity == null) {
-            throw new ResourceNotFoundException("Produto não encontrado: " + id);
+            throw new ResourceNotFoundException("Produto não encontrado com id: " + id);
         }
         return toResponse(entity);
     }
 
-    public List<ProductResponse> findAll(String category) {
-        return productRepository.findAll(category)
+    public List<ProductResponse> findAll(String categoryFilter) {
+        return productRepository.findAll(categoryFilter)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -366,342 +469,141 @@ public class ProductService {
         Product entity = new Product(
                 UUID.randomUUID().toString(),
                 request.getName(),
-                request.getPrice()
+                request.getCategory(),
+                request.getPriceInCents()
         );
         productRepository.save(entity);
         return toResponse(entity);
     }
 
     private ProductResponse toResponse(Product entity) {
-        return new ProductResponse(entity.getId(), entity.getName(), entity.getPrice());
-    }
-}
-```
-
----
-
-### 4.4 Camada de Persistência: Repositórios (`@Repository`)
-
-**Responsabilidades:**
-- Encapsular comandos SQL, mapeamento de `Cursor` para objetos de modelo e transações SQLite.
-- Gerenciar recursos de forma segura (fechamento de cursores e statements).
-
-**Boas Práticas:**
-- Marque repositórios com `@Repository`.
-- Sempre utilize parâmetros vinculados (`selectionArgs` no Android) para prevenir SQL Injection.
-- Feche `Cursor` dentro de blocos `try-with-resources`.
-
-```java
-package com.example.myapp.repository;
-
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-
-import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
-import com.github.matheuscruzsouza.nanospring.annotation.Repository;
-import com.example.myapp.model.Product;
-
-import java.util.ArrayList;
-import java.util.List;
-
-@Repository
-public class ProductRepository {
-
-    private final SQLiteDatabase database;
-
-    @Autowired
-    public ProductRepository(SQLiteDatabase database) {
-        this.database = database;
-    }
-
-    public Product findById(String id) {
-        String sql = "SELECT id, name, price FROM products WHERE id = ?";
-        try (Cursor cursor = database.rawQuery(sql, new String[]{id})) {
-            if (cursor.moveToFirst()) {
-                return mapCursor(cursor);
-            }
-        }
-        return null;
-    }
-
-    public List<Product> findAll(String category) {
-        List<Product> list = new ArrayList<>();
-        String sql = "SELECT id, name, price FROM products";
-        try (Cursor cursor = database.rawQuery(sql, null)) {
-            while (cursor.moveToNext()) {
-                list.add(mapCursor(cursor));
-            }
-        }
-        return list;
-    }
-
-    public void save(Product product) {
-        ContentValues values = new ContentValues();
-        values.put("id", product.getId());
-        values.put("name", product.getName());
-        values.put("price", product.getPrice());
-        database.insertWithOnConflict("products", null, values, SQLiteDatabase.CONFLICT_REPLACE);
-    }
-
-    private Product mapCursor(Cursor cursor) {
-        return new Product(
-                cursor.getString(cursor.getColumnIndexOrThrow("id")),
-                cursor.getString(cursor.getColumnIndexOrThrow("name")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("price"))
+        return new ProductResponse(
+                entity.getId(),
+                entity.getName(),
+                entity.getCategory(),
+                entity.getPriceInCents()
         );
     }
 }
 ```
 
----
+### 7.4 Controllers (API REST e Interface Web com HTMX)
 
-### 4.5 Camada de Segurança: Autenticação via Interceptor (`@Interceptor`)
-
-**Responsabilidades:**
-- Validar tokens de autorização (`Authorization: Bearer <token>`) e permissões antes que a requisição alcance os controllers.
-- Liberar rotas públicas e recursos estáticos/templates sem acoplar validações manuais de token dentro de cada método de controller.
-
-**Boas Práticas:**
-- Implemente `HandlerInterceptor` anotado com `@Interceptor` e `@Order(1)`.
-- Use verificação precoce de paths: libere rotas públicas (como `/api/public/**`, `/static/**`, assets) e bloqueie requisições não autorizadas retornando `false` (que responde automaticamente com `401 Unauthorized`).
-
+#### API REST (`ProductApiController.java`):
 ```java
-package com.example.myapp.security;
+package com.example.meuprojeto.controller.api;
 
-import com.github.matheuscruzsouza.nanospring.annotation.Interceptor;
-import com.github.matheuscruzsouza.nanospring.annotation.Order;
-import com.github.matheuscruzsouza.nanospring.handler.HandlerInterceptor;
-import fi.iki.elonen.NanoHTTPD;
-
-@Interceptor
-@Order(1)
-public class AuthInterceptor implements HandlerInterceptor {
-
-    @Override
-    public boolean preHandle(NanoHTTPD.IHTTPSession session, String path) {
-        // Libera rotas públicas, estáticos e interfaces web abertas
-        if (path.startsWith("/api/public") || path.startsWith("/static") || path.startsWith("/web")) {
-            return true;
-        }
-
-        // Validação de token em rotas protegidas
-        String authHeader = session.getHeaders().get("authorization");
-        if (authHeader == null || !isValidToken(authHeader)) {
-            return false; // Cancela a requisição e retorna 401 Unauthorized
-        }
-
-        return true;
-    }
-
-    private boolean isValidToken(String authHeader) {
-        return authHeader.startsWith("Bearer ") && authHeader.length() > 15;
-    }
-}
-```
-
----
-
-### 4.6 Camada de Tratamento Global de Exceções (`@ControllerAdvice`)
-
-**Responsabilidades:**
-- Interceptar exceções de negócio, falhas de validação e erros inesperados em um ponto único.
-- Garantir que a API **nunca** retorne stack traces puros do Java ou erros genéricos 500 sem corpo JSON explicativo.
-
-**Boas Práticas:**
-- Crie uma classe anotada com `@ControllerAdvice`.
-- Mapeie exceções específicas com métodos anotados por `@ExceptionHandler(ClasseDaException.class)`.
-- Retorne contratos padronizados (`ResponseEntity<Map<String, Object>>` ou um DTO de erro com `status`, `error`, `message`, `timestamp`).
-
-```java
-package com.example.myapp.exception;
-
-import com.github.matheuscruzsouza.nanospring.annotation.ControllerAdvice;
-import com.github.matheuscruzsouza.nanospring.annotation.ExceptionHandler;
+import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.PathVariable;
+import com.github.matheuscruzsouza.nanospring.annotation.PostMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.RequestBody;
+import com.github.matheuscruzsouza.nanospring.annotation.RequestParam;
+import com.github.matheuscruzsouza.nanospring.annotation.RestController;
+import com.github.matheuscruzsouza.nanospring.annotation.validation.Valid;
 import com.github.matheuscruzsouza.nanospring.http.HttpStatus;
 import com.github.matheuscruzsouza.nanospring.http.ResponseEntity;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.example.meuprojeto.dto.request.CreateProductRequest;
+import com.example.meuprojeto.dto.response.ProductResponse;
+import com.example.meuprojeto.service.ProductService;
 
-@ControllerAdvice
-public class GlobalExceptionHandler {
+import java.util.List;
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("status", 404);
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-        body.put("timestamp", System.currentTimeMillis());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+@RestController("/api/products")
+public class ProductApiController {
+
+    private final ProductService productService;
+
+    @Autowired
+    public ProductApiController(ProductService productService) {
+        this.productService = productService;
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("status", 400);
-        body.put("error", "Bad Request");
-        body.put("message", ex.getMessage());
-        body.put("timestamp", System.currentTimeMillis());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    @GetMethod("")
+    public ResponseEntity<List<ProductResponse>> listAll(
+            @RequestParam(value = "category", required = false) String category) {
+        return ResponseEntity.ok(productService.findAll(category));
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("status", 500);
-        body.put("error", "Internal Server Error");
-        body.put("message", "Ocorreu um erro inesperado no servidor local");
-        body.put("timestamp", System.currentTimeMillis());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    @GetMethod("/:id")
+    public ResponseEntity<ProductResponse> getById(@PathVariable("id") String id) {
+        return ResponseEntity.ok(productService.findById(id));
+    }
+
+    @PostMethod("")
+    public ResponseEntity<ProductResponse> create(@Valid @RequestBody CreateProductRequest request) {
+        ProductResponse created = productService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 }
 ```
 
----
-
-## 5. Padrões de Execução Android e Ciclo de Vida
-
-O Nano-Spring roda dentro do processo Android. Para garantir que o servidor não seja encerrado pelo sistema operacional (Low Memory Killer / Doze Mode):
-
-### 5.1 Utilizar `NanoSpringService` (Foreground Service)
-- **Sempre execute o servidor como Foreground Service** associado a uma notificação persistente.
-- Herde de `NanoSpringService` para obter controle integrado de `WakeLock` e inicialização.
-
+#### Interface Web com HTMX (`ProductWebController.java`):
 ```java
-package com.example.myapp.service;
+package com.example.meuprojeto.controller.web;
 
-import com.github.matheuscruzsouza.nanospring.service.NanoSpringService;
+import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.RequestParam;
+import com.github.matheuscruzsouza.nanospring.annotation.RestController;
+import com.github.matheuscruzsouza.nanospring.ui.ModelAndView;
+import com.example.meuprojeto.service.ProductService;
 
-public class AppBackendService extends NanoSpringService {
+@RestController("/web/produtos")
+public class ProductWebController {
 
-    @Override
-    protected String getBasePackage() {
-        return "com.example.myapp";
+    private final ProductService productService;
+
+    @Autowired
+    public ProductWebController(ProductService productService) {
+        this.productService = productService;
     }
 
-    @Override
-    protected int getPort() {
-        return 8080;
+    // Carrega a página HTML principal em assets/templates/produtos.html
+    @GetMethod("")
+    public ModelAndView exibirCatalogo() {
+        return new ModelAndView("produtos")
+                .addObject("titulo", "Catálogo de Produtos")
+                .addObject("produtos", productService.findAll(null));
+    }
+
+    // Retorna fragmento de template para swap de HTMX em assets/templates/partials/tabela.html
+    @GetMethod("/tabela")
+    public ModelAndView filtrarPorCategoria(
+            @RequestParam(value = "categoria", required = false) String categoria) {
+        return new ModelAndView("partials/tabela")
+                .addObject("produtos", productService.findAll(categoria));
     }
 }
 ```
 
-### 5.2 Permissões e Declaração no `AndroidManifest.xml`
-Declare os tipos corretos de serviço para Android 14+ (`API 34+`):
-
-```xml
-<!-- Permissões de Rede -->
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-<uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
-
-<!-- Foreground Service & Notificações -->
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-<uses-permission android:name="android.permission.WAKE_LOCK" />
-
-<application ...>
-    <service
-        android:name=".service.AppBackendService"
-        android:enabled="true"
-        android:exported="false"
-        android:foregroundServiceType="dataSync" />
-</application>
-```
-
 ---
 
-## 6. Padrão de Descoberta de Rede Local: mDNS / Zeroconf
-
-Como o Nano-Spring opera em dispositivos móveis conectados via Wi-Fi local onde os endereços IP podem mudar via DHCP, **o anúncio mDNS é o padrão para descoberta e resolução de nomes**.
-
-### 6.1 Dependência no `app/build.gradle`
-Adicione o módulo `nano-spring-discovery`:
-
-```kotlin
-dependencies {
-    implementation("com.github.matheuscruzsouza:nano-spring-discovery:2.4.1")
-}
-```
-
-### 6.2 Configuração em `assets/application.properties`
-Ative a resolução de host para que qualquer navegador ou cliente na rede possa acessar o servidor via `http://<nome-do-host>.local:<porta>`:
-
-```properties
-# Habilita o anúncio de rede mDNS
-nano.nsd.enabled=true
-
-# Nome do host anunciado na rede (acessível como http://meu-dispositivo.local:8080)
-nano.nsd.name=meu-dispositivo
-
-# Tipo do serviço DNS-SD (padrão: _http._tcp.)
-nano.nsd.type=_http._tcp.
-
-# Habilita o responder direto para navegadores web (padrão: true)
-nano.nsd.host-resolution=true
-```
+## 8. Recursos Opcionais (Perguntar Antes ao Desenvolvedor)
 
 > [!NOTE]
-> O módulo inclui o `MdnsHostResponder`, que responde a consultas mDNS diretas enviadas por navegadores (Chrome, Safari, Firefox) na porta UDP 5353 com o IP ativo do dispositivo. Certifique-se de declarar a permissão `android.permission.CHANGE_WIFI_MULTICAST_STATE` no `AndroidManifest.xml`.
-
----
-
-## 7. Diretrizes de Concorrência e Hardware em Dispositivos Móveis
-
-1. **Previsibilidade de Memória:**
-   - Mantenha o consumo controlado (entre 15 MB e 40 MB de heap).
-   - Evite carregar coleções inteiras em memória. Use paginação e limite as consultas (`LIMIT / OFFSET`).
-   - Não crie novas `Thread` soltas a cada requisição; utilize executores com filas limitadas.
-
-2. **Streams & Arquivos Grandes:**
-   - Para envio de arquivos, imagens e vídeos, utilize streams (`FileResourceRegion`, `InputStream`) em vez de carregar arrays de bytes (`byte[]`) completos na memória RAM.
-
-3. **Eventos em Tempo Real (SSE):**
-   - Utilize `SseEmitter` com controle adequado de expiração (timeouts) e limpeza de emitters desconectados em blocos `onCompletion` / `onError`.
-
-4. **Consciência de Bateria e Térmica:**
-   - Observe o status de bateria através das APIs nativas (`BatteryService` / `BatteryHelper`).
-   - Reduza a frequência de tarefas de background em caso de bateria fraca ou superaquecimento térmico.
-
----
-
----
-
-## 8. Diretrizes Opcionais: O que Perguntar ao Desenvolvedor Antes de Implementar
-
-> [!NOTE]
-> Para evitar complexidade acidental e sobrecarga de dependências (respeitando a filosofia *Simplicity First* e *Zero Speculative Code*), certas funcionalidades permanecem **estritamente opcionais**. 
-> **Assistentes de IA e desenvolvedores devem sempre perguntar e alinhar a necessidade antes de incluí-las no projeto:**
-
-### 8.1 Módulos e Recursos Opcionais (Matriz de Decisão)
+> Para evitar complexidade e consumo desnecessário de recursos, certas capacidades são opcionais. **Assistentes de IA e desenvolvedores devem sempre perguntar e validar a necessidade antes de incluí-las:**
 
 | Recurso / Módulo | Quando Perguntar ao Desenvolvedor | Padrão Recomendado se Aprovado |
 | :--- | :--- | :--- |
-| **Persistência SQLite & Migrações** (`nano-spring-data`) | *"A aplicação precisará de persistência em banco de dados local ou apenas dados em memória/comunicação em rede?"* | Se sim: usar `@Repository`, scripts SQL sequenciais (`V1__init.sql`) em `assets/db/migrations/` via `MigrationManager`. |
-| **Proteção contra DoS / Rate Limiting** | *"A API será exposta em rede Wi-Fi aberta/compartilhada exigindo limite de requisições por IP, ou será em rede controlada/ponto a ponto?"* | Se sim: configurar `TokenBucketRateLimiter` no `application.properties` para prevenir esgotamento de CPU/bateria. |
-| **CORS e Políticas de Origem** | *"Haverá clientes acessando a API a partir de navegadores web externos (SPAs/cross-origin)?"* | Se sim: declarar as origens permitidas explicitamente no `application.properties` ou configuração de CORS. |
-| **Documentação Interativa (OpenAPI / Swagger)** | *"Deseja incluir a interface interativa do Swagger (`/swagger-ui/`) para testes locais e documentação pública das rotas?"* | Se sim: adicionar as anotações `@Tag`, `@Operation` e `@ApiResponse` nos controllers. |
+| **Persistência SQLite & Migrações** (`nano-spring-data`) | *"A aplicação precisará de banco de dados SQLite local ou os dados serão mantidos em memória/rede?"* | Se sim: usar `nano-spring-data` com scripts SQL sequenciais (`V1__init.sql`) em `assets/db/migrations/`. |
+| **Proteção contra DoS / Rate Limiting** | *"A API será exposta em rede compartilhada exigindo limite de requisições por IP?"* | Se sim: configurar `TokenBucketRateLimiter` no `application.properties`. |
+| **CORS e Políticas de Origem** | *"Haverá clientes acessando a API a partir de navegadores externos em origens cruzadas?"* | Se sim: configurar as origens permitidas em `application.properties`. |
+| **Documentação Interativa (Swagger / OpenAPI)** | *"Deseja incluir a interface interativa do Swagger (`/swagger-ui/`) para testes locais da API?"* | Se sim: adicionar anotações `@Tag`, `@Operation` e `@ApiResponse` nos controllers. |
 
 ---
 
 ## 9. Checklist para Novos Projetos
 
 - [ ] Uso exclusivo dos recursos e abstrações do **Nano-Spring** antes de tentar implementar ou importar classes diretas do **NanoHTTPD**.
-- [ ] Separação explícita entre a interface Web (`controller/`, assets) e a interface do app Android (`ui/`).
-- [ ] **Interface do dispositivo implementada de forma 100% nativa** (Jetpack Compose ou XML), **evitando o uso de WebView** para a UI principal.
-- [ ] Uso padronizado de **HTMX** e templates Mustache em `assets/templates/` via `ModelAndView`, **sem HTML inline** nos controllers (destinado a clientes web remotos).
-- [ ] Implementação de **Autenticação centralizada** via `@Interceptor` (`HandlerInterceptor`) com `@Order(1)`.
-- [ ] Implementação de **Tratamento Centralizado de Exceções** via `@ControllerAdvice` retornando respostas de erro JSON padronizadas.
+- [ ] Separação explícita entre a interface do app Android (`ui/`) e a interface Web remota (`controller/`, `assets/`).
+- [ ] **Interface do dispositivo preferencialmente nativa** (Compose ou XML); uso de WebView reservado apenas para casos com justificativa técnica e avaliação de memória.
+- [ ] Renderização Web remota baseada em **HTMX + templates Mustache** em `assets/templates/` via `ModelAndView`, **sem HTML inline** nos controllers.
+- [ ] **Autenticação centralizada com validação de caminho por delimitador (`/`) e validação segura de tokens** (assinatura/integridade/expiração).
+- [ ] **Tratamento Centralizado de Exceções** via `@ControllerAdvice` retornando respostas de erro JSON padronizadas (`ErrorResponse`).
 - [ ] Registro e anúncio **mDNS / Zeroconf** (`nano-spring-discovery`) com resolução de host habilitada e permissão `CHANGE_WIFI_MULTICAST_STATE`.
-- [ ] Confirmação prévia com o usuário/desenvolvedor sobre recursos opcionais (`nano-spring-data`, Swagger, CORS, Rate Limiter).
-- [ ] Nenhum vazamento de instâncias de `Activity`, `View` ou referências diretas de UI para `@RestController` ou `@Service`.
-- [ ] Pacote base devidamente configurado e sem referências a `org.springframework.*`.
-- [ ] Dependências `nano-spring-core`, `nano-spring-web` e `nano-spring-discovery` adicionadas ao `build.gradle`.
-- [ ] Permissões de rede, multicast e Foreground Service configuradas no `AndroidManifest.xml`.
-- [ ] Subclasse de `NanoSpringService` criada e registrada no manifest.
-- [ ] DTOs com validações (`@Valid`, `@NotNull`, `@Size`) nos endpoints que recebem `@RequestBody`.
-- [ ] Camada de serviço separada da camada de controle e persistência.
+- [ ] Resiliência de ciclo de vida planejada (Foreground Service configurado, `START_STICKY` e consciência dos limites do LMK).
+- [ ] Alinhamento prévio com o desenvolvedor sobre módulos opcionais (`nano-spring-data`, Swagger, CORS, Rate Limiter).
+- [ ] DTOs com validações (`@Valid`, `@NotNull`, `@Size`) e valores monetários modelados sem `Double`.
+- [ ] Consultas SQLite protegidas contra SQL Injection via bind parameters (`selectionArgs`).
