@@ -27,7 +27,7 @@ subprojects {
                         from(component)
                         groupId = "com.github.matheuscruzsouza"
                         artifactId = project.name
-                        version = System.getenv("VERSION") ?: refVersion ?: "2.4.1"
+                        version = System.getenv("VERSION") ?: refVersion ?: "2.5.0"
                     }
                 }
                 repositories {

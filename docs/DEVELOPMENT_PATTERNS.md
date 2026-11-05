@@ -236,7 +236,7 @@ Em redes locais móveis (onde o roteador atribui IPs dinâmicos via DHCP), o an�
 ### 6.1 Dependência no `app/build.gradle` (ou `build.gradle.kts`)
 ```kotlin
 dependencies {
-    val nanoSpringVersion = "2.4.1"
+    val nanoSpringVersion = "2.5.0"
     implementation("com.github.matheuscruzsouza:nano-spring-discovery:$nanoSpringVersion")
 }
 ```
