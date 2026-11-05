@@ -153,6 +153,31 @@ public class AuthInterceptor implements HandlerInterceptor {
 }
 ```
 
+#### 3.2 Autenticação Nativa com JWT (`JwtAuthenticationProvider`)
+Quando a aplicação necessita de autenticação stateless com tokens criptografados e controle de expiração, utilize o `JwtAuthenticationProvider` nativo do Nano-Spring:
+
+```java
+package com.example.meuprojeto.config;
+
+import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.Component;
+import com.github.matheuscruzsouza.nanospring.security.JwtAuthenticationProvider;
+
+@Component
+public class SecurityConfig {
+
+    @Autowired
+    public void configureSecurity(JwtAuthenticationProvider jwtProvider) {
+        jwtProvider.setSecretKey("chave-secreta-forte-minimo-256-bits");
+        jwtProvider.setExpirationMillis(86400000L); // 24 horas
+    }
+}
+```
+
+> [!IMPORTANT]
+> **Diretriz de Segurança Adicional para Redes Compartilhadas:**  
+> Em dispositivos compartilhados em rede local (Wi-Fi), a renovação de tokens ou expiração deve considerar a limpeza de sessões inativas (alinhado à recente correção do `TokenBucketRateLimiter`, que expira buckets por inatividade de 60s).
+
 ---
 
 ## 4. Tratamento Centralizado de Exceções (`@ControllerAdvice`)
@@ -226,6 +251,13 @@ O Nano-Spring executa dentro do processo da JVM/ART do Android. O gerenciamento 
    - Para Android 14+ (`API 34+`), declare tipos condizentes com a atividade da aplicação no `AndroidManifest.xml` (ex.: `dataSync` ou `specialUse` caso justificado).
 3. **Prevenção de Doze Mode e Quedas de Rede:**
    - Utilize a trava de multicast (`CHANGE_WIFI_MULTICAST_STATE`) e o WakeLock de forma ponderada e gerencie o desligamento gracioso liberando sockets no `onDestroy`.
+
+### 5.3 Otimizações de Socket e Latência (v2.4.1)
+- O Nano-Spring utiliza internamente `FastSocketWrapper` com `TCP_NODELAY` ativado e buffers de rede otimizados (**256 KB** para envio / **128 KB** para recepção).
+- **Prevenção de Gargalos em Redes Mesh/VPN (ZeroTier, Tailscale):** Para evitar bloqueios provocados por resolução de DNS reverso (`PTR lookup`) nos sockets de clientes Android, as chamadas remotas de identificação de IP devem priorizar o endereço sem bloqueio de hostname.
+
+### 5.4 I/O de Armazenamento Flash (Buffered I/O)
+- Para leituras em disco no Android, nunca use buffers menores que 64 KB para arquivos de mídia. O padrão adotado no `FastFileResourceRegion` é de **512 KB**, o que minimiza interrupções e *syscalls* no kernel Linux do Android.
 
 ---
 
@@ -580,30 +612,109 @@ public class ProductWebController {
 
 ---
 
-## 8. Recursos Opcionais (Perguntar Antes ao Desenvolvedor)
+## 8. Armazenamento e Streaming de Mídia (Storage & Media Streaming)
+
+Aplicações locais no Android com frequência precisam servir músicas, vídeos, PDFs ou arquivos grandes para outros clientes na rede local (como reprodutores HTML5 Video, VLC, ExoPlayer ou outros dispositivos).
+
+### 8.1 Entrega Eficiente de Conteúdo Parcial (`HTTP 206 Partial Content`)
+- ❌ **Anti-Pattern:** Nunca carregue arquivos inteiros em arrays de bytes (`byte[]`) ou envie `FileInputStream` genérico sem suporte a range headers, pois isso causa alto consumo de heap e travamentos no player do cliente.
+- ✅ **Padrão Recomendado:** Retorne sempre `ResponseEntity<ResourceRegion>` utilizando a abstração nativa `FileResourceRegion` ou `FastFileResourceRegion`:
+
+```java
+package com.example.meuprojeto.controller.api;
+
+import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.PathVariable;
+import com.github.matheuscruzsouza.nanospring.annotation.RestController;
+import com.github.matheuscruzsouza.nanospring.annotation.openapi.Tag;
+import com.github.matheuscruzsouza.nanospring.http.ResponseEntity;
+import com.github.matheuscruzsouza.nanospring.storage.ByteRangeHandler;
+import com.github.matheuscruzsouza.nanospring.storage.FastFileResourceRegion;
+import com.github.matheuscruzsouza.nanospring.storage.ResourceRegion;
+import com.example.meuprojeto.model.MediaItem;
+import com.example.meuprojeto.service.MediaLibraryService;
+
+import java.io.File;
+
+@Tag(name = "Streaming de Mídia")
+@RestController("/api/media")
+public class MediaStreamApiController {
+
+    private final MediaLibraryService libraryService;
+
+    @Autowired
+    public MediaStreamApiController(MediaLibraryService libraryService) {
+        this.libraryService = libraryService;
+    }
+
+    @GetMethod("/:id/stream")
+    public ResponseEntity<ResourceRegion> streamMedia(@PathVariable("id") String id) {
+        MediaItem media = libraryService.buscarPorId(id);
+        File file = new File(media.getFilePath());
+
+        // Resolução automática de MIME type via utilitário do nano-spring
+        String mimeType = ByteRangeHandler.detectMediaMimeType(file.getName());
+
+        return ResponseEntity.ok()
+                .header("Cache-Control", "public, max-age=3600")
+                .header("ETag", "\"" + file.length() + "-" + file.lastModified() + "\"")
+                .body(new FastFileResourceRegion(file, mimeType));
+    }
+}
+```
+
+### 8.2 Cache de Metadados / Cabeçalhos (`StreamHeaderCache`)
+Em arquivos de vídeo (como MP4/MKV), os reprodutores remotos (HTML5 Video, VLC, ExoPlayer) costumam requisitar repetidamente os primeiros megabytes (metadados do cabeçalho / moov atom) antes de avançar no playback.
+
+- Utilize o `StreamHeaderCache` para manter em memória RAM os primeiros bytes dos arquivos mais acessados (política LRU).
+- **Configuração em `assets/application.properties`:**
+```properties
+# Habilita cache de cabeçalhos de mídia em memória RAM
+nanospring.storage.header-cache.enabled=true
+# Tamanho padrão do cabeçalho em cache por arquivo (ex: 2 MB)
+nanospring.storage.header-cache.header-size=2097152
+# Consumo máximo total da memória do cache (ex: 32 MB)
+nanospring.storage.header-cache.max-memory=33554432
+```
+
+### 8.3 Supressão de GZIP em Conteúdos Binários
+- O framework Nano-Spring suprime automaticamente a compressão GZIP para mídias (`video/*`, `audio/*`, imagens compactadas) e respostas parciais HTTP 206.
+- A equipe não deve forçar codificações de compressão sobre `ResourceRegion`, preservando CPU do host Android.
+
+---
+
+## 9. Recursos Opcionais (Perguntar Antes ao Desenvolvedor)
 
 > [!NOTE]
 > Para evitar complexidade e consumo desnecessário de recursos, certas capacidades são opcionais. **Assistentes de IA e desenvolvedores devem sempre perguntar e validar a necessidade antes de incluí-las:**
 
 | Recurso / Módulo | Quando Perguntar ao Desenvolvedor | Padrão Recomendado se Aprovado |
 | :--- | :--- | :--- |
+| **Streaming de Mídia & Grandes Arquivos** (`nano-spring-web`) | *"A aplicação precisará transmitir vídeos, áudios ou oferecer suporte a downloads com Range Requests?"* | Usar `ResponseEntity<ResourceRegion>` com `FastFileResourceRegion` e habilitar `StreamHeaderCache` no `application.properties`. |
+| **Autenticação Baseada em JWT** (`nano-spring-security`) | *"A API requer autenticação stateless com tokens criptografados e controle de expiração?"* | Utilizar o `JwtAuthenticationProvider` nativo em conjunto com `@Interceptor`. |
 | **Persistência SQLite & Migrações** (`nano-spring-data`) | *"A aplicação precisará de banco de dados SQLite local ou os dados serão mantidos em memória/rede?"* | Se sim: usar `nano-spring-data` com scripts SQL sequenciais (`V1__init.sql`) em `assets/db/migrations/`. |
 | **Proteção contra DoS / Rate Limiting** | *"A API será exposta em rede compartilhada exigindo limite de requisições por IP?"* | Se sim: configurar `TokenBucketRateLimiter` no `application.properties`. |
 | **CORS e Políticas de Origem** | *"Haverá clientes acessando a API a partir de navegadores externos em origens cruzadas?"* | Se sim: configurar as origens permitidas em `application.properties`. |
-| **Documentação Interativa (Swagger / OpenAPI)** | *"Deseja incluir a interface interativa do Swagger (`/swagger-ui/`) para testes locais da API?"* | Se sim: adicionar anotações `@Tag`, `@Operation` e `@ApiResponse` nos controllers. |
+| **Documentação Interativa (Swagger / OpenAPI)** | *"Deseja documentar os endpoints HTTP para visualização interativa no navegador?"* | Utilizar anotações `@Tag`, `@Operation` e `@ApiResponse` nos controllers. |
 
 ---
 
-## 9. Checklist para Novos Projetos
+## 10. Checklist para Novos Projetos
 
 - [ ] Uso exclusivo dos recursos e abstrações do **Nano-Spring** antes de tentar implementar ou importar classes diretas do **NanoHTTPD**.
 - [ ] Separação explícita entre a interface do app Android (`ui/`) e a interface Web remota (`controller/`, `assets/`).
 - [ ] **Interface do dispositivo preferencialmente nativa** (Compose ou XML); uso de WebView reservado apenas para casos com justificativa técnica e avaliação de memória.
 - [ ] Renderização Web remota baseada em **HTMX + templates Mustache** em `assets/templates/` via `ModelAndView`, **sem HTML inline** nos controllers.
 - [ ] **Autenticação centralizada com validação de caminho por delimitador (`/`) e validação segura de tokens** (assinatura/integridade/expiração).
+- [ ] **Segurança com JWT:** Adoção de `JwtAuthenticationProvider` quando a aplicação demandar autenticação dinâmica/stateless.
+- [ ] **Streaming Otimizado:** Implementação de endpoints de streaming via `ResourceRegion` e `ByteRangeHandler`, sem leitura completa de arquivos em memória RAM.
+- [ ] **Cache de Metadados de Streaming:** Configuração de `nanospring.storage.header-cache` definida no `application.properties` caso a aplicação atue como servidor de mídia.
+- [ ] **Documentação OpenAPI:** Endpoints públicos anotados com `@Tag` e `@Operation` caso o módulo Swagger esteja habilitado.
 - [ ] **Tratamento Centralizado de Exceções** via `@ControllerAdvice` retornando respostas de erro JSON padronizadas (`ErrorResponse`).
 - [ ] Registro e anúncio **mDNS / Zeroconf** (`nano-spring-discovery`) com resolução de host habilitada e permissão `CHANGE_WIFI_MULTICAST_STATE`.
 - [ ] Resiliência de ciclo de vida planejada (Foreground Service configurado, `START_STICKY` e consciência dos limites do LMK).
 - [ ] Alinhamento prévio com o desenvolvedor sobre módulos opcionais (`nano-spring-data`, Swagger, CORS, Rate Limiter).
 - [ ] DTOs com validações (`@Valid`, `@NotNull`, `@Size`) e valores monetários modelados sem `Double`.
 - [ ] Consultas SQLite protegidas contra SQL Injection via bind parameters (`selectionArgs`).
+- [ ] **Compatibilidade de Tooling:** Projetos novos devem mirar no Gradle 8.10.2 / AGP 8.7.3 e compilar com compatibilidade para o SDK 36.
