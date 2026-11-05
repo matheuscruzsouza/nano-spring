@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Versão 2.4.1 | Notas de Versão | Nano-Spring 🌱</title>
+  <title>Versão 2.5.0 | Notas de Versão | Nano-Spring 🌱</title>
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
 </head>
@@ -14,7 +14,7 @@
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
       <span class="logo-icon">🌱</span>
       <span>Nano-Spring</span>
-      <span class="badge">v2.4.1</span>
+      <span class="badge">v2.5.0</span>
     </div>
     <div class="topbar-center">
       <button class="search-btn" aria-label="Buscar na documentação">
@@ -39,10 +39,51 @@
 
     <main class="main-content">
       <div class="content">
-        <div class="hero-pill">🚀 Versão 2.4.1 - Performance de Rede, Concorrência e Suporte ao Android SDK 36</div>
-        <h1>Notas de Versão 2.4.1 (Patch Release)</h1>
+        <div class="hero-pill">🚀 Versão 2.5.0 - Otimização Nativa de Streaming (HTTP 206 Partial Content)</div>
+        <h1>Notas de Versão 2.5.0</h1>
         
-        <p class="lead">A versão <strong>2.4.1</strong> traz otimizações críticas de latência de socket e escalonamento do pool de threads, expiração baseada em inatividade no Rate Limiter, cache HTTP para assets estáticos e suporte oficial ao Android SDK 36 com AGP 8.7.3 e Gradle 8.10.2.</p>
+        <p class="lead">A versão <strong>2.5.0</strong> traz uma reformulação arquitetural no pipeline de streaming de mídia no módulo <code>nano-spring-web</code>. Com cache LRU agnóstico de cabeçalhos em RAM (<code>StreamHeaderCache</code>), suporte híbrido memória + disco (<code>FastFileResourceRegion</code>) e buffer de leitura sequencial de 512 KB, o framework elimina latência de inicialização de players HTML5 e reduz drasticamente syscalls na memória flash do Android.</p>
+
+        <h2 id="streaming-native-cache">⚡ Cache LRU de Cabeçalhos em RAM: <code>StreamHeaderCache</code></h2>
+        <p>Aplicações e players modernos de áudio e vídeo emitem múltiplas requisições <code>Range</code> iniciais consecutivas para extrair metadados e tabelas de índice (<code>ID3v2</code>, <code>moov atom</code>, FLAC headers). O <code>StreamHeaderCache</code> atua em memória RAM:</p>
+        <ul>
+          <li><strong>Fast-Start Imediato</strong>: Entrega os primeiros bytes de contêineres de mídia em <strong>0ms de I/O em disco</strong> para arquivos frequentes ou recém-acessados.</li>
+          <li><strong>Agnóstico e Seguro</strong>: Implementado sem dependências proprietárias do Android, permitindo execução tanto na JVM padrão de testes quanto no runtime Android com controle estrito de memória heap para evitar <code>OutOfMemoryError</code>.</li>
+        </ul>
+
+        <h2 id="streaming-fast-region">🚀 <code>FastFileResourceRegion</code>: Pipeline Híbrido RAM + Disco</h2>
+        <p>O <code>FastFileResourceRegion</code> substitui a antiga leitura não-bufferizada ou com buffers reduzidos:</p>
+        <ul>
+          <li><strong>Buffer Sequencial de 512 KB</strong>: Reduz a frequência de <i>syscalls</i> de leitura na memória flash do dispositivo móvel.</li>
+          <li><strong>SequenceInputStream Bridge</strong>: Quando um offset inicial coincide com a fatia em cache, combina seamlessly o buffer de memória com o canal de disco (<code>FileChannel</code>) sem alocações intermediárias de heap.</li>
+          <li><strong>Retrocompatibilidade Transparente</strong>: <code>FileResourceRegion</code> estende <code>FastFileResourceRegion</code>, beneficiando código legado sem necessidade de refatoração.</li>
+        </ul>
+
+        <h2 id="streaming-properties">⚙️ Configurações em <code>application.properties</code></h2>
+        <p>Ajuste os parâmetros de cache e buffer de acordo com as necessidades do aplicativo:</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">application.properties</span>
+          </div>
+          <pre><code class="language-properties"># Habilita ou desabilita o cache LRU de cabeçalhos (padrão: true)
+nano.storage.stream.header-cache.enabled=true
+
+# Tamanho do bloco inicial mantido em cache por arquivo (ex: 512 KB)
+nano.storage.stream.header-cache.chunk-size=524288
+
+# Limite máximo de memória reservado para o cache de streaming (ex: 8 MB)
+nano.storage.stream.header-cache.max-memory=8388608
+
+# Tamanho do buffer de leitura sequencial do disco (padrão: 512 KB)
+nano.storage.stream.disk-buffer-size=524288</code></pre>
+        </div>
+
+        <h2 id="streaming-http-headers">🏷️ Injeção Automática de <code>ETag</code> e <code>Cache-Control</code></h2>
+        <p>O <code>ByteRangeHandler</code> agora injeta automaticamente os cabeçalhos <code>Cache-Control: public, max-age=3600</code> e <code>ETag: "{length}-{lastModified}"</code> nas respostas <code>200 OK</code> e <code>206 Partial Content</code>, permitindo validação condicional e cache eficiente no cliente.</p>
+
+        <h2 id="historico-241">📜 Histórico: Novidades da v2.4.1</h2>
+        <p>A versão <strong>2.4.1</strong> trouxe otimizações críticas de latência de socket e escalonamento do pool de threads, expiração baseada em inatividade no Rate Limiter, cache HTTP para assets estáticos e suporte ao Android SDK 36 com AGP 8.7.3 e Gradle 8.10.2.</p>
 
         <h2 id="patch-network-socket">⚡ Otimização de Socket: <code>FastSocketWrapper</code> (Zero Reverse DNS &amp; TCP_NODELAY)</h2>
         <p>Em redes VPN virtuais (como ZeroTier e Tailscale) ou redes locais sem servidor DNS reverso, chamadas internas a <code>InetAddress.getHostName()</code> podiam bloquear conexões por vários segundos aguardando timeout de registros PTR. O novo <code>FastSocketWrapper</code> resolve isso na camada de transporte:</p>

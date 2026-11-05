@@ -60,6 +60,8 @@ public class ByteRangeHandlerTest {
         assertEquals(NanoHTTPD.Response.Status.OK, response.getStatus());
         assertEquals("bytes", response.getHeader("Accept-Ranges"));
         assertEquals(String.valueOf(content.length()), response.getHeader("Content-Length"));
+        assertEquals("public, max-age=3600", response.getHeader("Cache-Control"));
+        assertEquals("\"" + tempFile.length() + "-" + tempFile.lastModified() + "\"", response.getHeader("ETag"));
         assertEquals(content, readStream(response.getData()));
     }
 
@@ -76,6 +78,8 @@ public class ByteRangeHandlerTest {
         assertEquals("bytes", response.getHeader("Accept-Ranges"));
         assertEquals("10", response.getHeader("Content-Length"));
         assertEquals("bytes 0-9/" + content.length(), response.getHeader("Content-Range"));
+        assertEquals("public, max-age=3600", response.getHeader("Cache-Control"));
+        assertEquals("\"" + tempFile.length() + "-" + tempFile.lastModified() + "\"", response.getHeader("ETag"));
         assertEquals("0123456789", readStream(response.getData()));
     }
 

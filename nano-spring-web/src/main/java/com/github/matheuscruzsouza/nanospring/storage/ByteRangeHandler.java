@@ -1,6 +1,7 @@
 package com.github.matheuscruzsouza.nanospring.storage;
 
 import com.github.matheuscruzsouza.nanospring.http.HttpStatus;
+import com.github.matheuscruzsouza.nanospring.server.Environment;
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
 import fi.iki.elonen.NanoHTTPD.Response;
@@ -10,7 +11,44 @@ import java.io.InputStream;
 
 public final class ByteRangeHandler {
 
+    private static final String PROP_HEADER_CACHE_ENABLED = "nano.storage.stream.header-cache.enabled";
+    private static final String PROP_HEADER_CACHE_CHUNK_SIZE = "nano.storage.stream.header-cache.chunk-size";
+    private static final String PROP_HEADER_CACHE_MAX_MEMORY = "nano.storage.stream.header-cache.max-memory";
+    private static final String PROP_DISK_BUFFER_SIZE = "nano.storage.stream.disk-buffer-size";
+
+    private static final int DEFAULT_CHUNK_SIZE = 512 * 1024;      // 512 KB
+    private static final int DEFAULT_MAX_MEMORY = 8 * 1024 * 1024;  // 8 MB
+    private static final int DEFAULT_DISK_BUFFER_SIZE = 512 * 1024; // 512 KB
+
+    private static volatile StreamHeaderCache globalHeaderCache;
+
     private ByteRangeHandler() {
+    }
+
+    public static StreamHeaderCache getHeaderCache() {
+        if (globalHeaderCache == null) {
+            synchronized (ByteRangeHandler.class) {
+                if (globalHeaderCache == null) {
+                    boolean enabled = parseBoolean(Environment.getProperty(PROP_HEADER_CACHE_ENABLED), true);
+                    if (enabled) {
+                        int chunkSize = parseInt(Environment.getProperty(PROP_HEADER_CACHE_CHUNK_SIZE), DEFAULT_CHUNK_SIZE);
+                        int maxMemory = parseInt(Environment.getProperty(PROP_HEADER_CACHE_MAX_MEMORY), DEFAULT_MAX_MEMORY);
+                        globalHeaderCache = new StreamHeaderCache(chunkSize, maxMemory);
+                    }
+                }
+            }
+        }
+        return globalHeaderCache;
+    }
+
+    public static void setHeaderCache(StreamHeaderCache cache) {
+        synchronized (ByteRangeHandler.class) {
+            globalHeaderCache = cache;
+        }
+    }
+
+    public static int getDiskBufferSize() {
+        return parseInt(Environment.getProperty(PROP_DISK_BUFFER_SIZE), DEFAULT_DISK_BUFFER_SIZE);
     }
 
     public static Response serveFile(IHTTPSession session, File file, String mimeType) {
@@ -20,7 +58,16 @@ public final class ByteRangeHandler {
         String resolvedMime = (mimeType == null || mimeType.trim().isEmpty() || "application/json".equalsIgnoreCase(mimeType))
                 ? detectMediaMimeType(file.getName())
                 : mimeType;
-        return serveResource(session, new FileResourceRegion(file, resolvedMime));
+
+        byte[] headerBytes = null;
+        StreamHeaderCache cache = getHeaderCache();
+        if (cache != null) {
+            headerBytes = cache.getOrLoad(file);
+        }
+
+        int bufferSize = getDiskBufferSize();
+        FastFileResourceRegion resource = new FastFileResourceRegion(file, resolvedMime, headerBytes, bufferSize);
+        return serveResource(session, resource);
     }
 
     public static String detectMediaMimeType(String filename) {
@@ -70,6 +117,7 @@ public final class ByteRangeHandler {
                 response.setGzipEncoding(false);
                 response.addHeader("Accept-Ranges", "bytes");
                 response.addHeader("Content-Length", String.valueOf(totalLength));
+                applyCacheHeaders(response, resource);
                 return response;
             } catch (Exception e) {
                 closeQuietly(resource);
@@ -144,11 +192,24 @@ public final class ByteRangeHandler {
             response.addHeader("Accept-Ranges", "bytes");
             response.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + totalLength);
             response.addHeader("Content-Length", String.valueOf(chunkLength));
+            applyCacheHeaders(response, resource);
 
             return response;
         } catch (Exception e) {
             closeQuietly(resource);
             return NanoHTTPD.newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Erro ao processar stream parcial: " + e.getMessage());
+        }
+    }
+
+    private static void applyCacheHeaders(Response response, ResourceRegion resource) {
+        if (response == null) return;
+        response.addHeader("Cache-Control", "public, max-age=3600");
+
+        if (resource instanceof FastFileResourceRegion) {
+            File f = ((FastFileResourceRegion) resource).getFile();
+            if (f != null && f.exists()) {
+                response.addHeader("ETag", "\"" + f.length() + "-" + f.lastModified() + "\"");
+            }
         }
     }
 
@@ -165,6 +226,24 @@ public final class ByteRangeHandler {
                 res.close();
             } catch (Exception ignored) {
             }
+        }
+    }
+
+    private static boolean parseBoolean(String value, boolean defaultValue) {
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        return Boolean.parseBoolean(value.trim());
+    }
+
+    private static int parseInt(String value, int defaultValue) {
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return defaultValue;
         }
     }
 }
