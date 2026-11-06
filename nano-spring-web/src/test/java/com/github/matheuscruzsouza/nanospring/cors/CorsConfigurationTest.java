@@ -14,7 +14,7 @@ public class CorsConfigurationTest {
         CorsConfiguration config = new CorsConfiguration(null);
         assertTrue(config.isEnabled());
         assertEquals("*", config.getAllowedOrigins());
-        assertEquals("GET,POST,PUT,DELETE,OPTIONS", config.getAllowedMethods());
+        assertEquals("GET,POST,PUT,DELETE,PATCH,HEAD,OPTIONS", config.getAllowedMethods());
         assertEquals("Content-Type,Authorization,X-Requested-With,Accept", config.getAllowedHeaders());
         assertEquals("86400", config.getMaxAge());
     }

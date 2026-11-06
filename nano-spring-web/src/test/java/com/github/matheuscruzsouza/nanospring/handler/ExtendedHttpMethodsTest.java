@@ -143,7 +143,7 @@ public class ExtendedHttpMethodsTest {
         NanoHTTPD.Response response = ServerIndexHandler.process(session);
 
         assertNotNull(response);
-        assertEquals(NanoHTTPD.Response.Status.OK, response.getStatus());
+        assertEquals(200, response.getStatus().getRequestStatus());
     }
 
     @Test
@@ -152,7 +152,7 @@ public class ExtendedHttpMethodsTest {
         NanoHTTPD.Response response = ServerIndexHandler.process(session);
 
         assertNotNull(response);
-        assertEquals(NanoHTTPD.Response.Status.OK, response.getStatus());
+        assertEquals(200, response.getStatus().getRequestStatus());
         // Verify stream has 0 available bytes
         assertEquals(0, response.getData().available());
     }
@@ -163,7 +163,7 @@ public class ExtendedHttpMethodsTest {
         NanoHTTPD.Response response = ServerIndexHandler.process(session);
 
         assertNotNull(response);
-        assertEquals(NanoHTTPD.Response.Status.OK, response.getStatus());
+        assertEquals(200, response.getStatus().getRequestStatus());
     }
 
     @Test
@@ -172,7 +172,7 @@ public class ExtendedHttpMethodsTest {
         NanoHTTPD.Response response = ServerIndexHandler.process(session);
 
         assertNotNull(response);
-        assertEquals(NanoHTTPD.Response.Status.OK, response.getStatus());
+        assertEquals(200, response.getStatus().getRequestStatus());
     }
 
     @Test
@@ -181,7 +181,7 @@ public class ExtendedHttpMethodsTest {
         NanoHTTPD.Response response = ServerIndexHandler.process(session);
 
         assertNotNull(response);
-        assertEquals(NanoHTTPD.Response.Status.OK, response.getStatus());
+        assertEquals(200, response.getStatus().getRequestStatus());
     }
 
     @Test
