@@ -7,10 +7,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.github.matheuscruzsouza.nanospring.annotation.Autowired;
+import com.github.matheuscruzsouza.nanospring.annotation.ConnectMethod;
 import com.github.matheuscruzsouza.nanospring.annotation.DeleteMethod;
 import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.HeadMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.OptionsMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.PatchMethod;
 import com.github.matheuscruzsouza.nanospring.annotation.PostMethod;
 import com.github.matheuscruzsouza.nanospring.annotation.PutMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.TraceMethod;
 import com.github.matheuscruzsouza.nanospring.annotation.Repository;
 import com.github.matheuscruzsouza.nanospring.annotation.RestController;
 import com.github.matheuscruzsouza.nanospring.annotation.Service;
@@ -627,6 +632,21 @@ public class Server extends RouterNanoHTTPD {
                     } else if (m.isAnnotationPresent(DeleteMethod.class)) {
                         String methodPath = m.getDeclaredAnnotationsByType(DeleteMethod.class)[0].value();
                         ServerIndexHandler.register(NanoHTTPD.Method.DELETE, path + methodPath, instance, m);
+                    } else if (m.isAnnotationPresent(PatchMethod.class)) {
+                        String methodPath = m.getDeclaredAnnotationsByType(PatchMethod.class)[0].value();
+                        ServerIndexHandler.register(NanoHTTPD.Method.PATCH, path + methodPath, instance, m);
+                    } else if (m.isAnnotationPresent(HeadMethod.class)) {
+                        String methodPath = m.getDeclaredAnnotationsByType(HeadMethod.class)[0].value();
+                        ServerIndexHandler.register(NanoHTTPD.Method.HEAD, path + methodPath, instance, m);
+                    } else if (m.isAnnotationPresent(OptionsMethod.class)) {
+                        String methodPath = m.getDeclaredAnnotationsByType(OptionsMethod.class)[0].value();
+                        ServerIndexHandler.register(NanoHTTPD.Method.OPTIONS, path + methodPath, instance, m);
+                    } else if (m.isAnnotationPresent(TraceMethod.class)) {
+                        String methodPath = m.getDeclaredAnnotationsByType(TraceMethod.class)[0].value();
+                        ServerIndexHandler.register(NanoHTTPD.Method.TRACE, path + methodPath, instance, m);
+                    } else if (m.isAnnotationPresent(ConnectMethod.class)) {
+                        String methodPath = m.getDeclaredAnnotationsByType(ConnectMethod.class)[0].value();
+                        ServerIndexHandler.register(NanoHTTPD.Method.CONNECT, path + methodPath, instance, m);
                     }
                 }
             } catch (Exception e) {

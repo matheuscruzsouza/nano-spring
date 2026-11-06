@@ -1,9 +1,14 @@
 package com.github.matheuscruzsouza.nanospring.handler;
 
+import com.github.matheuscruzsouza.nanospring.annotation.ConnectMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.DeleteMethod;
 import com.github.matheuscruzsouza.nanospring.annotation.GetMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.HeadMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.OptionsMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.PatchMethod;
 import com.github.matheuscruzsouza.nanospring.annotation.PostMethod;
 import com.github.matheuscruzsouza.nanospring.annotation.PutMethod;
-import com.github.matheuscruzsouza.nanospring.annotation.DeleteMethod;
+import com.github.matheuscruzsouza.nanospring.annotation.TraceMethod;
 import com.github.matheuscruzsouza.nanospring.annotation.PathVariable;
 import com.github.matheuscruzsouza.nanospring.annotation.RequestBody;
 import com.github.matheuscruzsouza.nanospring.annotation.RequestParam;
@@ -96,7 +101,10 @@ public class ServerIndexHandler {
                 
 
                 if (pathMap == null) {
-                    return newFixedLengthResponse(Status.METHOD_NOT_ALLOWED, "text/plain", "Method not allowed");
+                    NanoHTTPD.Response response = newFixedLengthResponse(Status.METHOD_NOT_ALLOWED, "text/plain", "Method not allowed");
+                    String allowed = String.join(", ", methodsMap.keySet().stream().map(Enum::name).collect(java.util.stream.Collectors.toList()));
+                    response.addHeader("Allow", allowed);
+                    return response;
                 }
 
                 Optional<Map.Entry<Object, Method>> entry = pathMap.entrySet().stream().findFirst();
@@ -150,10 +158,20 @@ public class ServerIndexHandler {
                 mimeType = method.getAnnotation(PutMethod.class).mimeType();
             } else if (httpMethod == NanoHTTPD.Method.DELETE && method.isAnnotationPresent(DeleteMethod.class)) {
                 mimeType = method.getAnnotation(DeleteMethod.class).mimeType();
+            } else if (httpMethod == NanoHTTPD.Method.PATCH && method.isAnnotationPresent(PatchMethod.class)) {
+                mimeType = method.getAnnotation(PatchMethod.class).mimeType();
+            } else if (httpMethod == NanoHTTPD.Method.HEAD && method.isAnnotationPresent(HeadMethod.class)) {
+                mimeType = method.getAnnotation(HeadMethod.class).mimeType();
+            } else if (httpMethod == NanoHTTPD.Method.OPTIONS && method.isAnnotationPresent(OptionsMethod.class)) {
+                mimeType = method.getAnnotation(OptionsMethod.class).mimeType();
+            } else if (httpMethod == NanoHTTPD.Method.TRACE && method.isAnnotationPresent(TraceMethod.class)) {
+                mimeType = method.getAnnotation(TraceMethod.class).mimeType();
+            } else if (httpMethod == NanoHTTPD.Method.CONNECT && method.isAnnotationPresent(ConnectMethod.class)) {
+                mimeType = method.getAnnotation(ConnectMethod.class).mimeType();
             }
 
             Map<String, String> files = new HashMap<>();
-            if (httpMethod == NanoHTTPD.Method.POST || httpMethod == NanoHTTPD.Method.PUT) {
+            if (httpMethod == NanoHTTPD.Method.POST || httpMethod == NanoHTTPD.Method.PUT || httpMethod == NanoHTTPD.Method.PATCH) {
                 try {
                     session.parseBody(files);
                 android.util.Log.d("UPLOAD_DEBUG", "Files map: " + files.toString());
@@ -479,6 +497,10 @@ public class ServerIndexHandler {
                         finalResponse.addHeader(header.getKey(), header.getValue());
                     }
                 }
+            }
+
+            if (httpMethod == NanoHTTPD.Method.HEAD) {
+                finalResponse.setData(new java.io.ByteArrayInputStream(new byte[0]));
             }
 
             return finalResponse;

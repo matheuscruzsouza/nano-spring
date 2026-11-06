@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Versão 2.4.1 | Notas de Versão | Nano-Spring 🌱</title>
+  <title>Versão 2.5.0 | Notas de Versão | Nano-Spring 🌱</title>
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
 </head>
@@ -14,7 +14,7 @@
       <button class="menu-toggle" aria-label="Abrir Menu">☰</button>
       <span class="logo-icon">🌱</span>
       <span>Nano-Spring</span>
-      <span class="badge">v2.4.1</span>
+      <span class="badge">v2.5.0</span>
     </div>
     <div class="topbar-center">
       <button class="search-btn" aria-label="Buscar na documentação">
@@ -39,10 +39,47 @@
 
     <main class="main-content">
       <div class="content">
-        <div class="hero-pill">🚀 Versão 2.4.1 - Performance de Rede, Concorrência e Suporte ao Android SDK 36</div>
-        <h1>Notas de Versão 2.4.1 (Patch Release)</h1>
+        <div class="hero-pill">🚀 Versão 2.5.0 - Expansão de Métodos HTTP, Cabeçalho Allow e CORS Completo</div>
+        <h1>Notas de Versão 2.5.0 (Minor Release)</h1>
         
-        <p class="lead">A versão <strong>2.4.1</strong> traz otimizações críticas de latência de socket e escalonamento do pool de threads, expiração baseada em inatividade no Rate Limiter, cache HTTP para assets estáticos e suporte oficial ao Android SDK 36 com AGP 8.7.3 e Gradle 8.10.2.</p>
+        <p class="lead">A versão <strong>2.5.0</strong> expande os recursos HTTP do Nano-Spring com anotações dedicadas para <code>@PatchMethod</code>, <code>@HeadMethod</code>, <code>@OptionsMethod</code>, <code>@TraceMethod</code> e <code>@ConnectMethod</code>, conformidade com RFCs via cabeçalho <code>Allow</code> em respostas 405 Method Not Allowed e suporte padrão a PATCH/HEAD na configuração de CORS.</p>
+
+        <h2 id="feature-http-methods">🌐 Expansão de Métodos HTTP (@PatchMethod, @HeadMethod, @OptionsMethod, etc.)</h2>
+        <p>Além dos métodos convencionais (GET, POST, PUT, DELETE), o Nano-Spring agora suporta anotações semânticas dedicadas para todos os métodos suportados pelo motor HTTP:</p>
+        <ul>
+          <li><strong><code>@PatchMethod</code></strong>: Ideal para atualizações parciais de recursos, suportando injeção e validação automática de payload via <code>@RequestBody</code>.</li>
+          <li><strong><code>@HeadMethod</code></strong>: Retorna exatamente os mesmos cabeçalhos que uma requisição GET retornaria, descartando automaticamente o corpo (body) da resposta conforme a RFC 7231 / RFC 9110.</li>
+          <li><strong><code>@OptionsMethod</code></strong>: Permite expor endpoints de descoberta de capacidades do recurso além do pré-flight padrão do CORS.</li>
+          <li><strong><code>@TraceMethod</code> e <code>@ConnectMethod</code></strong>: Suporte nativo para diagnósticos e túneis de conexão HTTP.</li>
+        </ul>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">Exemplo: Utilizando os novos métodos HTTP em Controllers</span>
+          </div>
+          <pre><code class="language-java">@RestController("/api/users")
+public class UserController {
+
+    @PatchMethod("/:id")
+    public ResponseEntity&lt;User&gt; updatePartial(@PathVariable("id") String id, @RequestBody UpdateUserDto dto) {
+        return ResponseEntity.ok(userService.patch(id, dto));
+    }
+
+    @HeadMethod("/:id")
+    public ResponseEntity&lt;Void&gt; checkExists(@PathVariable("id") String id) {
+        return userService.exists(id) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+    }
+}</code></pre>
+        </div>
+
+        <h2 id="feature-allow-header">📋 Conformidade RFC: Cabeçalho <code>Allow</code> em Respostas 405</h2>
+        <p>Quando uma rota registrada recebe uma requisição com um método HTTP não suportado para aquele caminho, o Nano-Spring agora responde com status <code>405 Method Not Allowed</code> acompanhado do cabeçalho <code>Allow</code> com a lista exata de métodos aceitos pelo recurso (ex: <code>Allow: GET, POST, PATCH</code>).</p>
+
+        <h2 id="feature-cors-patch">🛡️ CORS Aprimorado com Suporte a PATCH e HEAD</h2>
+        <p>A configuração padrão de CORS (<code>nano.cors.allowed-methods</code>) agora inclui <code>PATCH</code> e <code>HEAD</code> nativamente: <code>GET,POST,PUT,DELETE,PATCH,HEAD,OPTIONS</code>.</p>
+
+        <h2 id="historico-241">⚡ Histórico: Novidades da v2.4.1</h2>
+        <p class="lead">A versão <strong>2.4.1</strong> trouxe otimizações críticas de latência de socket e escalonamento do pool de threads, expiração baseada em inatividade no Rate Limiter, cache HTTP para assets estáticos e suporte oficial ao Android SDK 36 com AGP 8.7.3 e Gradle 8.10.2.</p>
 
         <h2 id="patch-network-socket">⚡ Otimização de Socket: <code>FastSocketWrapper</code> (Zero Reverse DNS &amp; TCP_NODELAY)</h2>
         <p>Em redes VPN virtuais (como ZeroTier e Tailscale) ou redes locais sem servidor DNS reverso, chamadas internas a <code>InetAddress.getHostName()</code> podiam bloquear conexões por vários segundos aguardando timeout de registros PTR. O novo <code>FastSocketWrapper</code> resolve isso na camada de transporte:</p>
@@ -187,9 +224,10 @@ public ResponseEntity&lt;Map&lt;String, String&gt;&gt; processar(@RequestParam M
     <aside class="toc-sidebar">
       <div class="toc-title">Nesta Página</div>
       <ul class="toc-list">
-        <li><a href="#patch-network-socket">FastSocketWrapper &amp; TCP_NODELAY</a></li>
-        <li><a href="#patch-thread-pool">Escalonamento de Threads</a></li>
-        <li><a href="#patch-static-cache">Cache Estático &amp; Rate Limiter</a></li>
+        <li><a href="#feature-http-methods">Novos Métodos HTTP (@PatchMethod, etc.)</a></li>
+        <li><a href="#feature-allow-header">Cabeçalho Allow em 405</a></li>
+        <li><a href="#feature-cors-patch">CORS com PATCH e HEAD</a></li>
+        <li><a href="#historico-241">Histórico v2.4.1</a></li>
         <li><a href="#historico-240">Histórico v2.4.0</a></li>
         <li><a href="#historico-230">Histórico v2.3.0</a></li>
         <li><a href="#historico-220">Histórico v2.2.0</a></li>

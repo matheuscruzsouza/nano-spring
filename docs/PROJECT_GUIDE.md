@@ -76,7 +76,7 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    val nanoSpringVersion = "2.4.1"
+    val nanoSpringVersion = "2.5.0"
 
     // Módulos Obrigatórios para API REST
     implementation("com.github.matheuscruzsouza:nano-spring-core:$nanoSpringVersion")
@@ -337,7 +337,7 @@ public class MainActivity extends AppCompatActivity {
 | Conceito | Anotação / Classe | Pacote Correto |
 | :--- | :--- | :--- |
 | **Controlador** | `@RestController(path)` | `com.github.matheuscruzsouza.nanospring.annotation.RestController` |
-| **Rotas HTTP** | `@GetMethod`, `@PostMethod`, `@PutMethod`, `@DeleteMethod` | `com.github.matheuscruzsouza.nanospring.annotation.*` |
+| **Rotas HTTP** | `@GetMethod`, `@PostMethod`, `@PutMethod`, `@DeleteMethod`, `@PatchMethod`, `@HeadMethod`, `@OptionsMethod`, `@TraceMethod`, `@ConnectMethod` | `com.github.matheuscruzsouza.nanospring.annotation.*` |
 | **Parâmetros** | `@PathVariable("name")`, `@RequestParam("name")`, `@RequestBody` | `com.github.matheuscruzsouza.nanospring.annotation.*` |
 | **Resposta HTTP** | `ResponseEntity<T>` | `com.github.matheuscruzsouza.nanospring.http.ResponseEntity` |
 | **Injeção / Beans** | `@Service`, `@Repository`, `@Autowired` | `com.github.matheuscruzsouza.nanospring.annotation.*` |

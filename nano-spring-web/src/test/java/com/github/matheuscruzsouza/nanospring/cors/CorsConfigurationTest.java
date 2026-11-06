@@ -47,7 +47,7 @@ public class CorsConfigurationTest {
         response.addHeader("Access-Control-Max-Age", config.getMaxAge());
 
         assertEquals("*", response.getHeader("Access-Control-Allow-Origin"));
-        assertEquals("GET,POST,PUT,DELETE,OPTIONS", response.getHeader("Access-Control-Allow-Methods"));
+        assertEquals("GET,POST,PUT,DELETE,PATCH,HEAD,OPTIONS", response.getHeader("Access-Control-Allow-Methods"));
         assertEquals("Content-Type,Authorization,X-Requested-With,Accept", response.getHeader("Access-Control-Allow-Headers"));
         assertEquals("86400", response.getHeader("Access-Control-Max-Age"));
     }
