@@ -140,7 +140,7 @@ public class ExtendedHttpMethodsTest {
         files.put("postData", "{\"name\":\"Nano\"}");
 
         NanoHTTPD.IHTTPSession session = createMockSession(NanoHTTPD.Method.PATCH, "/test/patch", headers, files);
-        NanoHTTPD.Response response = ServerIndexHandler.execute(session);
+        NanoHTTPD.Response response = ServerIndexHandler.process(session);
 
         assertNotNull(response);
         assertEquals(NanoHTTPD.Response.Status.OK, response.getStatus());
@@ -149,7 +149,7 @@ public class ExtendedHttpMethodsTest {
     @Test
     public void testHeadMethodHasEmptyBody() throws Exception {
         NanoHTTPD.IHTTPSession session = createMockSession(NanoHTTPD.Method.HEAD, "/test/head", Collections.emptyMap(), null);
-        NanoHTTPD.Response response = ServerIndexHandler.execute(session);
+        NanoHTTPD.Response response = ServerIndexHandler.process(session);
 
         assertNotNull(response);
         assertEquals(NanoHTTPD.Response.Status.OK, response.getStatus());
@@ -160,7 +160,7 @@ public class ExtendedHttpMethodsTest {
     @Test
     public void testOptionsMethod() throws Exception {
         NanoHTTPD.IHTTPSession session = createMockSession(NanoHTTPD.Method.OPTIONS, "/test/options", Collections.emptyMap(), null);
-        NanoHTTPD.Response response = ServerIndexHandler.execute(session);
+        NanoHTTPD.Response response = ServerIndexHandler.process(session);
 
         assertNotNull(response);
         assertEquals(NanoHTTPD.Response.Status.OK, response.getStatus());
@@ -169,7 +169,7 @@ public class ExtendedHttpMethodsTest {
     @Test
     public void testTraceMethod() throws Exception {
         NanoHTTPD.IHTTPSession session = createMockSession(NanoHTTPD.Method.TRACE, "/test/trace", Collections.emptyMap(), null);
-        NanoHTTPD.Response response = ServerIndexHandler.execute(session);
+        NanoHTTPD.Response response = ServerIndexHandler.process(session);
 
         assertNotNull(response);
         assertEquals(NanoHTTPD.Response.Status.OK, response.getStatus());
@@ -178,7 +178,7 @@ public class ExtendedHttpMethodsTest {
     @Test
     public void testConnectMethod() throws Exception {
         NanoHTTPD.IHTTPSession session = createMockSession(NanoHTTPD.Method.CONNECT, "/test/connect", Collections.emptyMap(), null);
-        NanoHTTPD.Response response = ServerIndexHandler.execute(session);
+        NanoHTTPD.Response response = ServerIndexHandler.process(session);
 
         assertNotNull(response);
         assertEquals(NanoHTTPD.Response.Status.OK, response.getStatus());
@@ -188,7 +188,7 @@ public class ExtendedHttpMethodsTest {
     public void testMethodNotAllowedIncludesAllowHeader() throws Exception {
         // Envia GET para uma rota que só tem PATCH registrado (/test/patch)
         NanoHTTPD.IHTTPSession session = createMockSession(NanoHTTPD.Method.GET, "/test/patch", Collections.emptyMap(), null);
-        NanoHTTPD.Response response = ServerIndexHandler.execute(session);
+        NanoHTTPD.Response response = ServerIndexHandler.process(session);
 
         assertNotNull(response);
         assertEquals(NanoHTTPD.Response.Status.METHOD_NOT_ALLOWED, response.getStatus());
