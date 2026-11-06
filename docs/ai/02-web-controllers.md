@@ -6,7 +6,7 @@ O Nano-Spring possui um servidor HTTP embutido e suporta roteamento estilo REST.
 Importe SEMPRE de `com.github.matheuscruzsouza.nanospring.annotation.*`.
 
 - `@RestController("caminho-base")`: Define o controller e sua rota base.
-- `@GetMethod("caminho")`, `@PostMethod`, `@PutMethod`, `@DeleteMethod`: Define os endpoints.
+- `@GetMethod("caminho")`, `@PostMethod`, `@PutMethod`, `@DeleteMethod`, `@PatchMethod`, `@HeadMethod`, `@OptionsMethod`, `@TraceMethod`, `@ConnectMethod`: Define os endpoints para os respectivos métodos HTTP.
 - `@PathVariable("nome")`: Captura variáveis na rota (`/recurso/:id`). Note a sintaxe `:id`.
 - `@RequestBody`: Converte o corpo da requisição (JSON ou `application/x-www-form-urlencoded`) para DTO, `Map<String, String>` ou `String`.
 - `@RequestHeader("Nome")`: Obtém um cabeçalho HTTP.

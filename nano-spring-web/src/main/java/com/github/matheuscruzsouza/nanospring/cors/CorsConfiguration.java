@@ -16,7 +16,7 @@ public final class CorsConfiguration {
     public static final String KEY_MAX_AGE = "nano.cors.max-age";
 
     public static final String DEFAULT_ORIGINS = "*";
-    public static final String DEFAULT_METHODS = "GET,POST,PUT,DELETE,OPTIONS";
+    public static final String DEFAULT_METHODS = "GET,POST,PUT,DELETE,PATCH,HEAD,OPTIONS";
     public static final String DEFAULT_HEADERS = "Content-Type,Authorization,X-Requested-With,Accept";
     public static final String DEFAULT_MAX_AGE = "86400";
 
