@@ -130,7 +130,7 @@ Nano-Spring supports `HTTP Range` requests (`206 Partial Content`, `Accept-Range
 
 - **Automatic MIME Detection**: Returning a `java.io.File` directly from a controller method automatically resolves common media MIME types (`.mp4`, `.mkv`, `.webm`, `.mp3`, `.flac`, `.jpg`, `.png`, `.pdf`, `.zip`, etc.) when no explicit `mimeType` is set on `@GetMethod`.
 - **Zero-GZIP Overhead on Media**: Binary and media streams (`video/*`, `audio/*`, `image/*`, `application/octet-stream`, `application/zip`, `application/pdf`, and `Range` responses) explicitly bypass GZIP compression so CPU and battery are not wasted compressing already-compressed media.
-- **Buffered Disk & Socket I/O**: `FileResourceRegion` uses a **64 KB** `BufferedInputStream` over `FileChannel` seeks, paired with enlarged TCP socket buffers (`SO_SNDBUF = 256 KB`, `SO_RCVBUF = 128 KB`) in `FastSocketWrapper` for high-throughput LAN and VPN transfers.
+- **Buffered Disk & Socket I/O**: `FileResourceRegion` and `FastFileResourceRegion` use a **512 KB** `BufferedInputStream` over `FileChannel` seeks, paired with an optional in-memory LRU header cache (`StreamHeaderCache`), `SequenceInputStream` RAM-to-disk bridging, automatic `ETag` and `Cache-Control` injection, and enlarged TCP socket buffers (`SO_SNDBUF = 256 KB`, `SO_RCVBUF = 128 KB`) in `FastSocketWrapper` for high-throughput LAN and VPN transfers.
 
 ```java
 // Option A: Return File directly (auto-detects MIME type and supports Range headers)
