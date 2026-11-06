@@ -76,7 +76,7 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    val nanoSpringVersion = "2.5.0"
+    val nanoSpringVersion = "2.6.0"
 
     // Módulos Obrigatórios para API REST
     implementation("com.github.matheuscruzsouza:nano-spring-core:$nanoSpringVersion")
