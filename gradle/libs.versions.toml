@@ -5,6 +5,7 @@ gson = "2.8.9"
 jmustache = "1.15"
 junit = "4.13.2"
 mockito = "5.10.0"
+smbj = "0.13.0"
 
 [libraries]
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
@@ -13,6 +14,7 @@ gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 jmustache = { module = "com.samskivert:jmustache", version.ref = "jmustache" }
 junit = { module = "junit:junit", version.ref = "junit" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+smbj = { module = "com.hierynomus:smbj", version.ref = "smbj" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }
