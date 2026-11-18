@@ -1,69 +1,74 @@
 package com.github.matheuscruzsouza.nanospring.media.storage;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * {@link StorageProvider} implementation backed by the local filesystem via {@code java.nio.file}.
+ * {@link StorageProvider} implementation backed by the local filesystem via {@link File}.
+ * Compatible with Android API 25+ (avoids {@code java.nio.file} which requires API 26).
  */
 public class LocalStorageProvider implements StorageProvider {
 
-    private final Path rootPath;
+    private final File rootDir;
+    private final String canonicalRootPath;
 
     public LocalStorageProvider() {
-        this.rootPath = null;
+        this.rootDir = null;
+        this.canonicalRootPath = null;
     }
 
     public LocalStorageProvider(File rootDir) {
-        this.rootPath = rootDir != null ? rootDir.toPath().toAbsolutePath().normalize() : null;
-    }
-
-    public LocalStorageProvider(Path rootPath) {
-        this.rootPath = rootPath != null ? rootPath.toAbsolutePath().normalize() : null;
+        if (rootDir != null) {
+            try {
+                this.rootDir = rootDir.getCanonicalFile();
+                this.canonicalRootPath = this.rootDir.getPath();
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Invalid root directory: " + rootDir, e);
+            }
+        } else {
+            this.rootDir = null;
+            this.canonicalRootPath = null;
+        }
     }
 
     @Override
     public boolean exists(String path) throws IOException {
-        Path resolved = resolvePath(path);
-        return Files.exists(resolved);
+        File resolved = resolveFile(path);
+        return resolved.exists();
     }
 
     @Override
     public FileEntry stat(String path) throws IOException {
-        Path resolved = resolvePath(path);
-        if (!Files.exists(resolved)) {
+        File resolved = resolveFile(path);
+        if (!resolved.exists()) {
             throw new FileNotFoundException("File not found: " + path);
         }
-        File file = resolved.toFile();
-        boolean isDir = file.isDirectory();
-        long size = isDir ? 0L : file.length();
+        boolean isDir = resolved.isDirectory();
+        long size = isDir ? 0L : resolved.length();
         return new FileEntry(
-                file.getName(),
+                resolved.getName(),
                 toRelativeOrAbsolutePath(resolved),
                 size,
                 isDir,
-                file.lastModified()
+                resolved.lastModified()
         );
     }
 
     @Override
     public List<FileEntry> list(String path) throws IOException {
-        Path resolved = resolvePath(path);
-        if (!Files.exists(resolved) || !Files.isDirectory(resolved)) {
+        File resolved = resolveFile(path);
+        if (!resolved.exists() || !resolved.isDirectory()) {
             return Collections.emptyList();
         }
-        File[] children = resolved.toFile().listFiles();
+        File[] children = resolved.listFiles();
         if (children == null || children.length == 0) {
             return Collections.emptyList();
         }
@@ -73,7 +78,7 @@ public class LocalStorageProvider implements StorageProvider {
             long size = isDir ? 0L : child.length();
             entries.add(new FileEntry(
                     child.getName(),
-                    toRelativeOrAbsolutePath(child.toPath()),
+                    toRelativeOrAbsolutePath(child),
                     size,
                     isDir,
                     child.lastModified()
@@ -87,41 +92,51 @@ public class LocalStorageProvider implements StorageProvider {
         if (offset < 0) {
             throw new IllegalArgumentException("Offset must be non-negative: " + offset);
         }
-        Path resolved = resolvePath(path);
-        if (!Files.exists(resolved) || Files.isDirectory(resolved)) {
+        File resolved = resolveFile(path);
+        if (!resolved.exists() || resolved.isDirectory()) {
             throw new FileNotFoundException("File not found or is a directory: " + path);
         }
-        FileChannel channel = FileChannel.open(resolved, StandardOpenOption.READ);
+        FileInputStream fis = new FileInputStream(resolved);
         try {
+            FileChannel channel = fis.getChannel();
             if (offset > 0) {
                 channel.position(offset);
             }
             return Channels.newInputStream(channel);
         } catch (IOException | RuntimeException e) {
-            channel.close();
+            fis.close();
             throw e;
         }
     }
 
-    private Path resolvePath(String path) throws IOException {
+    private File resolveFile(String path) throws IOException {
         if (path == null) {
             throw new IllegalArgumentException("Path must not be null");
         }
-        if (rootPath == null) {
-            return Paths.get(path).toAbsolutePath().normalize();
+        if (rootDir == null) {
+            return new File(path).getCanonicalFile();
         }
         String sanitized = path.startsWith("/") ? path.substring(1) : path;
-        Path resolved = rootPath.resolve(sanitized).normalize();
-        if (!resolved.startsWith(rootPath)) {
+        File resolved = new File(rootDir, sanitized).getCanonicalFile();
+        String resolvedPath = resolved.getPath();
+        if (!resolvedPath.equals(canonicalRootPath)
+                && !resolvedPath.startsWith(canonicalRootPath + File.separator)) {
             throw new IOException("Path escapes root directory: " + path);
         }
         return resolved;
     }
 
-    private String toRelativeOrAbsolutePath(Path resolved) {
-        if (rootPath != null) {
-            return rootPath.relativize(resolved).toString();
+    private String toRelativeOrAbsolutePath(File resolved) {
+        if (canonicalRootPath != null) {
+            String fullPath = resolved.getPath();
+            if (fullPath.equals(canonicalRootPath)) {
+                return "";
+            }
+            String prefix = canonicalRootPath + File.separator;
+            if (fullPath.startsWith(prefix)) {
+                return fullPath.substring(prefix.length());
+            }
         }
-        return resolved.toString();
+        return resolved.getPath();
     }
 }
